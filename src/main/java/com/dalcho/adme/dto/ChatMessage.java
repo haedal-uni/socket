@@ -1,4 +1,4 @@
-package main.java.com.dalcho.adme.dto;
+package com.dalcho.adme.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
