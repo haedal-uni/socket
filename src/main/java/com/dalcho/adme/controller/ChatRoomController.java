@@ -20,7 +20,7 @@ public class ChatRoomController {
 	// 채팅 리스트 화면
 	@GetMapping("/room")
 	public String rooms(Model model) {
-		return "one";
+		return "chat-only";
 	}
 
 	// 모든 채팅방 목록 반환
@@ -33,7 +33,7 @@ public class ChatRoomController {
 	// 채팅방 생성
 	@PostMapping("/room")
 	@ResponseBody
-	public ChatRoomDto createRoom(@RequestParam("name") String nickname){
+	public ChatRoomDto createRoom(@RequestBody String nickname){
 		return chatService.createRoom(nickname);
 	}
 
@@ -41,7 +41,7 @@ public class ChatRoomController {
 	@GetMapping("/room/enter/{roomId}")
 	public String roomDetail(Model model, @PathVariable String roomId){
 		model.addAttribute("roomId", roomId);
-		return "room-detail";
+		return "one-detail";
 	}
 
 	// 특정 채팅방 조회
@@ -49,5 +49,12 @@ public class ChatRoomController {
 	@ResponseBody
 	public ChatRoomDto roomInfo(@PathVariable String roomId) {
 		return chatService.findById(roomId);
+	}
+
+	// 본인 채팅방
+	@GetMapping("/room/one/{nickname}")
+	@ResponseBody
+	public ChatRoomDto roomOne(@PathVariable String nickname) {
+		return chatService.roomOne(nickname);
 	}
 }

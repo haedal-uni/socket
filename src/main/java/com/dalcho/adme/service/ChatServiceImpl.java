@@ -26,10 +26,16 @@ public class ChatServiceImpl {
 
 	//채팅방 불러오기
 	public List<ChatRoomDto> findAllRoom() {
-		//채팅방 최근 생성 순으로 반환
-		List<ChatRoomDto> result = new ArrayList<>(ChatRoomMap.getInstance().getChatRooms().values());
-		Collections.reverse(result);
-		return result;
+		List<ChatRoomDto> chatRoomDtos = new ArrayList<>();
+		List<Socket> all = socketRepository.findAll();
+		try {
+			for (int i = 0; i < all.size(); i++) {
+				chatRoomDtos.add(ChatRoomDto.of(all.get(i)));
+			}
+		} catch (NullPointerException e) {
+			throw new RuntimeException("data 없음! ");
+		}
+		return chatRoomDtos;
 	}
 
 	//채팅방 하나 불러오기
@@ -39,27 +45,21 @@ public class ChatServiceImpl {
 
 	//채팅방 생성
 	public ChatRoomDto createRoom(String nickname) {
-		ChatRoomDto chatRoom = null;
+		ChatRoomDto chatRoom = new ChatRoomDto();
 		if (!socketRepository.existsByNickname(nickname)) {
 			chatRoom = ChatRoomDto.create(nickname); // name으로 새로 id를 만드는 코드
 			ChatRoomMap.getInstance().getChatRooms().put(chatRoom.getRoomId(), chatRoom);
 			Socket socket = new Socket(chatRoom.getRoomId(), nickname);
-			log.info("Service socket :  " + socket);
 			socketRepository.save(socket);
-		}
-		else{
+			return chatRoom;
+		} else {
 			Optional<Socket> byNickname = socketRepository.findByNickname(nickname);
-			chatRoom.toEntity(byNickname.get().getRoomId(), byNickname.get().getNickname());
+			return ChatRoomDto.of(byNickname.get());
 		}
-		return chatRoom;
 	}
 
-	// maxUserCnt 에 따른 채팅방 입장 여부
-	public boolean chkRoomUserCnt(String roomId) {
-		ChatRoomDto room = ChatRoomMap.getInstance().getChatRooms().get(roomId);
-		if (room.getUserCount() + 1 > room.getMaxUserCnt()) {
-			return false;
-		}
-		return true;
+	public ChatRoomDto roomOne(String nickname) {
+		Optional<Socket> byNickname = socketRepository.findByNickname(nickname);
+		return ChatRoomDto.of(byNickname.get());
 	}
 }
