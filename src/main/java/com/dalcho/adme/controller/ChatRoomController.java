@@ -12,7 +12,6 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/chat")
 @Slf4j
 public class ChatRoomController {
 	private final ChatServiceImpl chatService;
@@ -20,7 +19,7 @@ public class ChatRoomController {
 	// 채팅 리스트 화면
 	@GetMapping("/room")
 	public String rooms(Model model) {
-		return "chat-only";
+		return "chat-list";
 	}
 
 	// 모든 채팅방 목록 반환
@@ -41,14 +40,14 @@ public class ChatRoomController {
 	@GetMapping("/room/enter/{roomId}")
 	public String roomDetail(Model model, @PathVariable String roomId){
 		model.addAttribute("roomId", roomId);
-		return "one-detail";
+		return "chat-room";
 	}
 
-	// 특정 채팅방 조회
+	// 삭제 후 채팅방 재 접속 막기
 	@GetMapping("/room/{roomId}")
 	@ResponseBody
-	public ChatRoomDto roomInfo(@PathVariable String roomId) {
-		return chatService.findById(roomId);
+	public boolean getRoomInfo(@PathVariable String roomId) {
+		return chatService.getRoomInfo(roomId);
 	}
 
 	// 본인 채팅방
@@ -57,4 +56,12 @@ public class ChatRoomController {
 	public ChatRoomDto roomOne(@PathVariable String nickname) {
 		return chatService.roomOne(nickname);
 	}
+
+	// 완료된 채팅방 삭제하기
+	@DeleteMapping("/room/one/{roomId}")
+	@ResponseBody
+	public void deleteRoom(@PathVariable String roomId){
+		chatService.deleteRoom(roomId);
+	}
+
 }

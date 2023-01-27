@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface SocketRepository extends JpaRepository<Socket, Long> {
 	boolean existsByNickname(String nickname);
 	Optional<Socket> findByNickname(String nickname);
+	boolean existsByRoomId(String roomId);
+	Optional<Socket> findByRoomId(String roomId);
 }

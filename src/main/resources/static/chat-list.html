@@ -26,6 +26,7 @@
 		<div class="input-group-prepend">
 			<label class="input-group-text">방제목</label>
 		</div>
+		<!--		<input type="text" class="form-control" v-model="room_name" v-on:keyup.enter="createRoom">-->
 		<div class="input-group-append">
 			<button class="btn btn-primary" type="button" onclick=createRoom()>채팅방 개설</button>
 		</div>
@@ -51,11 +52,16 @@
 			var params = new URLSearchParams();
 			params.append("name", username);
 			$.ajax({
-				type: "POST", url: `/chat/room/`, data: username, contentType: false, processData: false, success: function(response) {
+				type: "POST", url: `/room/`, data: username, contentType: false, processData: false, success: function(response) {
+					console.log("response.data : " + JSON.stringify(response))
 					localStorage.setItem('wschat.roomName', username);
 					alert(username + " 님 환영합니다.")
+					// alert(response.data.roomName + " 님 환영합니다. ")
+					console.log("response.data : " + JSON.stringify(response))
+					// roomId, roomName, userCount
+					//location.href = "/chat/room/enter/" + roomId;
 					localStorage.setItem('wschat.roomId', response["roomId"]);
-					location.href = "/chat/room/enter/" + response["roomId"];
+					location.href = "/room/enter/" + response["roomId"];
 				}
 			});
 		}
@@ -72,11 +78,14 @@
 	}
 
 	function enterRoom(roomId) {
-		if (localStorage.getItem('wschat.sender') == localStorage.getItem('wschat.roomName') || localStorage.getItem('wschat.sender') ==
-			"admin") {
-			location.href = "/chat/room/enter/" + roomId;
+		let roomName = document.getElementsByClassName(roomId)[0].textContent;
+		localStorage.setItem('wschat.roomName', roomName);
+		//location.href = "/chat/room/enter/" + roomId;
+		if (localStorage.getItem('wschat.sender') == localStorage.getItem('wschat.roomName') || localStorage.getItem('wschat.sender') =="admin") {
+			location.href = "/room/enter/" + roomId;
 		}
 	}
+
 
 	$(document).ready(function() {
 		showList()
@@ -86,15 +95,16 @@
 		let username = localStorage.getItem('wschat.sender')
 		if (username == "admin") {
 			$.ajax({
-				type: "GET", url: `/chat/rooms`, contentType: false, processData: false, success: function(response) {
+				type: "GET", url: `/rooms`, contentType: false, processData: false, success: function(response) {
+					console.log("채팅방 불러오기 (all) : " + JSON.stringify(response))
 					for (let i = 0; i < response.length; i++) {
 						let nickname = response[i]["nickname"];
 						let roomId = response[i]["roomId"];
 						let roomName = nickname + " 님의 채팅방";
 						let roomNum = "'" + roomId + "'"
+						console.log("ROOMiD : " + "'" + roomId);
 						let tempHtml = `<div class="item"><button class="learn-more" onclick="enterRoom(${roomNum})">${roomName}</button>
-                        <div class="roomId" style="display: none">${roomId}</div>
-                        <div class="nickname" style="display: none">${nickname}</div>
+                        <div class=${roomId} style="display: none">${nickname}</div>
                    </div>
                    <br>
 `
@@ -102,16 +112,16 @@
 					}
 				}
 			})
-		} else if (!username == "") {
+		} else if (!username=="") {
 			$.ajax({
-				type: "GET", url: `/chat/room/one/` + username, contentType: false, processData: false, success: function(response) {
+				type: "GET", url: `/room/one/`+ username, contentType: false, processData: false, success: function(response) {
+					console.log("채팅방 불러오기 (one) : " + JSON.stringify(response))
 					let nickname = response["nickname"];
 					let roomId = response["roomId"];
 					let roomName = nickname + " 님의 채팅방";
 					let roomNum = "'" + roomId + "'"
 					let tempHtml = `<div class="item"> <button class="learn-more" onclick="enterRoom(${roomNum})">${roomName}</button>
-                        <div class="roomId" style="display: none">${roomId}</div>
-                        <div class="nickname" style="display: none">${nickname}</div>
+               <div class=${roomId} style="display: none">${nickname}</div>
                    </div>
                    <br>
 `
