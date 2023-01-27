@@ -29,37 +29,44 @@ public class ChatServiceImpl {
 		List<ChatRoomDto> chatRoomDtos = new ArrayList<>();
 		List<Socket> all = socketRepository.findAll();
 		try {
-			for (int i = 0; i < all.size(); i++) {
+			for(int i=0; i<all.size(); i++){
 				chatRoomDtos.add(ChatRoomDto.of(all.get(i)));
 			}
 		} catch (NullPointerException e) {
-			throw new RuntimeException("data 없음! ");
+			throw new RuntimeException("data 없음! ") ;
 		}
 		return chatRoomDtos;
 	}
 
 	//채팅방 하나 불러오기
-	public ChatRoomDto findById(String roomId) {
-		return ChatRoomMap.getInstance().getChatRooms().get(roomId);
+	public boolean getRoomInfo(String roomId) {
+		return socketRepository.existsByRoomId(roomId);
 	}
 
 	//채팅방 생성
 	public ChatRoomDto createRoom(String nickname) {
 		ChatRoomDto chatRoom = new ChatRoomDto();
 		if (!socketRepository.existsByNickname(nickname)) {
-			chatRoom = ChatRoomDto.create(nickname); // name으로 새로 id를 만드는 코드
+			chatRoom = ChatRoomDto.create(nickname);
 			ChatRoomMap.getInstance().getChatRooms().put(chatRoom.getRoomId(), chatRoom);
 			Socket socket = new Socket(chatRoom.getRoomId(), nickname);
+			log.info("Service socket :  " + socket);
 			socketRepository.save(socket);
 			return chatRoom;
-		} else {
+		}
+		else{
 			Optional<Socket> byNickname = socketRepository.findByNickname(nickname);
 			return ChatRoomDto.of(byNickname.get());
 		}
 	}
 
-	public ChatRoomDto roomOne(String nickname) {
+	public ChatRoomDto roomOne(String nickname){
 		Optional<Socket> byNickname = socketRepository.findByNickname(nickname);
 		return ChatRoomDto.of(byNickname.get());
+	}
+
+	public void deleteRoom(String roomId){
+		Socket socket = socketRepository.findByRoomId(roomId).orElseThrow(NullPointerException :: new);
+		socketRepository.delete(socket);
 	}
 }

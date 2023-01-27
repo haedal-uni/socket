@@ -18,14 +18,10 @@ public class ChatRoomDto {
 	private String roomId; // 채팅방 아이디
 	private String roomName; // 채팅방 이름(사용자가 설정한 이름)
 	private String nickname;
-	//private int userCount; // 채팅방 인원수
-	//private int maxUserCnt; // 채팅방 최대 인원 제한
-	//private Set<WebSocketSession> sessions = new HashSet<>();
 
 	public ChatRoomDto() {
-
 	}
-	//WebSocketSession은 Spring에서 Websocket Connection이 맺어진 세션
+
 
 	public static ChatRoomDto create(String name) {
 		ChatRoomDto room = new ChatRoomDto();
@@ -33,7 +29,6 @@ public class ChatRoomDto {
 		room.roomName = name;
 		return room;
 	}
-
 
 	public static ChatRoomDto of (Socket socket){
 		return ChatRoomDto.builder()
