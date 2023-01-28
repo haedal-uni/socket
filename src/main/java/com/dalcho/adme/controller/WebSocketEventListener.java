@@ -14,24 +14,24 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @RequiredArgsConstructor
 @Component
 public class WebSocketEventListener {
-	private final SimpMessageSendingOperations sendingOperations;
+    private final SimpMessageSendingOperations sendingOperations;
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
 
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-		logger.info("Received a new web socket connection  " );
+		logger.info("Received a new web socket connection  ");
 	}
 
 	@EventListener
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String username = (String) headerAccessor.getSessionAttributes().get("username");
-		if(username != null) {
+		if (username != null) {
 			logger.info("User Disconnected : " + username);
 			ChatMessage chatMessage = new ChatMessage();
 			chatMessage.setType(ChatMessage.MessageType.LEAVE);
 			chatMessage.setSender(username);
-			sendingOperations.convertAndSend("/queue/public", chatMessage);
+			sendingOperations.convertAndSend("/topic/public", chatMessage);
 		}
 	}
 }

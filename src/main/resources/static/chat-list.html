@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<!-- CSS -->
 	<link rel="stylesheet" href="/webjars/bootstrap/4.3.1/dist/css/bootstrap.min.css">
-	<link rel="stylesheet" type="text/css" href="/css/button.css">
+	<link rel="stylesheet" type="text/css" href="/css/chatRoomButton.css">
 	<style>
 		[v-cloak] {
 			display: none;
@@ -28,11 +28,11 @@
 		</div>
 		<!--		<input type="text" class="form-control" v-model="room_name" v-on:keyup.enter="createRoom">-->
 		<div class="input-group-append">
-			<button class="btn btn-primary" type="button" onclick=createRoom()>채팅방 개설</button>
+			<button class="btn btn-primary" type="button" onclick="createRoom()">채팅방 개설</button>
 		</div>
 		<input type="text" class="form-control" id="createNickname">
 		<div class="input-group-append">
-			<button class="btn btn-primary" type="button" onclick=createNickname()>닉네임 입력</button>
+			<button class="btn btn-primary" type="button" onclick="createNickname()">닉네임 입력</button>
 		</div>
 	</div>
 	<br><br>
@@ -42,95 +42,9 @@
 </div>
 <!-- JavaScript -->
 <script>
-	let username = "";
 
-	function createRoom() {
-		if ("" === username) {
-			alert("로그아웃 되었습니다.");
-			return;
-		} else {
-			var params = new URLSearchParams();
-			params.append("name", username);
-			$.ajax({
-				type: "POST", url: `/room/`, data: username, contentType: false, processData: false, success: function(response) {
-					console.log("response.data : " + JSON.stringify(response))
-					localStorage.setItem('wschat.roomName', username);
-					alert(username + " 님 환영합니다.")
-					// alert(response.data.roomName + " 님 환영합니다. ")
-					console.log("response.data : " + JSON.stringify(response))
-					// roomId, roomName, userCount
-					//location.href = "/chat/room/enter/" + roomId;
-					localStorage.setItem('wschat.roomId', response["roomId"]);
-					location.href = "/room/enter/" + response["roomId"];
-				}
-			});
-		}
-	}
-
-	function createNickname() {
-		if ("" == $("#createNickname").val()) {
-			alert("nickname을 입력해주세요")
-			return;
-		} else {
-			username = $("#createNickname").val();
-			localStorage.setItem("wschat.sender", username);
-		}
-	}
-
-	function enterRoom(roomId) {
-		let roomName = document.getElementsByClassName(roomId)[0].textContent;
-		localStorage.setItem('wschat.roomName', roomName);
-		//location.href = "/chat/room/enter/" + roomId;
-		if (localStorage.getItem('wschat.sender') == localStorage.getItem('wschat.roomName') || localStorage.getItem('wschat.sender') =="admin") {
-			location.href = "/room/enter/" + roomId;
-		}
-	}
-
-
-	$(document).ready(function() {
-		showList()
-	});
-
-	function showList() {
-		let username = localStorage.getItem('wschat.sender')
-		if (username == "admin") {
-			$.ajax({
-				type: "GET", url: `/rooms`, contentType: false, processData: false, success: function(response) {
-					console.log("채팅방 불러오기 (all) : " + JSON.stringify(response))
-					for (let i = 0; i < response.length; i++) {
-						let nickname = response[i]["nickname"];
-						let roomId = response[i]["roomId"];
-						let roomName = nickname + " 님의 채팅방";
-						let roomNum = "'" + roomId + "'"
-						console.log("ROOMiD : " + "'" + roomId);
-						let tempHtml = `<div class="item"><button class="learn-more" onclick="enterRoom(${roomNum})">${roomName}</button>
-                        <div class=${roomId} style="display: none">${nickname}</div>
-                   </div>
-                   <br>
-`
-						$(".frame").append(tempHtml);
-					}
-				}
-			})
-		} else if (!username=="") {
-			$.ajax({
-				type: "GET", url: `/room/one/`+ username, contentType: false, processData: false, success: function(response) {
-					console.log("채팅방 불러오기 (one) : " + JSON.stringify(response))
-					let nickname = response["nickname"];
-					let roomId = response["roomId"];
-					let roomName = nickname + " 님의 채팅방";
-					let roomNum = "'" + roomId + "'"
-					let tempHtml = `<div class="item"> <button class="learn-more" onclick="enterRoom(${roomNum})">${roomName}</button>
-               <div class=${roomId} style="display: none">${nickname}</div>
-                   </div>
-                   <br>
-`
-					$(".frame").append(tempHtml);
-				}
-			})
-		}
-	}
 </script>
+<script src="/js/chat-list.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
 		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
