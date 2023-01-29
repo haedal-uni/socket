@@ -12,7 +12,6 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@Slf4j
 public class ChatRoomController {
 	private final ChatServiceImpl chatService;
 

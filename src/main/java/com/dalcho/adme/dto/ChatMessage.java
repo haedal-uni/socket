@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ChatMessage {
 	public enum MessageType {
-		JOIN, TALK, LEAVE
+		JOIN, TALK, LEAVE, DELETE
 	}
 
 	private MessageType type; // message type

@@ -2,11 +2,7 @@ package com.dalcho.adme.dto;
 
 import com.dalcho.adme.model.Socket;
 import lombok.*;
-import org.springframework.web.socket.WebSocketSession;
 
-import javax.websocket.Session;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -21,7 +17,6 @@ public class ChatRoomDto {
 
 	public ChatRoomDto() {
 	}
-
 
 	public static ChatRoomDto create(String name) {
 		ChatRoomDto room = new ChatRoomDto();
