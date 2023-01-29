@@ -103,10 +103,10 @@ function deleteRoom() {
 	let url = new URL(window.location.href).pathname;
 	let roomId = url.split("enter/")[1]
 	let delConfrim = confirm("채팅방을 삭제하실 건가요?")
-	stompClient.send("/app/chat/end-chat", {}, JSON.stringify({sender: username, type: 'DELETE'}))
 	if (delConfrim) {
 		$.ajax({
 			type: "DELETE", url: `/room/one/` + roomId, contentType: false, processData: false, success: function(response) {
+				stompClient.send("/app/chat/end-chat", {}, JSON.stringify({sender: username, type: 'DELETE'}))
 				alert(roomName + "님 채팅방이 5분뒤에 삭제됩니다.");
 				localStorage.removeItem('wschat.roomId')
 				localStorage.removeItem('wschat.roomName')

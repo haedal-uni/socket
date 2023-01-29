@@ -2,6 +2,8 @@ package com.dalcho.adme.service;
 
 import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.dto.ChatRoomMap;
+import com.dalcho.adme.exception.CustomException;
+import com.dalcho.adme.exception.notfound.SocketNotFoundException;
 import com.dalcho.adme.model.Socket;
 import com.dalcho.adme.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
@@ -52,9 +54,9 @@ public class ChatServiceImpl {
 		}
 	}
 
-	public ChatRoomDto roomOne(String nickname){
-		Optional<Socket> byNickname = chatRepository.findByNickname(nickname);
-		return ChatRoomDto.of(byNickname.get());
+	public ChatRoomDto roomOne(String nickname) throws CustomException {
+		Socket socket = chatRepository.findByNickname(nickname).orElseThrow(SocketNotFoundException::new);
+		return ChatRoomDto.of(socket);
 	}
 
 	public void deleteRoom(String roomId){

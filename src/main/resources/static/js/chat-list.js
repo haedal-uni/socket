@@ -79,6 +79,10 @@ function showList() {
                    <br>
 `
 				$(".frame").append(tempHtml);
+			}, error : function(error){
+				let msg = error.responseJSON['message']
+				let errorMsg = JSON.stringify(msg)
+				$("#errorMsg").text(errorMsg);
 			}
 		})
 		return;
