@@ -7,10 +7,10 @@
 - mysql (roomId, nickname)
 - 관리자만 채팅 리스트 띄워놓기
 - 채팅이 완료되면 채팅방 삭제시키기
+- exception 처리
 
 <br><br><br>
 
 ## 구현해야할 것
 - 로그인한 아이디로 사이트 이용하기
 - 채팅 내용 저장
-- exception 처리
