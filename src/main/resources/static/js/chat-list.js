@@ -64,6 +64,7 @@ function showList() {
 				}
 			}
 		})
+		return;
 	} else if (!username=="") {
 		$.ajax({
 			type: "GET", url: `/room/one/`+ username, contentType: false, processData: false, success: function(response) {
@@ -80,6 +81,7 @@ function showList() {
 				$(".frame").append(tempHtml);
 			}
 		})
+		return;
 	}
 	$('.frame').load(location.href+' .frame');
 }
