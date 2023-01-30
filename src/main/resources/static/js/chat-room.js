@@ -27,10 +27,11 @@ function connect(event) {
 }
 
 function onConnected() {
-	stompClient.subscribe('/topic/public', onMessageReceived);
+	let roomId = localStorage.getItem('wschat.roomId')
+	stompClient.subscribe('/topic/public/'+ roomId, onMessageReceived);
 	//(Object) subscribe(destination, callback, headers = {})
 
-	stompClient.send("/app/chat/addUser", {}, JSON.stringify({sender: username, type: 'JOIN'}))
+	stompClient.send("/app/chat/addUser", {}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
 	//(void) send(destination, headers = {}, body = '')
 
 	connectingElement.classList.add('hidden');
@@ -46,7 +47,7 @@ function sendMessage(event) {
 	var messageContent = messageInput.value.trim();
 	if (messageContent && stompClient) {
 		var chatMessage = {
-			sender: username, message: messageInput.value, type: 'TALK'
+			roomId: roomId, sender: username, message: messageInput.value, type: 'TALK'
 		};
 		stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
 		messageInput.value = '';
@@ -106,7 +107,7 @@ function deleteRoom() {
 	if (delConfrim) {
 		$.ajax({
 			type: "DELETE", url: `/room/one/` + roomId, contentType: false, processData: false, success: function(response) {
-				stompClient.send("/app/chat/end-chat", {}, JSON.stringify({sender: username, type: 'DELETE'}))
+				stompClient.send("/app/chat/end-chat", {}, JSON.stringify({roomId: roomId, sender: username, type: 'DELETE'}))
 				alert(roomName + "님 채팅방이 5분뒤에 삭제됩니다.");
 				localStorage.removeItem('wschat.roomId')
 				localStorage.removeItem('wschat.roomName')

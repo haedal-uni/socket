@@ -1,5 +1,5 @@
 let username = "";
-
+localStorage.removeItem('wschat.roomId')
 function createRoom() {
 	if ("" === username) {
 		alert("로그아웃 되었습니다.");
@@ -34,6 +34,7 @@ function enterRoom(roomId) {
 	let roomName = document.getElementsByClassName(roomId)[0].textContent;
 	localStorage.setItem('wschat.roomName', roomName);
 	if (localStorage.getItem('wschat.sender') == localStorage.getItem('wschat.roomName') || localStorage.getItem('wschat.sender') =="admin") {
+		localStorage.setItem('wschat.roomId', roomId);
 		location.href = "/room/enter/" + roomId;
 	}
 }

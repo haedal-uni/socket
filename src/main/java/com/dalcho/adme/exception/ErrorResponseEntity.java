@@ -12,14 +12,8 @@ public class ErrorResponseEntity {
 	private String code;
 	private String message;
 
-	public static ResponseEntity<ErrorResponseEntity> toResponseEntity(ErrorCode e){
-		return ResponseEntity
-				.status(e.getHttpStatus())
-				.body(ErrorResponseEntity.builder()
-						.status(e.getHttpStatus().value())
-						.code(e.name())
-						.message(e.getMessage())
-						.build()
-				);
+	public static ResponseEntity<ErrorResponseEntity> toResponseEntity(ErrorCode e) {
+		return ResponseEntity.status(e.getHttpStatus())
+				.body(ErrorResponseEntity.builder().status(e.getHttpStatus().value()).code(e.name()).message(e.getMessage()).build());
 	}
 }

@@ -14,8 +14,7 @@ public class CustomExceptionHandler {
 	}
 
 	@ExceptionHandler(SQLException.class)
-	private ResponseEntity<ErrorResponseEntity> handleSQLException(){
+	private ResponseEntity<ErrorResponseEntity> handleSQLException() {
 		return ErrorResponseEntity.toResponseEntity(ErrorCode.DATABASE_ERROR);
 	}
-
 }

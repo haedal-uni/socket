@@ -11,16 +11,15 @@ import java.util.Map;
 public class ChatRoomMap {
 	private static ChatRoomMap chatRoomMap = new ChatRoomMap();
 	private Map<String, ChatRoomDto> chatRooms = new LinkedHashMap<>();
-
 //    @PostConstruct
 //    private void init() {
 //        chatRooms = new LinkedHashMap<>();
 //    }
 
-	private ChatRoomMap(){}
-
-	public static ChatRoomMap getInstance(){
-		return chatRoomMap;
+	private ChatRoomMap() {
 	}
 
+	public static ChatRoomMap getInstance() {
+		return chatRoomMap;
+	}
 }
