@@ -25,10 +25,7 @@ public class ChatRoomDto {
 		return room;
 	}
 
-	public static ChatRoomDto of (Socket socket){
-		return ChatRoomDto.builder()
-				.roomId(socket.getRoomId())
-				.nickname(socket.getNickname())
-				.build();
+	public static ChatRoomDto of(Socket socket) {
+		return ChatRoomDto.builder().roomId(socket.getRoomId()).nickname(socket.getNickname()).build();
 	}
 }

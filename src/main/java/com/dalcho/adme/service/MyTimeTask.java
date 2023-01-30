@@ -12,13 +12,15 @@ import java.util.TimerTask;
 public class MyTimeTask extends TimerTask {
 	private final ChatRepository chatRepository;
 	private String roomId;
-	public MyTimeTask(ChatRepository chatRepository, String roomId){
+
+	public MyTimeTask(ChatRepository chatRepository, String roomId) {
 		this.chatRepository = chatRepository;
 		this.roomId = roomId;
 	}
+
 	@Override
 	public void run() {
-		Socket socket = chatRepository.findByRoomId(roomId).orElseThrow(NullPointerException :: new);
+		Socket socket = chatRepository.findByRoomId(roomId).orElseThrow(NullPointerException::new);
 		chatRepository.delete(socket);
 		log.info("5분이 지나 삭제 되었습니다." + socket);
 	}
