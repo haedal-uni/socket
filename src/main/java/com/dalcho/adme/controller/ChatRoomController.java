@@ -1,17 +1,23 @@
 package com.dalcho.adme.controller;
 
+import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.dto.ChatResponse;
 import com.dalcho.adme.dto.ChatRoomDto;
+import com.dalcho.adme.dto.ChatRoomMap;
 import com.dalcho.adme.service.ChatServiceImpl;
+import com.dalcho.adme.util.ServletUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class ChatRoomController {
 	private final ChatServiceImpl chatService;
 
@@ -35,10 +41,25 @@ public class ChatRoomController {
 		return chatService.createRoom(nickname);
 	}
 
+	@GetMapping("/join/{roomId}")
+	@ResponseBody
+	public DeferredResult<ChatResponse> joinRequest(@PathVariable String roomId) {
+		String sessionId = ServletUtil.getSession().getId();
+		final ChatRoomMap user = new ChatRoomMap(sessionId);
+		final DeferredResult<ChatResponse> deferredResult = new DeferredResult<>(null);
+		deferredResult.onTimeout(() -> chatService.timeout(user, roomId));
+		return deferredResult;
+	}
+
 	// 채팅방 입장 화면
 	@GetMapping("/room/enter/{roomId}")
 	public String roomDetail(Model model, @PathVariable String roomId) {
 		model.addAttribute("roomId", roomId);
+		String sessionId = ServletUtil.getSession().getId();
+		log.info(">> Join request. session id : {}", sessionId);
+		final ChatRoomMap user = new ChatRoomMap(sessionId);
+		final DeferredResult<ChatResponse> deferredResult = new DeferredResult<>(null);
+		chatService.addUser(user, deferredResult);
 		return "chat-room";
 	}
 

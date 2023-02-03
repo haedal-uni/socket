@@ -1,5 +1,8 @@
 package com.dalcho.adme.service;
 
+import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.dto.ChatResponse;
+import com.dalcho.adme.dto.ChatResponse.ResponseType;
 import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.dto.ChatRoomMap;
 import com.dalcho.adme.exception.CustomException;
@@ -8,15 +11,74 @@ import com.dalcho.adme.model.Socket;
 import com.dalcho.adme.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.async.DeferredResult;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class ChatServiceImpl {
 	private final ChatRepository chatRepository;
+	private Map<ChatRoomMap, DeferredResult<ChatResponse>> waitingUsers;
+	// {key : websocket session id, value : chat room id}
+	private Map<String, DeferredResult<ChatResponse>> watingQueue;
+	private ReentrantReadWriteLock lock;
+	private ReentrantLock locks;
+	private final SimpMessagingTemplate template;
+	private final Queue<ChatMessage> queue = new LinkedList<>();
+
+	@PostConstruct // @PostConstruct는 의존성 주입이 이루어진 후 초기화를 수행하는 메서드
+	private void setUp() {
+		this.waitingUsers = new LinkedHashMap<>();
+		this.watingQueue = new LinkedHashMap<>();
+		//this.lock = new ReentrantLock();
+		this.lock = new ReentrantReadWriteLock();
+	}
+
+	@Async("asyncThreadPool")
+	public void addUser(ChatRoomMap request, DeferredResult<ChatResponse> deferredResult) throws IllegalStateException {
+		log.info("## Join chat room request. {}[{}]", Thread.currentThread().getName(), Thread.currentThread().getId());
+		if (request == null || deferredResult == null) {
+			return;
+		} else {
+			try {
+				//lock.lock();
+				lock.writeLock().lock();
+				waitingUsers.put(request, deferredResult);
+				watingQueue.put(request.getSessionId(), deferredResult);
+			} finally {
+				//lock.unlock();
+				lock.writeLock().unlock();
+			}
+		}
+	}
+
+	public void timeout(ChatRoomMap user, String roomId) {
+		if (watingQueue.size() ==1) {
+			try {
+				//lock.lock();
+				lock.writeLock().lock();
+				setJoinResult(new ChatResponse(ResponseType.TIMEOUT, roomId, user.getSessionId()));
+			} finally {
+				//lock.unlock();
+				lock.writeLock().unlock();
+			}
+		}
+
+	}
+
+	private void setJoinResult(ChatResponse response) {
+		if (response != null) {
+			template.convertAndSend("/topic/public/" + response.getRoomId(), response);
+		}
+	}
 
 	//채팅방 불러오기
 	public List<ChatRoomDto> findAllRoom() {
