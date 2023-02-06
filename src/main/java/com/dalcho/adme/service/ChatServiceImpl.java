@@ -6,17 +6,30 @@ import com.dalcho.adme.dto.ChatResponse.ResponseType;
 import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.dto.ChatRoomMap;
 import com.dalcho.adme.exception.CustomException;
+import com.dalcho.adme.exception.notfound.FileNotFoundException;
 import com.dalcho.adme.exception.notfound.SocketNotFoundException;
 import com.dalcho.adme.model.Socket;
 import com.dalcho.adme.repository.ChatRepository;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -32,7 +45,9 @@ public class ChatServiceImpl {
 	private ReentrantReadWriteLock lock;
 	private ReentrantLock locks;
 	private final SimpMessagingTemplate template;
-	private final Queue<ChatMessage> queue = new LinkedList<>();
+	private final Queue<String> queue = new LinkedList<>();
+	@Value("${spring.servlet.multipart.location}")
+	private String chatUploadLocation;
 
 	@PostConstruct // @PostConstruct는 의존성 주입이 이루어진 후 초기화를 수행하는 메서드
 	private void setUp() {
@@ -61,7 +76,7 @@ public class ChatServiceImpl {
 	}
 
 	public void timeout(ChatRoomMap user, String roomId) {
-		if (watingQueue.size() ==1) {
+		if (watingQueue.size() == 1) {
 			try {
 				//lock.lock();
 				lock.writeLock().lock();
@@ -71,7 +86,6 @@ public class ChatServiceImpl {
 				lock.writeLock().unlock();
 			}
 		}
-
 	}
 
 	private void setJoinResult(ChatResponse response) {
@@ -125,5 +139,52 @@ public class ChatServiceImpl {
 		TimerTask task = new MyTimeTask(chatRepository, roomId);
 		t.schedule(task, 300000);
 		log.info("5분뒤에 삭제 됩니다.");
+	}
+
+	public void createQueueRoom(ChatMessage chatMessage) {
+		if (queue.isEmpty()) {
+			queue.add(chatMessage.getSender());
+		}
+		System.out.println("현재 queue size : " + queue.size());
+	}
+
+	public void saveFile(ChatMessage chatMessage) { // 파일 저장
+		JSONObject json = new JSONObject();
+		json.put("roomId", chatMessage.getRoomId());
+		json.put("type", chatMessage.getType().toString());
+		json.put("sender", chatMessage.getSender());
+		json.put("message", chatMessage.getMessage());
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		String json1 = gson.toJson(json);
+		try {
+			FileWriter file = new FileWriter(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt", true);
+			File file1 = new File(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt");
+			if (file1.exists() && file1.length() == 0) {
+				file.write(json1);
+			} else {
+				file.write("," + json1);
+			}
+			file.flush();
+			file.close(); // 연결 끊기
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Object readFile(String roomId) {
+		try {
+			//FileReader reader = new FileReader(chatUploadLocation + "/" + roomName + "-" + roomId + ".txt");
+			String str = Files.readString(Paths.get(chatUploadLocation + "/" + roomId + ".txt"));
+			JSONParser parser = new JSONParser();
+			//Object object = parser.parse(reader);
+			Object obj = parser.parse("[" + str + "]");
+			//reader.close();
+			return obj;
+		} catch (NoSuchFileException e){
+			throw new FileNotFoundException();
+		}catch (IOException | ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }
