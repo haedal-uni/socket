@@ -6,6 +6,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class ChatMessage {
 	public enum MessageType {
 		JOIN, TALK, LEAVE, DELETE

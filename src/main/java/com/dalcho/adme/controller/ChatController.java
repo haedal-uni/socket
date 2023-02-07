@@ -1,11 +1,9 @@
 package com.dalcho.adme.controller;
 
 import com.dalcho.adme.dto.ChatMessage;
-import com.dalcho.adme.dto.ChatRoomDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
