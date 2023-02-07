@@ -1,8 +1,6 @@
 package com.dalcho.adme.service;
 
 import com.dalcho.adme.dto.ChatMessage;
-import com.dalcho.adme.dto.ChatResponse;
-import com.dalcho.adme.dto.ChatResponse.ResponseType;
 import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.dto.ChatRoomMap;
 import com.dalcho.adme.exception.CustomException;
@@ -18,12 +16,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.async.DeferredResult;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,68 +25,14 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class ChatServiceImpl {
 	private final ChatRepository chatRepository;
-	private Map<ChatRoomMap, DeferredResult<ChatResponse>> waitingUsers;
-	// {key : websocket session id, value : chat room id}
-	private Map<String, DeferredResult<ChatResponse>> watingQueue;
-	private ReentrantReadWriteLock lock;
-	private ReentrantLock locks;
-	private final SimpMessagingTemplate template;
-	private final Queue<String> queue = new LinkedList<>();
 	@Value("${spring.servlet.multipart.location}")
 	private String chatUploadLocation;
-
-	@PostConstruct // @PostConstruct는 의존성 주입이 이루어진 후 초기화를 수행하는 메서드
-	private void setUp() {
-		this.waitingUsers = new LinkedHashMap<>();
-		this.watingQueue = new LinkedHashMap<>();
-		//this.lock = new ReentrantLock();
-		this.lock = new ReentrantReadWriteLock();
-	}
-
-	@Async("asyncThreadPool")
-	public void addUser(ChatRoomMap request, DeferredResult<ChatResponse> deferredResult) throws IllegalStateException {
-		log.info("## Join chat room request. {}[{}]", Thread.currentThread().getName(), Thread.currentThread().getId());
-		if (request == null || deferredResult == null) {
-			return;
-		} else {
-			try {
-				//lock.lock();
-				lock.writeLock().lock();
-				waitingUsers.put(request, deferredResult);
-				watingQueue.put(request.getSessionId(), deferredResult);
-			} finally {
-				//lock.unlock();
-				lock.writeLock().unlock();
-			}
-		}
-	}
-
-	public void timeout(ChatRoomMap user, String roomId) {
-		if (watingQueue.size() == 1) {
-			try {
-				//lock.lock();
-				lock.writeLock().lock();
-				setJoinResult(new ChatResponse(ResponseType.TIMEOUT, roomId, user.getSessionId()));
-			} finally {
-				//lock.unlock();
-				lock.writeLock().unlock();
-			}
-		}
-	}
-
-	private void setJoinResult(ChatResponse response) {
-		if (response != null) {
-			template.convertAndSend("/topic/public/" + response.getRoomId(), response);
-		}
-	}
 
 	//채팅방 불러오기
 	public List<ChatRoomDto> findAllRoom() {
@@ -108,7 +48,7 @@ public class ChatServiceImpl {
 		return chatRoomDtos;
 	}
 
-	//채팅방 하나 불러오기
+	// 삭제 후 재 접속 막기
 	public boolean getRoomInfo(String roomId) {
 		return chatRepository.existsByRoomId(roomId);
 	}
@@ -129,6 +69,7 @@ public class ChatServiceImpl {
 		}
 	}
 
+	//채팅방 하나 불러오기
 	public ChatRoomDto roomOne(String nickname) throws CustomException {
 		Socket socket = chatRepository.findByNickname(nickname).orElseThrow(SocketNotFoundException::new);
 		return ChatRoomDto.of(socket);
@@ -139,13 +80,6 @@ public class ChatServiceImpl {
 		TimerTask task = new MyTimeTask(chatRepository, roomId);
 		t.schedule(task, 300000);
 		log.info("5분뒤에 삭제 됩니다.");
-	}
-
-	public void createQueueRoom(ChatMessage chatMessage) {
-		if (queue.isEmpty()) {
-			queue.add(chatMessage.getSender());
-		}
-		System.out.println("현재 queue size : " + queue.size());
 	}
 
 	public void saveFile(ChatMessage chatMessage) { // 파일 저장
@@ -180,9 +114,9 @@ public class ChatServiceImpl {
 			Object obj = parser.parse("[" + str + "]");
 			//reader.close();
 			return obj;
-		} catch (NoSuchFileException e){
+		} catch (NoSuchFileException e) {
 			throw new FileNotFoundException();
-		}catch (IOException | ParseException e) {
+		} catch (IOException | ParseException e) {
 			e.printStackTrace();
 			return null;
 		}

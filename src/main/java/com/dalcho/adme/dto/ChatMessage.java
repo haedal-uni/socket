@@ -6,9 +6,10 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatMessage { // @MessageMapping에서 쓰임(stomp)
+@ToString
+public class ChatMessage {
 	public enum MessageType {
-		JOIN, TALK, LEAVE, DELETE, LOAD
+		JOIN, TALK, LEAVE, DELETE
 	}
 
 	private String roomId; // 채팅방 아이디
