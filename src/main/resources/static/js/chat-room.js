@@ -10,7 +10,7 @@ let stompClient = null;
 let username = localStorage.getItem('wschat.sender');
 let roomName = localStorage.getItem('wschat.roomName');
 let date = new Date();
-let ms = date.getHours() + ':' + date.getMinutes() + '.' + date.getSeconds()
+let ms;
 let colors = ['#2196F3', '#32c787', '#00BCD4', '#ff5652', '#ffc107', '#ff85af', '#FF9800', '#39bbb0'];
 $(".title").text(roomName + "님 ")
 $("#h2-chatRoomName").text(roomName + "님 고객센터 채팅방입니다.")
@@ -104,7 +104,7 @@ function onMessageReceived(payload) { // 메세지 받기
 		message.message = message.sender + ' 님이 나가셨습니다.';
 	} else if (message.type === 'DELETE') {
 		messageElement.classList.add('event-message');
-		message.message = roomName + ' 님 채팅이 종료되어 ' + '현재 시간 [' + ms + ']  ' + '으로 부터 5분 뒤에 삭제될 예정입니다.';
+		message.message = roomName + ' 님 채팅이 종료되어 ' + '현재 시간 [ ' + ms + ' ]  ' + ' 으로 부터 5분 뒤에 삭제될 예정입니다.';
 	} else if (message.type === 'TALK' && message.message != null) {
 		messageElement.classList.add('chat-message'); // 채팅 메세지
 		let avatarElement = document.createElement('i');
@@ -142,12 +142,16 @@ function deleteRoom() {
 	let delConfrim = confirm("채팅방을 삭제하실 건가요?")
 	if (delConfrim) {
 		$.ajax({
-			type: "DELETE", url: `/room/one/` + roomId, contentType: false, processData: false, success: function(response) {
-				stompClient.send("/app/chat/end-chat", {}, JSON.stringify({roomId: roomId, sender: username, type: 'DELETE'}))
+			type: "DELETE", url: `/room/one/` + roomId, contentType: false, processData: false,
+			beforeSend: function(){
+				ms = date.getHours() + '시 ' + date.getMinutes() + '분  ' + date.getSeconds();
+			},
+			success: function(response) {
 				setFile({roomId: roomId, sender: username, type: 'DELETE'})
 				alert(roomName + "님 채팅방이 5분뒤에 삭제됩니다.");
 				localStorage.removeItem('wschat.roomId')
 				localStorage.removeItem('wschat.roomName')
+				stompClient.send("/app/chat/end-chat", {}, JSON.stringify({roomId: roomId, sender: username, type: 'DELETE'}))
 				setTimeout(function() {
 					location.href = "/room/"
 				}, 2500);
