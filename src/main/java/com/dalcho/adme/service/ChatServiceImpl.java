@@ -77,7 +77,7 @@ public class ChatServiceImpl {
 
 	public void deleteRoom(String roomId) {
 		Timer t = new Timer(true);
-		TimerTask task = new MyTimeTask(chatRepository, roomId);
+		TimerTask task = new MyTimeTask(chatRepository, roomId, chatUploadLocation);
 		t.schedule(task, 300000);
 		log.info("5분뒤에 삭제 됩니다.");
 	}
