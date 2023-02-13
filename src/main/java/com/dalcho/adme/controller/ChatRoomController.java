@@ -5,8 +5,6 @@ import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.service.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

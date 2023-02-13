@@ -29,22 +29,18 @@ function start() {
 			}
 			let message = JSON.parse(response);
 			if (message.type === 'SUCCESS') {
-				connectingElement.text("채팅 가눙");
-				console.log("message : " + message.roomId)
+				connectingElement.text("모두 접속하여 채팅방이 open 되었습니다.");
 				sessionId = message.sessionId;
 				roomId = message.roomId;
-				$("#message").removeAttr("disabled");
 				connect(true)
 			} else if (message.type === 'TIMEOUT') {
 				connectingElement.text("시간 초과 다시 시도해주세요");
 			}
 		}, error: function(jqxhr) {
-			console.log("http staus ?? " + jqxhr)
-			console.log("3")
+			console.log("http staus " + JSON.stringify(jqxhr))
 			clearInterval(joinInterval);
 			connectingElement.text("다시 시도해주세요")
 		}, complete: function() {
-			console.log("4")
 			clearInterval(joinInterval);
 		},
 	})
@@ -55,18 +51,24 @@ function connect(event) {
 		stompClient = Stomp.over(socket);
 		stompClient.connect({roomId : roomId}, onConnected, onError);
 		// handleWebSocketConnectListener 에서 header에 roomId값 보내기
-		//stompClient.connect({}, onConnected, onError);
-		console.log("연결됨 : " + roomId)
 	}
-	//event.preventDefault();
 }
 
 function onConnected() {
-	stompClient.subscribe('/every-chat/' + roomId, onMessageReceived);
-	console.log("구독중 " + roomId)
-	//(Object) subscribe(destination, callback, headers = {})
-	//stompClient.send("/app/chat/addUser", {}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
-	//(void) send(destination, headers = {}, body = '')
+	setTimeout(function(){
+		connectingElement.text("");
+	}, 1900)
+
+	setTimeout( function() {
+		stompClient.subscribe('/every-chat/' + roomId, onMessageReceived);
+		//(Object) subscribe(destination, callback, headers = {})
+
+		stompClient.send("/app/every-chat/addUser", {}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
+		//(void) send(destination, headers = {}, body = '')
+		$("#message").removeAttr("disabled");
+	}, 2100)
+
+
 }
 
 function onError(error) {
@@ -92,7 +94,7 @@ function onMessageReceived(payload) { // 메세지 받기
 	let messageElement = document.createElement('li');
 	if (message.type === 'JOIN') {
 		messageElement.classList.add('event-message');
-		message.message = message.sender + ' 님 안녕하세요';
+		message.message = message.sender + ' 님이 입장하셨습니다. ';
 	} else if (message.type === 'LEAVE' && message.sender != "admin") {
 		messageElement.classList.add('event-message');
 		message.message = message.sender + ' 님이 나가셨습니다.';

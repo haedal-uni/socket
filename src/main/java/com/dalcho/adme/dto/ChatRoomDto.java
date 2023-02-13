@@ -10,7 +10,7 @@ import java.util.UUID;
 @ToString
 @Builder
 @AllArgsConstructor
-public class ChatRoomDto {
+public class ChatRoomDto { // 일반 crud에서 쓰임
 	private String roomId; // 채팅방 아이디
 	private String roomName; // 채팅방 이름(사용자가 설정한 이름)
 	private String nickname;
