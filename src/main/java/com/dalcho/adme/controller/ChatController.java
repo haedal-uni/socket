@@ -20,6 +20,7 @@ public class ChatController {
 
 	@MessageMapping("/chat/addUser")
 	public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+		//socket session 에 sender, roomId 저장
 		headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
 		headerAccessor.getSessionAttributes().put("roomId", chatMessage.getRoomId());
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);

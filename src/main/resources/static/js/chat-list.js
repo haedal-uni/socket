@@ -90,3 +90,6 @@ function showList() {
 	}
 	$('.frame').load(location.href+' .frame');
 }
+function randomChat(){
+	location.href= "/every-chat";
+}

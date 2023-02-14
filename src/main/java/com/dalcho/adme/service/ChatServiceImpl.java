@@ -4,8 +4,8 @@ import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.dto.ChatRoomMap;
 import com.dalcho.adme.exception.CustomException;
+import com.dalcho.adme.exception.notfound.ChatRoomNotFoundException;
 import com.dalcho.adme.exception.notfound.FileNotFoundException;
-import com.dalcho.adme.exception.notfound.SocketNotFoundException;
 import com.dalcho.adme.model.Socket;
 import com.dalcho.adme.repository.ChatRepository;
 import com.google.gson.Gson;
@@ -71,7 +71,7 @@ public class ChatServiceImpl {
 
 	//채팅방 하나 불러오기
 	public ChatRoomDto roomOne(String nickname) throws CustomException {
-		Socket socket = chatRepository.findByNickname(nickname).orElseThrow(SocketNotFoundException::new);
+		Socket socket = chatRepository.findByNickname(nickname).orElseThrow(ChatRoomNotFoundException::new);
 		return ChatRoomDto.of(socket);
 	}
 

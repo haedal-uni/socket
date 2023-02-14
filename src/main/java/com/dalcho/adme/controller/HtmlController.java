@@ -20,7 +20,7 @@ public class HtmlController {
 		return "chat-room";
 	}
 
-	@GetMapping("/every/chat")
+	@GetMapping("/every-chat")
 	public String everyRoomDetail() {
 		return "every-chat-room";
 	}

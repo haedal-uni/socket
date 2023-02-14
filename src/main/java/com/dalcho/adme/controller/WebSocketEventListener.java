@@ -1,6 +1,7 @@
 package com.dalcho.adme.controller;
 
 import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.service.EveryChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 public class WebSocketEventListener {
 	private final SimpMessageSendingOperations sendingOperations;
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
+	private final EveryChatServiceImpl everyChatService;
 
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
@@ -27,7 +29,11 @@ public class WebSocketEventListener {
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String username = (String) headerAccessor.getSessionAttributes().get("username");
 		String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
-		if (username != null) {
+		if (roomId.startsWith("aaaa")) {
+			logger.info("User Disconnected - random");
+			String sessionId = (String) headerAccessor.getHeader("simpSessionId");
+			everyChatService.disconnectUser(sessionId, roomId, username);
+		} else {
 			logger.info("User Disconnected : " + username);
 			ChatMessage chatMessage = new ChatMessage();
 			chatMessage.setType(ChatMessage.MessageType.LEAVE);
