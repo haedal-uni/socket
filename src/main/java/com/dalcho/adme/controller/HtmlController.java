@@ -29,4 +29,9 @@ public class HtmlController {
 	public String draw(){
 		return "draw";
 	}
+
+	@GetMapping("/sse")
+	public String hello(){
+		return "sse";
+	}
 }
