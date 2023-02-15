@@ -1,6 +1,7 @@
 package com.dalcho.adme.controller;
 
 import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.service.ChatServiceImpl;
 import com.dalcho.adme.service.EveryChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -12,12 +13,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+//@EventListener는 동기적으로 처리를 진행
 @RequiredArgsConstructor
 @Component
 public class WebSocketEventListener {
 	private final SimpMessageSendingOperations sendingOperations;
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
 	private final EveryChatServiceImpl everyChatService;
+	private final ChatServiceImpl chatService;
 
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
@@ -39,6 +42,7 @@ public class WebSocketEventListener {
 			chatMessage.setType(ChatMessage.MessageType.LEAVE);
 			chatMessage.setSender(username);
 			chatMessage.setRoomId(roomId);
+			chatService.connectUser("Disconnect", roomId);
 			sendingOperations.convertAndSend("/topic/public/" + roomId, chatMessage);
 		}
 	}

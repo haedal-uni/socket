@@ -34,7 +34,7 @@ public class EveryChatServiceImpl {
 		this.lock = new ReentrantReadWriteLock();
 	}
 
-	@Async("asyncThreadPool")
+	@Async("asyncThreadPool") // 비동기
 	public void addUser(ChatRoomMap request, DeferredResult<EveryChatResponse> deferredResult) throws IllegalStateException {
 		log.info("## Join chat room request. {}[{}]", Thread.currentThread().getName(), Thread.currentThread().getId());
 		if (request == null || deferredResult == null) {

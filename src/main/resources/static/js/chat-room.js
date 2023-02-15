@@ -49,14 +49,14 @@ function sendMessage(event) {
 		let chatMessage = {
 			roomId: roomId, sender: username, message: messageInput.value, type: 'TALK'
 		};
-		setFile(chatMessage)
+		saveFile(chatMessage)
 		stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
 		messageInput.value = '';
 	}
 	event.preventDefault(); // 계속 바뀌는 것을 방지함
 }
 
-function setFile(chatMessage) {
+function saveFile(chatMessage) {
 	$.ajax({
 		type: "POST",
 		url: `/room/enter/` + roomId + '/' + roomName,
@@ -77,7 +77,6 @@ function getFile() {
 	isRun = true;
 	$.ajax({
 		type: "GET", url: `/room/enter/` + roomId + '/' + roomName, contentType: false, processData: false, success: function(response) {
-			console.log("length : " + response.length)
 			for (let i = 0; i < response.length; i++) {
 				onMessageReceived(response[i])
 			}
@@ -147,7 +146,7 @@ function deleteRoom() {
 				ms = date.getHours() + '시 ' + date.getMinutes() + '분  ' + date.getSeconds();
 			},
 			success: function(response) {
-				setFile({roomId: roomId, sender: username, type: 'DELETE'})
+				saveFile({roomId: roomId, sender: username, type: 'DELETE'})
 				alert(roomName + "님 채팅방이 5분뒤에 삭제됩니다.");
 				localStorage.removeItem('wschat.roomId')
 				localStorage.removeItem('wschat.roomName')
@@ -180,3 +179,10 @@ let roomId = url.split("enter/")[1]
 isRoom(roomId)
 usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
+
+function alarmMessage(){
+	document.querySelector('#messageForm').addEventListener("submit", () => {
+		fetch(`/room/publish?sender=${username}&roomId=${roomId}`);
+	});
+}
+alarmMessage()

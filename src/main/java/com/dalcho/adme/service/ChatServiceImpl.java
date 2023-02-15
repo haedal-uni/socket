@@ -6,7 +6,7 @@ import com.dalcho.adme.dto.ChatRoomMap;
 import com.dalcho.adme.exception.CustomException;
 import com.dalcho.adme.exception.notfound.ChatRoomNotFoundException;
 import com.dalcho.adme.exception.notfound.FileNotFoundException;
-import com.dalcho.adme.model.Socket;
+import com.dalcho.adme.model.Chat;
 import com.dalcho.adme.repository.ChatRepository;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -17,7 +17,9 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,19 +27,41 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class ChatServiceImpl {
+
+	private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
 	private final ChatRepository chatRepository;
+	private Map<String, Integer> connectUsers;
 	@Value("${spring.servlet.multipart.location}")
 	private String chatUploadLocation;
+
+	@PostConstruct // @PostConstruct는 의존성 주입이 이루어진 후 초기화를 수행하는 메서드
+	private void setUp() { // 안그러면 NullPointerException
+		this.connectUsers = new HashMap<>();
+	}
+
+	public void connectUser(String status, String roomId){
+		if (Objects.equals(status, "Connect")){
+			connectUsers.putIfAbsent(roomId, 0); // 값이 없으면 이걸 수행하고 있으면 수행안함 (값이 있으므로)
+			int num = connectUsers.get(roomId);
+			connectUsers.put(roomId, num+1);
+		} else if (Objects.equals(status, "Disconnect")) {
+			//connectUsers.putIfAbsent(roomId, 0);
+			int num = connectUsers.get(roomId);
+			connectUsers.put(roomId, num-1);
+		}
+	}
+
 
 	//채팅방 불러오기
 	public List<ChatRoomDto> findAllRoom() {
 		List<ChatRoomDto> chatRoomDtos = new ArrayList<>();
-		List<Socket> all = chatRepository.findAll();
+		List<Chat> all = chatRepository.findAll();
 		try {
 			for (int i = 0; i < all.size(); i++) {
 				chatRoomDtos.add(ChatRoomDto.of(all.get(i)));
@@ -59,20 +83,20 @@ public class ChatServiceImpl {
 		if (!chatRepository.existsByNickname(nickname)) {
 			chatRoom = ChatRoomDto.create(nickname);
 			ChatRoomMap.getInstance().getChatRooms().put(chatRoom.getRoomId(), chatRoom);
-			Socket socket = new Socket(chatRoom.getRoomId(), nickname);
-			log.info("Service socket :  " + socket);
-			chatRepository.save(socket);
+			Chat chat = new Chat(chatRoom.getRoomId(), nickname);
+			log.info("Service chat :  " + chat);
+			chatRepository.save(chat);
 			return chatRoom;
 		} else {
-			Optional<Socket> byNickname = chatRepository.findByNickname(nickname);
+			Optional<Chat> byNickname = chatRepository.findByNickname(nickname);
 			return ChatRoomDto.of(byNickname.get());
 		}
 	}
 
 	//채팅방 하나 불러오기
 	public ChatRoomDto roomOne(String nickname) throws CustomException {
-		Socket socket = chatRepository.findByNickname(nickname).orElseThrow(ChatRoomNotFoundException::new);
-		return ChatRoomDto.of(socket);
+		Chat chat = chatRepository.findByNickname(nickname).orElseThrow(ChatRoomNotFoundException::new);
+		return ChatRoomDto.of(chat);
 	}
 
 	public void deleteRoom(String roomId) {
@@ -82,6 +106,20 @@ public class ChatServiceImpl {
 		log.info("5분뒤에 삭제 됩니다.");
 	}
 
+	public ChatMessage ringAlarm(String sender, String roomId){
+		ChatMessage chatMessage = new ChatMessage();
+		if (Objects.equals(sender, "admin") && connectUsers.get(roomId) ==1){
+			chatMessage.setRoomId(roomId);
+			chatMessage.setSender(sender);
+			chatMessage.setMessage("고객센터에 문의한 글에 답글이 달렸습니다.");
+		} else if (!Objects.equals(sender, "admin") && connectUsers.get(roomId) == 1) {
+			chatMessage.setRoomId(roomId);
+			chatMessage.setSender(sender);
+			chatMessage.setMessage(sender + " 님이 답을 기다리고 있습니다.");
+
+		}
+		return chatMessage;
+	}
 	public void saveFile(ChatMessage chatMessage) { // 파일 저장
 		JSONObject json = new JSONObject();
 		json.put("roomId", chatMessage.getRoomId());

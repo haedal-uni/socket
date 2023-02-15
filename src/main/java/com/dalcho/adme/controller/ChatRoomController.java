@@ -5,16 +5,23 @@ import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.service.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController // @Controller + @ResponseBody
 @RequiredArgsConstructor
 @Slf4j
 public class ChatRoomController {
 	private final ChatServiceImpl chatService;
-
+	private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
+	private static final Map<String, SseEmitter> CLIENTS = new ConcurrentHashMap<>();
 	// 모든 채팅방 목록 반환(관리자)
 	@GetMapping("/rooms")
 	public List<ChatRoomDto> room() {
@@ -55,5 +62,31 @@ public class ChatRoomController {
 	@PostMapping("/room/enter/{roomId}/{roomName}")
 	public void saveFile(@PathVariable String roomId, @PathVariable String roomName, @RequestBody ChatMessage chatMessage){
 		chatService.saveFile(chatMessage);
+	}
+
+	@GetMapping("/room/subscribe")
+	public SseEmitter subscribe(String id) {
+		SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
+		CLIENTS.put(id, emitter);
+		emitter.onTimeout(() -> CLIENTS.remove(id));
+		emitter.onCompletion(() -> CLIENTS.remove(id));
+		return emitter;
+	}
+
+	@GetMapping("/room/publish")
+	public void publish(String sender, String roomId) {
+		System.out.println("sender : " + sender);
+		Set<String> deadIds = new HashSet<>();
+		CLIENTS.forEach((id, emitter) -> {
+			try {
+				ChatMessage chatMessage = chatService.ringAlarm(sender, roomId);
+				emitter.send(chatMessage, MediaType.APPLICATION_JSON);
+			} catch (Exception e) {
+				deadIds.add(id);
+				log.warn("disconnected id : {}", id);
+			}
+		});
+
+		deadIds.forEach(CLIENTS::remove);
 	}
 }
