@@ -1,11 +1,19 @@
 function start(username, roomId){
 	console.log("username + roomId : "+ username + roomId)
 	let id = username + "-" + roomId;
-	const eventSource = new EventSource(`/room/subscribe/?id=${id}`);
+	const eventSource = new EventSource(`/room/subscribe/?id=${username}`);
 
 	eventSource.onopen = (e) => {
 	};
+	eventSource.addEventListener('error', function(e) {
+		if (e.readyState == EventSource.CLOSED) {
+			// Connection was closed.
+		}
+	})
 	eventSource.onerror = (e) => {
+		if (e.readyState == EventSource.CLOSED) {
+			// Connection was closed.
+		}
 	};
 	eventSource.onmessage = (e) => {
 		let message = JSON.parse(e.data + "\n")

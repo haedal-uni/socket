@@ -9,10 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RestController // @Controller + @ResponseBody
@@ -65,9 +63,12 @@ public class ChatRoomController {
 	}
 
 	@GetMapping("/room/subscribe")
-	public SseEmitter subscribe(String id) {
+	public SseEmitter subscribe(String id) throws IOException {
 		SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
 		CLIENTS.put(id, emitter);
+		emitter.send(SseEmitter.event()
+				.name("connect") // 해당 이벤트의 이름 지정
+				.data("connected!")); // 503 에러 방지를 위한 더미 데이터
 		emitter.onTimeout(() -> CLIENTS.remove(id));
 		emitter.onCompletion(() -> CLIENTS.remove(id));
 		return emitter;
@@ -75,18 +76,18 @@ public class ChatRoomController {
 
 	@GetMapping("/room/publish")
 	public void publish(String sender, String roomId) {
-		System.out.println("sender : " + sender);
 		Set<String> deadIds = new HashSet<>();
 		CLIENTS.forEach((id, emitter) -> {
 			try {
 				ChatMessage chatMessage = chatService.ringAlarm(sender, roomId);
+				Thread.sleep(500);
 				emitter.send(chatMessage, MediaType.APPLICATION_JSON);
 			} catch (Exception e) {
+				log.info("[error]  " + e);
 				deadIds.add(id);
 				log.warn("disconnected id : {}", id);
 			}
 		});
-
 		deadIds.forEach(CLIENTS::remove);
 	}
 }
