@@ -1,6 +1,6 @@
 package com.dalcho.adme.service;
 
-import com.dalcho.adme.model.Socket;
+import com.dalcho.adme.model.Chat;
 import com.dalcho.adme.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +25,8 @@ public class MyTimeTask extends TimerTask {
 
 	@Override
 	public void run() {
-		Socket socket = chatRepository.findByRoomId(roomId).orElseThrow(NullPointerException::new);
-		chatRepository.delete(socket);
+		Chat chat = chatRepository.findByRoomId(roomId).orElseThrow(NullPointerException::new);
+		chatRepository.delete(chat);
 		File file = new File(chatUploadLocation + "/" + roomId + ".txt");
 		if (file.exists()){
 			boolean result = file.delete();
@@ -38,7 +38,6 @@ public class MyTimeTask extends TimerTask {
 		} else{
 			log.info("파일을 찾을 수 없습니다.");
 		}
-
-		log.info("5분이 지나 채팅방이 삭제 되었습니다." + socket);
+		log.info("5분이 지나 채팅방이 삭제 되었습니다." + chat);
 	}
 }

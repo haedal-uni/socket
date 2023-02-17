@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script src="http://code.jquery.com/jquery-3.5.1.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/latest/js/bootstrap.min.js"></script>
+</head>
+<style>
+	#msgStack{
+		position: fixed;
+		bottom: 0;
+		right: 0;
+		width:100%;
+	}
+</style>
+<body>
+<input id="input"/>
+<button id="send">send</button>
+<pre id="messages"></pre>
+
+<div id="msgStack"></div>
+
+<script>
+	const eventSource = new EventSource(`/api/subscribe?id=${Math.random()}`);
+
+	eventSource.onopen = (e) => {
+		console.log(e);
+	};
+
+	eventSource.onerror = (e) => {
+		console.log(e);
+	};
+
+	eventSource.onmessage = (e) => {
+		//document.querySelector("#messages").appendChild(document.createTextNode(e.data + "\n"));
+		onMessage(e.data + "\n")
+	};
+
+	document.querySelector("#send").addEventListener("click", () => {
+		fetch(`/api/publish?message=${document.querySelector("#input").value}`);
+	});
+
+	function onMessage(data){
+		// toast
+		let toast = "<div class='toast' role='alert' aria-live='assertive' aria-atomic='true'>";
+		toast += "<div class='toast-header'><i class='fas fa-bell mr-2'></i><strong class='mr-auto'>알림</strong>";
+		toast += "<small class='text-muted'>just now</small><button type='button' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>";
+		toast += "<span aria-hidden='true'>&times;</span></button>";
+		toast += "</div> <div class='toast-body'>" + data + "</div></div>";
+		$("#msgStack").append(toast);   // msgStack div에 생성한 toast 추가
+		$(".toast").toast({"animation": true, "autohide": false});
+		$('.toast').toast('show');
+	};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</body>
+</html>

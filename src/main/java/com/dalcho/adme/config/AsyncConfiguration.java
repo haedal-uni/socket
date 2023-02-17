@@ -24,3 +24,9 @@ public class AsyncConfiguration { // Async 설정
 		return taskExecutor;
 	}
 }
+/*
+기본적으로 Spring Event 는 동기적이다. 하지만 @Async 를 통해 비동기로 동작할 수 있다.
+Executor 쓰레드풀을 사용
+
+*@TransactionalEventListener
+ */
