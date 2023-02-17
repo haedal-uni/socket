@@ -6,12 +6,15 @@ import com.dalcho.adme.service.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 @RestController // @Controller + @ResponseBody
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class ChatRoomController {
 	private final ChatServiceImpl chatService;
 	private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
 	private static final Map<String, SseEmitter> CLIENTS = new ConcurrentHashMap<>();
+
 	// 모든 채팅방 목록 반환(관리자)
 	@GetMapping("/rooms")
 	public List<ChatRoomDto> room() {
@@ -58,7 +62,7 @@ public class ChatRoomController {
 
 	// 채팅방 기록 저장하기
 	@PostMapping("/room/enter/{roomId}/{roomName}")
-	public void saveFile(@PathVariable String roomId, @PathVariable String roomName, @RequestBody ChatMessage chatMessage){
+	public void saveFile(@PathVariable String roomId, @PathVariable String roomName, @RequestBody ChatMessage chatMessage) {
 		chatService.saveFile(chatMessage);
 	}
 
@@ -66,8 +70,7 @@ public class ChatRoomController {
 	public SseEmitter subscribe(String id) throws IOException {
 		SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
 		CLIENTS.put(id, emitter);
-		emitter.send(SseEmitter.event()
-				.name("connect") // 해당 이벤트의 이름 지정
+		emitter.send(SseEmitter.event().name("connect") // 해당 이벤트의 이름 지정
 				.data("connected!")); // 503 에러 방지를 위한 더미 데이터
 		emitter.onTimeout(() -> CLIENTS.remove(id));
 		emitter.onCompletion(() -> CLIENTS.remove(id));
@@ -75,19 +78,19 @@ public class ChatRoomController {
 	}
 
 	@GetMapping("/room/publish")
+	@Async("asyncThreadPool") // 비동기
 	public void publish(String sender, String roomId) {
 		Set<String> deadIds = new HashSet<>();
 		CLIENTS.forEach((id, emitter) -> {
 			try {
-				ChatMessage chatMessage = chatService.ringAlarm(sender, roomId);
-				Thread.sleep(500);
+				ChatMessage chatMessage = chatService.chatAlarm(sender, roomId);
 				emitter.send(chatMessage, MediaType.APPLICATION_JSON);
 			} catch (Exception e) {
 				log.info("[error]  " + e);
 				deadIds.add(id);
 				log.warn("disconnected id : {}", id);
 			}
+			deadIds.forEach(CLIENTS::remove);
 		});
-		deadIds.forEach(CLIENTS::remove);
 	}
 }

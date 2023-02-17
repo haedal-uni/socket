@@ -5,18 +5,13 @@ function start(username, roomId){
 
 	eventSource.onopen = (e) => {
 	};
-	eventSource.addEventListener('error', function(e) {
-		if (e.readyState == EventSource.CLOSED) {
-			// Connection was closed.
-		}
-	})
 	eventSource.onerror = (e) => {
 		if (e.readyState == EventSource.CLOSED) {
 			// Connection was closed.
 		}
 	};
 	eventSource.onmessage = (e) => {
-		let message = JSON.parse(e.data + "\n")
+		let message = JSON.parse(e.data + "\n")// 문자 하나라서 /n만 사용 여러줄이라면 마지막에는 줄바꿈 문자 두개(\n\n)로 구분
 		if (message !== "" && message !== null && message !==undefined && message.sender !== "admin") {
 			adminAlarmForm(message)
 		}

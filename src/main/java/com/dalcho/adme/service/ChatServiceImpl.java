@@ -106,7 +106,7 @@ public class ChatServiceImpl {
 		log.info("5분뒤에 삭제 됩니다.");
 	}
 
-	public ChatMessage ringAlarm(String sender, String roomId){
+	public ChatMessage chatAlarm(String sender, String roomId){
 		ChatMessage chatMessage = new ChatMessage();
 		if (Objects.equals(sender, "admin") && connectUsers.get(roomId) ==1){
 			chatMessage.setRoomId(roomId);
@@ -120,6 +120,7 @@ public class ChatServiceImpl {
 		}
 		return chatMessage;
 	}
+
 	public void saveFile(ChatMessage chatMessage) { // 파일 저장
 		JSONObject json = new JSONObject();
 		json.put("roomId", chatMessage.getRoomId());
@@ -133,6 +134,7 @@ public class ChatServiceImpl {
 			File file1 = new File(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt");
 			if (file1.exists() && file1.length() == 0) {
 				file.write(json1);
+				chatAlarm(chatMessage.getSender(), chatMessage.getRoomId());
 			} else {
 				file.write("," + json1);
 			}
