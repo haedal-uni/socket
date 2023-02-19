@@ -5,6 +5,7 @@ import com.dalcho.adme.dto.EveryChatResponse;
 import com.dalcho.adme.dto.ChatRoomMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -34,18 +35,19 @@ public class EveryChatServiceImpl {
 		this.lock = new ReentrantReadWriteLock();
 	}
 
-	@Async("asyncThreadPool") // 비동기
+	@Async("executor") // 비동기
 	public void addUser(ChatRoomMap request, DeferredResult<EveryChatResponse> deferredResult) throws IllegalStateException {
 		log.info("## Join chat room request. {}[{}]", Thread.currentThread().getName(), Thread.currentThread().getId());
 		if (request == null || deferredResult == null) {
 			return;
 		}
 		try {
-			log.info(" = = = = add User == = = = =  ");
-			log.info("sessionId : " + request + "  , roomId : " + deferredResult);
 			lock.writeLock().lock();
 			waitingUsers.put(request, deferredResult); // sessionId, roomId
-		} finally {
+		} catch (TaskRejectedException e){
+			log.warn(String.valueOf(e));
+		}
+		finally {
 			lock.writeLock().unlock();
 			establishChatRoom();
 		}
@@ -53,7 +55,6 @@ public class EveryChatServiceImpl {
 
 	public void timeout(ChatRoomMap chatRoomMap) {
 		if (watingQueue.size() < 2) {
-			log.info(" = = = = = = = timeout = = = = = = = ");
 			try {
 				lock.writeLock().lock();
 				setJoinResult(waitingUsers.remove(chatRoomMap), new EveryChatResponse(EveryChatResponse.ResponseType.TIMEOUT, null, chatRoomMap.getSessionId()));
@@ -82,7 +83,7 @@ public class EveryChatServiceImpl {
 			user1Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user1.getSessionId()));
 			user2Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user2.getSessionId()));
 		} catch (Exception e) {
-			log.warn("Exception occur while checking waiting users", e);
+			log.error("Exception occur while checking waiting users", e);
 		} finally {
 			lock.readLock().unlock();
 		}
@@ -106,7 +107,7 @@ public class EveryChatServiceImpl {
 	public void disconnectUser(String websocketSessionId, String sessionRoomId,	String username) {
 		String roomId = connectedUsers.get(websocketSessionId);
 		if (!Objects.equals(roomId, sessionRoomId)) {
-			log.info(" [error] : Map에 저장된 roomId와 session에 저장된 roomId가 같지 않습니다. ");
+			log.error(" [error] : Map에 저장된 roomId와 session에 저장된 roomId가 같지 않습니다. ");
 			log.info(" [roomId] : " + roomId + "  , [sessionRoomId] : " + sessionRoomId);
 		}
 		ChatMessage chatMessage = new ChatMessage();
