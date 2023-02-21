@@ -37,6 +37,7 @@ public class EveryChatServiceImpl {
 
 	@Async("executor") // 비동기
 	public void addUser(ChatRoomMap request, DeferredResult<EveryChatResponse> deferredResult) throws IllegalStateException {
+		long startTime = System.currentTimeMillis();
 		log.info("## Join chat room request. {}[{}]", Thread.currentThread().getName(), Thread.currentThread().getId());
 		if (request == null || deferredResult == null) {
 			return;
@@ -51,9 +52,12 @@ public class EveryChatServiceImpl {
 			lock.writeLock().unlock();
 			establishChatRoom();
 		}
+		long endTime = System.currentTimeMillis();
+		log.info(String.format("코드 실행 시간 : %20dms", endTime - startTime));
 	}
 
 	public void timeout(ChatRoomMap chatRoomMap) {
+		log.info("timeout");
 		if (watingQueue.size() < 2) {
 			try {
 				lock.writeLock().lock();

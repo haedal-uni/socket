@@ -30,18 +30,22 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-    // websocket
+    // chat
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.webjars:sockjs-client:1.1.2'
     implementation 'org.webjars:stomp-websocket:2.3.3-1'
 
-    implementation 'org.springframework.boot:spring-boot-starter-freemarker'
-    implementation 'org.springframework.boot:spring-boot-devtools'
+    //implementation 'org.springframework.boot:spring-boot-starter-freemarker'
+    //implementation 'org.springframework.boot:spring-boot-devtools'
     implementation 'org.webjars.bower:bootstrap:4.3.1'
-    implementation 'org.webjars.bower:axios:0.17.1'
+    //implementation 'org.webjars.bower:axios:0.17.1'
+    // chat-file
     implementation 'com.google.code.gson:gson:2.8.0'
-
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
+    // securtiy
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.json:json:20200518'
 }
 
 test {

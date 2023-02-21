@@ -5,11 +5,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import javax.servlet.http.HttpSession;
+
 @Controller
 public class HtmlController {
 	// 채팅 리스트 화면
 	@GetMapping("/room")
-	public String rooms(Model model) {
+	public String rooms(Model model, HttpSession httpSession) {
+		model.addAttribute("username", httpSession.getAttribute("username"));
 		return "chat-list";
 	}
 
@@ -25,13 +28,25 @@ public class HtmlController {
 		return "every-chat-room";
 	}
 
-	@GetMapping("/draw")
-	public String draw(){
-		return "draw";
+	@GetMapping("/user/login")
+	public String login(){
+		return "login";
 	}
 
-	@GetMapping("/sse")
-	public String hello(){
-		return "sse";
+	@GetMapping("/user/login/error")
+	public String loginError(Model model){
+		model.addAttribute("loginError", true);
+		return "login";
 	}
+
+	// 회원 가입 페이지
+	@GetMapping("/user/signup")
+	public String signup() {
+		return "signup";
+	}
+	@GetMapping("/fun")
+	public String fun(){
+		return "funny";
+	}
+
 }

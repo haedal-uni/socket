@@ -12,14 +12,31 @@ $(document).ready(function () {
 	start();
 });
 
+function timer(){
+	let time = 20;
+	let min = "";
+	let sec = "";
+	let x = setInterval(function(){
+		min = parseInt(time/60);
+		sec = time%60;
+		connectingElement.text("현재 1명의 접속을 기다리고 있는 중입니다.  [ " + min + " 분  " + sec + " 초 ]");
+		time--;
+		if (time < 0) {
+			clearInterval(x);
+			connectingElement.text("시간 초과 다시 시도해주세요");
+		}
+	}, 1000)
+}
 function start() {
 	$.ajax({
 		type: "GET", url: `/join`, contentType: 'application/json', async:true, processData: false,
 		beforeSend: function() {
 			connectingElement.text("다른 user가 접속할 때 까지 대기중입니다.")
+			timer();
 			joinInterval = setInterval(function() {
-				connectingElement.text("현재 접속을 기다리고 있는 중입니다.")
-			}, 2000);
+				//connectingElement.text("현재 접속을 기다리고 있는 중입니다.")
+
+			});
 		},
 		success: function(chatMessage) {
 			response = JSON.stringify(chatMessage)
@@ -34,7 +51,8 @@ function start() {
 				roomId = message.roomId;
 				connect(true)
 			} else if (message.type === 'TIMEOUT') {
-				connectingElement.text("시간 초과 다시 시도해주세요");
+				//connectingElement.text("시간 초과 다시 시도해주세요");
+				console.log("timeout!")
 			}
 		}, error: function(jqxhr) {
 			console.log("http staus " + JSON.stringify(jqxhr))
