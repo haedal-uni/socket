@@ -33,8 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 @Service
 public class ChatServiceImpl {
-
-	private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
 	private final ChatRepository chatRepository;
 	private Map<String, Integer> connectUsers;
 	@Value("${spring.servlet.multipart.location}")
@@ -67,7 +65,7 @@ public class ChatServiceImpl {
 				chatRoomDtos.add(ChatRoomDto.of(all.get(i)));
 			}
 		} catch (NullPointerException e) {
-			throw new RuntimeException("data 없음! ");
+			log.info(" [현재 채팅방 db 없음!] " + e);
 		}
 		return chatRoomDtos;
 	}
@@ -103,7 +101,7 @@ public class ChatServiceImpl {
 		Timer t = new Timer(true);
 		TimerTask task = new MyTimeTask(chatRepository, roomId, chatUploadLocation);
 		t.schedule(task, 300000);
-		log.info("5분뒤에 삭제 됩니다.");
+		log.warn("5분뒤에 삭제 됩니다.");
 	}
 
 	public ChatMessage chatAlarm(String sender, String roomId){
@@ -141,7 +139,7 @@ public class ChatServiceImpl {
 			file.flush();
 			file.close(); // 연결 끊기
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("[error] " + e);
 		}
 	}
 
@@ -157,7 +155,7 @@ public class ChatServiceImpl {
 		} catch (NoSuchFileException e) {
 			throw new FileNotFoundException();
 		} catch (IOException | ParseException e) {
-			e.printStackTrace();
+			log.error("[error] " + e);
 			return null;
 		}
 	}
