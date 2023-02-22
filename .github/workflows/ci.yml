@@ -15,13 +15,17 @@ on:
 
 permissions:
   contents: read
+  
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-        run:
-            working-directory: "./src/main/java/com/dalcho/adme"
+    outputs:
+          backend: ${{ steps.filter.outputs.backend }}
+          frontend: ${{ steps.filter.outputs.frontend }}
+#     defaults:
+#         run:
+#             working-directory: "./src/main/java/com/dalcho/adme"
 
     steps:
     - uses: actions/checkout@v3
@@ -30,6 +34,14 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+          filters: |
+            backend:
+              - './src/main/java/com/dalcho/adme/**'
+            frontend:
+              - './src/main/resources/static/**'
         
     - name: Grant execute permission for gradlew (빌드 전 gradle 권한 부여)
       run: chmod +x gradlew
