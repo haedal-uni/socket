@@ -1,9 +1,13 @@
 
 //localStorage.removeItem('wschat.roomId')
 function createRoom() {
+	let name = $("#header-title-login-user").text().replace(/\n|\r|\s*/g, "");
+	let username = name.replace("님", "");
+	localStorage.setItem('wschat.sender', username);
+	console.log("username : " + username)
 	if ("" === username) {
-		alert("로그아웃 되었습니다.");
-		return;
+		alert("로그인해주세요");
+		return location.href = "/user/login";
 	} else {
 		var params = new URLSearchParams();
 		params.append("name", username);
@@ -18,17 +22,6 @@ function createRoom() {
 	}
 }
 
-function createNickname() {
-	if ("" == $("#createNickname").val()) {
-		alert("nickname을 입력해주세요")
-		return;
-	} else {
-		username = $("#createNickname").val();
-		localStorage.setItem('wschat.sender', username);
-		showList()
-		return;
-	}
-}
 
 function enterRoom(roomId) {
 	let roomName = document.getElementsByClassName(roomId)[0].textContent;

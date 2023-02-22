@@ -10,7 +10,6 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@ToString
 public class Chat {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
