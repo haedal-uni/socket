@@ -37,5 +37,4 @@ out/
 .vscode/
 
 gradle
-
 src/main/resources/kakao.properties
