@@ -45,8 +45,6 @@ function alarmSubscribe() {
 }
 
 function showList() {
-	console.log("hihihih")
-	console.log("username " + username)
 	if (username == "admin") {
 		$.ajax({
 			type: "GET", url: `/rooms`, contentType: false, processData: false, success: function(response) {

@@ -98,30 +98,5 @@ public class JwtTokenProvider {
 		}
 	}
 
-	// jwt token을 복화하 하여 이름을 얻는다.
-	public String getUserNameFromJwt(String jwt){
-		return getClaims(jwt).getBody().getId();
-	}
-
-	private Jws<Claims> getClaims(String jwt){
-		try{
-			return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(jwt);
-		}catch (SignatureException e){
-			log.error("Invalid JWT signature");
-			throw e;
-		} catch (MalformedJwtException e){
-			log.error("Invalid JWT token");
-			throw e;
-		} catch (ExpiredJwtException e){
-			log.error("Expired JWT token");
-			throw e;
-		} catch (UnsupportedJwtException e){
-			log.error("Unsupported JWT token");
-			throw e;
-		} catch (IllegalArgumentException e){
-			log.error("JWT claims string is empty");
-			throw e;
-		}
-	}
 }
 
