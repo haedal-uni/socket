@@ -1,10 +1,7 @@
 package com.dalcho.adme.config.security;
 
 import com.dalcho.adme.service.UserDetailService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,10 +9,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
@@ -100,6 +95,32 @@ public class JwtTokenProvider {
 		} catch (Exception e) {
 			log.info("[validateToken] 토큰 유효 체크 예외 발생");
 			return false;
+		}
+	}
+
+	// jwt token을 복화하 하여 이름을 얻는다.
+	public String getUserNameFromJwt(String jwt){
+		return getClaims(jwt).getBody().getId();
+	}
+
+	private Jws<Claims> getClaims(String jwt){
+		try{
+			return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(jwt);
+		}catch (SignatureException e){
+			log.error("Invalid JWT signature");
+			throw e;
+		} catch (MalformedJwtException e){
+			log.error("Invalid JWT token");
+			throw e;
+		} catch (ExpiredJwtException e){
+			log.error("Expired JWT token");
+			throw e;
+		} catch (UnsupportedJwtException e){
+			log.error("Unsupported JWT token");
+			throw e;
+		} catch (IllegalArgumentException e){
+			log.error("JWT claims string is empty");
+			throw e;
 		}
 	}
 }

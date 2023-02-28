@@ -12,7 +12,7 @@ public class HtmlController {
 	// 채팅 리스트 화면
 	@GetMapping("/room")
 	public String rooms(Model model, HttpSession httpSession) {
-		model.addAttribute("username", httpSession.getAttribute("username"));
+		model.addAttribute("nickname", httpSession.getAttribute("nickname"));
 		return "chat-list";
 	}
 
@@ -44,9 +44,9 @@ public class HtmlController {
 	public String signup() {
 		return "signup";
 	}
-	@GetMapping("/fun")
-	public String fun(){
-		return "funny";
+	@GetMapping("/error")
+	public String error(){
+		return "error";
 	}
 
 }

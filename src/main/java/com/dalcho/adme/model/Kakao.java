@@ -1,33 +1,28 @@
 package com.dalcho.adme.model;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import jdk.jshell.Snippet;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
-public class Kakao {
-	public Kakao(String username, String password, String email, UserRole role, Long kakaoIdx) {
-		this.username = username;
-		this.password = password;
-		this.email = email;
-		this.role = role;
-		this.kakaoIdx = kakaoIdx;
-	}
+public class Kakao implements UserDetails {
+	public static final String DEFAULT_PROFILE_IMG_PATH = "images/default-profile.png";
 
-	// ID가 자동으로 생성 및 증가합니다.
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Id
 	@Column(name = "kakao_id")
 	private Long id;
-	// 반드시 값을 가지도록 합니다.
 	@Column(nullable = false)
-	private String username;
+	private String nickname;
 	@Column(nullable = false)
 	private String password;
 	@Column(nullable = false)
@@ -35,6 +30,50 @@ public class Kakao {
 	@Column(nullable = false)
 	@Enumerated(value = EnumType.STRING)
 	private UserRole role;
+
 	@Column(nullable = false)
-	private Long kakaoIdx;
+	private boolean enabled = true; // 1
+
+	private String profile = DEFAULT_PROFILE_IMG_PATH;
+
+	@Builder // UserMapper와 연결
+	public Kakao(Long id, String email, String password, UserRole role, String nickname) {
+		this.id = id;
+		this.email = email;
+		this.password = password;
+		this.nickname = nickname;
+
+		this.role = role == null ? UserRole.USER : role;
+		this.profile = DEFAULT_PROFILE_IMG_PATH;
+	}
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return null;
+	}
+
+	@Override
+	public String getUsername() {
+		return null;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return false;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return false;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return false;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return this.enabled;
+	}
 }
