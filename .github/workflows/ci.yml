@@ -34,14 +34,14 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-          filters: |
-            backend:
-              - './src/main/java/com/dalcho/adme/**'
-            frontend:
-              - './src/main/resources/static/**'
+#     - uses: dorny/paths-filter@v2
+#       id: filter
+#       with:
+#           filters: |
+#             backend:
+#               - './src/main/java/com/dalcho/adme/**'
+#             frontend:
+#               - './src/main/resources/static/**'
         
     - name: Grant execute permission for gradlew (빌드 전 gradle 권한 부여)
       run: chmod +x gradlew
