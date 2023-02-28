@@ -1,8 +1,7 @@
-
 //localStorage.removeItem('wschat.roomId')
+let name = $("#header-title-login-user").text().replace(/\n|\r|\s*/g, "");
+let username = name.replace("님", "");
 function createRoom() {
-	let name = $("#header-title-login-user").text().replace(/\n|\r|\s*/g, "");
-	let username = name.replace("님", "");
 	localStorage.setItem('wschat.sender', username);
 	console.log("username : " + username)
 	if ("" === username) {
@@ -22,32 +21,30 @@ function createRoom() {
 	}
 }
 
-
 function enterRoom(roomId) {
 	let roomName = document.getElementsByClassName(roomId)[0].textContent;
 	localStorage.setItem('wschat.roomName', roomName);
-	if (localStorage.getItem('wschat.sender') == localStorage.getItem('wschat.roomName') || localStorage.getItem('wschat.sender') =="admin") {
+	if (localStorage.getItem('wschat.sender') == localStorage.getItem('wschat.roomName') || localStorage.getItem('wschat.sender') ==
+		"admin") {
 		localStorage.setItem('wschat.roomId', roomId);
 		location.href = "/room/enter/" + roomId;
 	}
 }
 
-
 $(document).ready(function() {
-	showList()
+	setInterval(showList(),1000)
 	alarmSubscribe();
 });
 
-function alarmSubscribe(){
+function alarmSubscribe() {
 	let roomId = localStorage.getItem('wschat.roomId')
 	let username = localStorage.getItem('wschat.sender');
-	if (username!= null && roomId != null){
+	if (username != null && roomId != null) {
 		start(username, roomId);
 	}
 }
 
 function showList() {
-	let username = localStorage.getItem('wschat.sender')
 	if (username == "admin") {
 		$.ajax({
 			type: "GET", url: `/rooms`, contentType: false, processData: false, success: function(response) {
@@ -67,9 +64,9 @@ function showList() {
 			}
 		})
 		return;
-	} else if (!username=="") {
+	} else if (!username == "") {
 		$.ajax({
-			type: "GET", url: `/room/one/`+ username, contentType: false, processData: false, success: function(response) {
+			type: "GET", url: `/room/one/` + username, contentType: false, processData: false, success: function(response) {
 				console.log("채팅방 불러오기 (one) : " + JSON.stringify(response))
 				let nickname = response["nickname"];
 				let roomId = response["roomId"];
@@ -81,7 +78,7 @@ function showList() {
                    <br>
 `
 				$(".frame").append(tempHtml);
-			}, error : function(error){
+			}, error: function(error) {
 				let msg = error.responseJSON['message']
 				let errorMsg = JSON.stringify(msg)
 				$("#errorMsg").text(errorMsg);
@@ -89,13 +86,14 @@ function showList() {
 		})
 		return;
 	}
-	$('.frame').load(location.href+' .frame');
-}
-function randomChat(){
-	location.href= "/every-chat";
+	$('.frame').load(location.href + ' .frame');
 }
 
-function alarmForm(data){
+function randomChat() {
+	location.href = "/every-chat";
+}
+
+function alarmForm(data) {
 	if ($(".toast-body").text() === "") {
 		let url = `/room/enter/${data.roomId}`
 		let roomId = data.roomId
@@ -104,7 +102,7 @@ function alarmForm(data){
 		toast += "<small class='text-muted'>just now</small><button type='button' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>";
 		toast += "<span aria-hidden='true'>&times;</span></button>";
 		toast += "</div> <div class='toast-body'>" + data.message + "<br>";
-		toast += "<button onclick= " + "closeAlarm()" +"><a href=" + url +"> 바로가기</a></button>" + "</div></div>";
+		toast += "<button onclick= " + "closeAlarm()" + "><a href=" + url + "> 바로가기</a></button>" + "</div></div>";
 		$("#msgStack").append(toast);   // msgStack div에 생성한 toast 추가
 		$(".toast").toast({"animation": true, "autohide": false});
 		$('.toast').toast('show');
@@ -112,21 +110,22 @@ function alarmForm(data){
 	if ($('.toast').toast('hide')) {
 		$('.toast').toast('show')
 	}
-	if($(".toast fade hide show")){
+	if ($(".toast fade hide show")) {
 		$('.toast').toast('show')
 	}
 }
-function closeAlarm(){
+
+function closeAlarm() {
 	$('.toast').toast('hide')
 }
 
-function adminAlarmForm(data){
-	if ($(".toast-body").text().split(" ")[0] !== data.sender){
+function adminAlarmForm(data) {
+	if ($(".toast-body").text().split(" ")[0] !== data.sender) {
 		let toast = "<div class='toast' role='alert' aria-live='assertive' aria-atomic='true'>";
 		toast += "<div class='toast-header'><i class='fas fa-bell mr-2'></i><strong class='mr-auto'>알림</strong>";
 		toast += "<small class='text-muted'>just now</small><button type='button' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>";
 		toast += "<span aria-hidden='true'>&times;</span></button>";
-		toast += "</div> <div class='toast-body'>" + data.message +"</div></div>";
+		toast += "</div> <div class='toast-body'>" + data.message + "</div></div>";
 		$("#msgStack").append(toast);   // msgStack div에 생성한 toast 추가
 		$(".toast").toast({"animation": true, "autohide": false});
 		$('.toast').toast('show');
@@ -134,7 +133,7 @@ function adminAlarmForm(data){
 	if ($('.toast').toast('hide')) {
 		$('.toast').toast('show')
 	}
-	if($(".toast fade hide show")){
+	if ($(".toast fade hide show")) {
 		$('.toast').toast('show')
 	}
 }

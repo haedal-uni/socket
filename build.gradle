@@ -45,7 +45,11 @@ dependencies {
 
     // securtiy
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'io.jsonwebtoken:jjwt:0.9.1' // jwt
     implementation 'org.json:json:20200518'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    // 소셜 로그인을 통한 인증과 권한 처리를 쉽게 할 수 있게 해준다.
 }
 
 test {
