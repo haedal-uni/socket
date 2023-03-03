@@ -1,8 +1,8 @@
 package com.dalcho.adme.config.security;
 
+import com.dalcho.adme.oauth2.CustomOAuthService;
 import com.dalcho.adme.oauth2.OAuth2SuccessHandler;
 import com.dalcho.adme.oauth2.Oauth2FailureHandler;
-import com.dalcho.adme.oauth2.CustomOAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

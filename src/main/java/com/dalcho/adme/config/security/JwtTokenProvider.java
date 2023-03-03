@@ -38,12 +38,12 @@ public class JwtTokenProvider {
 		log.info("[init] JwtTokenProvider 내 secretKey 초기화 완료");
 	}
 
-	public String createToken(String nickname, String roles) {
+	public String generateToken(String nickname) {
 		log.info("[createToken] 토큰 생성 시작");
 
-		// Claims 객체에 담아 Jwt Token 의 내용에 값 넣기, sub 속정에 값 추가(Uid 사용)
+		// Claims 객체에 담아 Jwt Token 의 내용에 값 넣기, sub 속성에 값 추가(Uid 사용)
 		Claims claims = Jwts.claims().setSubject(nickname);
-		claims.put("roles", roles); // 사용자 권한확인용 추가
+		//claims.put("roles", roles); // 사용자 권한확인용 추가
 		Date now = new Date();
 
 		// Token 생성
@@ -98,5 +98,30 @@ public class JwtTokenProvider {
 		}
 	}
 
+	// jwt token을 복화하 하여 이름을 얻는다.
+	public String getUserNameFromJwt(String jwt){
+		return getClaims(jwt).getBody().getId();
+	}
+
+	private Jws<Claims> getClaims(String jwt){
+		try{
+			return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(jwt);
+		}catch (SignatureException e){
+			log.error("Invalid JWT signature");
+			throw e;
+		} catch (MalformedJwtException e){
+			log.error("Invalid JWT token");
+			throw e;
+		} catch (ExpiredJwtException e){
+			log.error("Expired JWT token");
+			throw e;
+		} catch (UnsupportedJwtException e){
+			log.error("Unsupported JWT token");
+			throw e;
+		} catch (IllegalArgumentException e){
+			log.error("JWT claims string is empty");
+			throw e;
+		}
+	}
 }
 
