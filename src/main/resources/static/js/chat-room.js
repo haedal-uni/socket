@@ -10,18 +10,18 @@ let stompClient = null;
 let username = localStorage.getItem('wschat.sender');
 let roomName = localStorage.getItem('wschat.roomName');
 let date = new Date();
+let token = localStorage.getItem('token');
 let ms;
 let colors = ['#2196F3', '#32c787', '#00BCD4', '#ff5652', '#ffc107', '#ff85af', '#FF9800', '#39bbb0'];
 $(".title").text(roomName + "님 ")
 $("#h2-chatRoomName").text(roomName + "님 고객센터 채팅방입니다.")
-
 function connect(event) {
 	if (username) {
 		usernamePage.classList.add('hidden');
 		chatPage.classList.remove('hidden');
 		let socket = new SockJS('/ws');
 		stompClient = Stomp.over(socket);
-		stompClient.connect({}, onConnected, onError);
+		stompClient.connect({Authorization:token}, onConnected, onError);
 	}
 	event.preventDefault();
 }
@@ -31,7 +31,7 @@ function onConnected() {
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
 	//(Object) subscribe(destination, callback, headers = {})
 
-	stompClient.send("/app/chat/addUser", {}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
+	stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
 	//(void) send(destination, headers = {}, body = '')
 
 	connectingElement.classList.add('hidden');
@@ -50,7 +50,7 @@ function sendMessage(event) {
 			roomId: roomId, sender: username, message: messageInput.value, type: 'TALK'
 		};
 		saveFile(chatMessage)
-		stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
+		stompClient.send("/app/chat/sendMessage", {Authorization:token}, JSON.stringify(chatMessage));
 		messageInput.value = '';
 	}
 	event.preventDefault(); // 계속 바뀌는 것을 방지함
@@ -150,7 +150,7 @@ function deleteRoom() {
 				alert(roomName + "님 채팅방이 5분뒤에 삭제됩니다.");
 				localStorage.removeItem('wschat.roomId')
 				localStorage.removeItem('wschat.roomName')
-				stompClient.send("/app/chat/end-chat", {}, JSON.stringify({roomId: roomId, sender: username, type: 'DELETE'}))
+				stompClient.send("/app/chat/end-chat", {Authorization:token}, JSON.stringify({roomId: roomId, sender: username, type: 'DELETE'}))
 				setTimeout(function() {
 					location.href = "/room/"
 				}, 2500);

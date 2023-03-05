@@ -45,6 +45,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	private String parseBearer(String token) {
-		return token.substring(BEARER.length());
+		return token.substring(BEARER.length()); //"Bearer "를 제외한 나머지
 	}
 }

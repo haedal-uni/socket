@@ -93,7 +93,7 @@ public class JwtTokenProvider {
 			return !claims.getBody().getExpiration().before(new Date());
 
 		} catch (Exception e) {
-			log.info("[validateToken] 토큰 유효 체크 예외 발생");
+			log.warn("[validateToken] 토큰 유효 체크 예외 발생");
 			return false;
 		}
 	}
