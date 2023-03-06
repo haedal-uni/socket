@@ -31,7 +31,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 			IOException {
 		OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 		Kakao kakao = UserMapper.of(oAuth2User); // kakao type으로 넣기
-		String token = jwtProvider.createToken(kakao.getNickname(), UserRole.USER.toString()); // string 으로 받는다
+		String token = jwtProvider.generateToken(kakao.getNickname()); // string 으로 받는다
 		response.sendRedirect(getRedirectionURI(token));
 	}
 

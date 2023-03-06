@@ -34,7 +34,6 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 		String accessToken = userRequest.getAccessToken().getTokenValue();
 
-		  OAuth2UserService oAuth2UserService1 = new DefaultOAuth2UserService(); //랑 무슨차이지
 		OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService  = new DefaultOAuth2UserService();
 		OAuth2User oAuth2User = oAuth2UserService.loadUser(userRequest);
 
