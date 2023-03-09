@@ -11,12 +11,12 @@ import java.util.Collection;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
-public class Kakao implements UserDetails {
+public class User implements UserDetails {
 	public static final String DEFAULT_PROFILE_IMG_PATH = "images/default-profile.png";
 
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Id
-	@Column(name = "kakao_id")
+	@Column(name = "user_id")
 	private Long id;
 	@Column(nullable = false)
 	private String nickname;
@@ -31,15 +31,17 @@ public class Kakao implements UserDetails {
 	@Column(nullable = false)
 	private boolean enabled = true; // 1
 
+	@Column()
+	private Long kakaoId;
+
 	private String profile = DEFAULT_PROFILE_IMG_PATH;
 
 	@Builder // UserMapper와 연결
-	public Kakao(Long id, String email, String password, UserRole role, String nickname) {
-		this.id = id;
+	public User(Long kakaoId, String email, String password, UserRole role, String nickname) {
+		this.kakaoId = kakaoId;
 		this.email = email;
 		this.password = password;
 		this.nickname = nickname;
-
 		this.role = role == null ? UserRole.USER : role;
 		this.profile = DEFAULT_PROFILE_IMG_PATH;
 	}

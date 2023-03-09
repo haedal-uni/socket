@@ -1,5 +1,7 @@
 package com.dalcho.adme.config.security;
 
+import com.dalcho.adme.model.User;
+import com.dalcho.adme.model.UserRole;
 import com.dalcho.adme.service.UserDetailService;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -38,12 +39,13 @@ public class JwtTokenProvider {
 		log.info("[init] JwtTokenProvider 내 secretKey 초기화 완료");
 	}
 
-	public String generateToken(String nickname) {
+	public String generateToken(User user) {
 		log.info("[createToken] 토큰 생성 시작");
 
 		// Claims 객체에 담아 Jwt Token 의 내용에 값 넣기, sub 속성에 값 추가(Uid 사용)
-		Claims claims = Jwts.claims().setSubject(nickname);
-		//claims.put("roles", roles); // 사용자 권한확인용 추가
+		Claims claims = Jwts.claims().setSubject(user.getNickname());
+		//claims.put("nickname", kakao.getNickname());
+		claims.put("roles", user.getRole().name()); // 사용자 권한확인용 추가
 		Date now = new Date();
 
 		// Token 생성
@@ -61,12 +63,17 @@ public class JwtTokenProvider {
 	// 필터에서 인증에 성공시 SecurityContextHolder 에 저장할 Authentication 생성
 	public Authentication getAuthentication(String token) {
 		log.info("[getAuthentication] 토큰 인증 정보 조회 시작");
-
-		UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUsername(token));
-
+		Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+		String role = claims.get("roles").toString();
+		User user = User.builder()
+				.nickname((String) claims.get("sub"))
+				.role(UserRole.of(role))
+				.build();
+		//UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUsername(token));
 		log.info("[getAuthentication] 토큰 인증 정보 조회 완료");
-
-		return new UsernamePasswordAuthenticationToken(userDetails, " ", userDetails.getAuthorities());
+		//System.out.println("userDetails : " + userDetails);
+		return new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
+		//return new UsernamePasswordAuthenticationToken(userDetails, " ", userDetails.getAuthorities());
 	}
 
 	public String getUsername(String token) {
@@ -74,7 +81,6 @@ public class JwtTokenProvider {
 
 		// 토큰을 생성할때 넣었던 sub 값 추출
 		String info = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
-
 		log.info("[getUsername] 토큰 기반 회원 구별 정보 추출 완료");
 
 		return info;
@@ -100,7 +106,7 @@ public class JwtTokenProvider {
 
 	// jwt token을 복화하 하여 이름을 얻는다.
 	public String getUserNameFromJwt(String jwt){
-		return getClaims(jwt).getBody().getId();
+		return getClaims(jwt).getBody().getSubject();
 	}
 
 	private Jws<Claims> getClaims(String jwt){

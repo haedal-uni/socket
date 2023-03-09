@@ -31,8 +31,6 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
 
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-		String accessToken = userRequest.getAccessToken().getTokenValue();
-
 		OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService  = new DefaultOAuth2UserService();
 		OAuth2User oAuth2User = oAuth2UserService.loadUser(userRequest);
 
@@ -46,9 +44,21 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
 		// OAuth2 로그인을 통해 가져온 OAuth2User의 attribute를 담아주는 of 메소드
 		OAuth2Attribute oAuth2Attribute = OAuth2Attribute.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
 
-		User user = userRepository.findByEmail(oAuth2Attribute.getEmail()).orElseGet(() -> {
+		/*
+		        if(provider.equals("google")){
+            oAuth2UserInfo = new GoogleUserInfo(oAuth2User.getAttributes());
+        }
+        else if(provider.equals("naver")){
+            oAuth2UserInfo = new NaverUserInfo(oAuth2User.getAttributes());
+        }
+        else if(provider.equals("kakao")){	//추가
+            oAuth2UserInfo = new KakaoUserInfo(oAuth2User.getAttributes());
+        }
+		 */
+		User user = userRepository.findByEmail(oAuth2Attribute.getEmail()).orElseGet(() -> { //authorization_request_not_found
 			log.info("[db save] : kakao social login");
-			User saved = UserMapper.of(oAuth2User);
+			User saved = UserMapper.ofKakao(oAuth2User);
+			log.info("saved : " + saved);
 			userRepository.save(saved);
 			return saved;
 		});
@@ -56,10 +66,9 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
 		if (!user.isEnabled()) throw new OAuth2AuthenticationException(new OAuth2Error("Not Found"), new UserNotFoundException());
 		Map<String, Object> memberAttribute = oAuth2Attribute.convertToMap(); // {name=kakao에서 설정한 이름, id=email, key=email, email=test@kakao.com, picture=null}
 		memberAttribute.put("id", user.getId());
-
 		httpSession.setAttribute("nickname", oAuth2Attribute.getName());
 		return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority(user.getRole()
-				.toString())), memberAttribute, "email");
+				.name())), memberAttribute, "email");
 	}
 }
 
