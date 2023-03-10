@@ -16,6 +16,7 @@ import java.util.Map;
 @Slf4j
 public class UserMapper {
 	public static User ofKakao(OAuth2User oAuth2User) {
+		log.info("ofKakao : " + oAuth2User);
 		var attributes = oAuth2User.getAttributes();
 		Map<String, Object> kakao_account = (Map<String, Object>) attributes.get("kakao_account");
 		Map<String, Object> properties = (Map<String, Object>) oAuth2User.getAttributes().get("properties");
@@ -31,11 +32,12 @@ public class UserMapper {
 	public static User of(OAuth2User oAuth2User) {// nickname과 role만 있으면 됨
 		var attributes = oAuth2User.getAttributes();
 		var authority = oAuth2User.getAuthorities();
+
 		String auth = authority.toString().replace("[","").replace("]","");
 		return User.builder()
 				.email((String) attributes.get("email"))
 				.password("")
-				.nickname( (String) attributes.get("nickname"))
+				.nickname( (String) attributes.get("name"))
 				.role(UserRole.of(auth))
 //                .picture((String)attributes.get("picture"))
 				.build();

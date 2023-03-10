@@ -41,10 +41,9 @@ public class JwtTokenProvider {
 
 	public String generateToken(User user) {
 		log.info("[createToken] 토큰 생성 시작");
-
 		// Claims 객체에 담아 Jwt Token 의 내용에 값 넣기, sub 속성에 값 추가(Uid 사용)
-		Claims claims = Jwts.claims().setSubject(user.getNickname());
-		claims.put("nickname", user.getNickname());
+		Claims claims = Jwts.claims().setSubject(user.getNickname());  // JWT payload 에 저장되는 정보단위
+//		claims.put("nickname", user.getNickname());
 		claims.put("roles", user.getRole().name()); // 사용자 권한확인용 추가
 		Date now = new Date();
 
@@ -66,11 +65,11 @@ public class JwtTokenProvider {
 		Claims claims = getClaims(token).getBody();
 		String role = claims.get("roles").toString();
 		User user = User.builder()
-				.nickname((String) claims.get("sub"))
+				.nickname(claims.getSubject())
 				.role(UserRole.of(role))
 				.build();
 		//UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUsername(token));
-		log.info("[getAuthentication] 토큰 인증 정보 조회 완료");
+		log.info("[getAuthentication] 토큰 인증 정보 조회 완료 : " + user);
 		//System.out.println("userDetails : " + userDetails);
 		return new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
 		//return new UsernamePasswordAuthenticationToken(userDetails, " ", userDetails.getAuthorities());
@@ -78,10 +77,9 @@ public class JwtTokenProvider {
 
 	public String getUsername(String token) { 	// jwt token을 복화하 하여 이름을 얻는다.
 		log.info("[getUsername] 토큰 기반 회원 구별 정보 추출");
-
 		// 토큰을 생성할때 넣었던 sub 값 추출
 		String info = getClaims(token).getBody().getSubject();
-		log.info("[getUsername] 토큰 기반 회원 구별 정보 추출 완료");
+		log.info("[getUsername] 토큰 기반 회원 구별 정보 추출 완료 : " + info);
 
 		return info;
 	}
