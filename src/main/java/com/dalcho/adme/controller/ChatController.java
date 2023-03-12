@@ -3,8 +3,10 @@ package com.dalcho.adme.controller;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.user.LoginInfo;
+import com.dalcho.adme.model.User;
 import com.dalcho.adme.service.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -13,10 +15,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class ChatController {
 	private final SimpMessagingTemplate template;
 	private final ChatServiceImpl chatService;
@@ -28,9 +30,8 @@ public class ChatController {
    */
 	@MessageMapping("/chat/sendMessage")
 	public void sendMessage(@Payload ChatMessage chatMessage, @Header("Authorization") String token) {
-		String nickname = jwtTokenProvider.getUserNameFromJwt(token);
-
-		System.out.println("nickname " + nickname);
+		String nickname = jwtTokenProvider.getUsername(token);
+		System.out.println("sendMessage의 nickname " + nickname);
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
@@ -45,8 +46,20 @@ public class ChatController {
 
 	@MessageMapping("/chat/user")
 	public LoginInfo getUserInfo() {
+		log.info("securitycontext : " + SecurityContextHolder.getContext());
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		log.info("authentication : " + authentication);
 		String name = authentication.getName();
-		return LoginInfo.builder().name(name).token(jwtTokenProvider.generateToken(name)).build();
+		log.info("chat/user 의 name " + name);
+		User user = User.builder()
+				.nickname(authentication.getName())
+				.build();
+		return LoginInfo.builder().name(name).token(jwtTokenProvider.generateToken(user)).build();
+	}
+
+	@MessageMapping("/chat/end-chat")
+	public void endChat(@Payload ChatMessage chatMessage) {
+		log.info("endchat");
+		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 }

@@ -1,9 +1,7 @@
 package com.dalcho.adme.controller;
 
-import com.dalcho.adme.model.KakaoUserInfo;
-import com.dalcho.adme.service.KaKaoService;
+import com.dalcho.adme.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,11 +11,11 @@ import javax.servlet.http.HttpSession;
 
 @Controller
 @RequiredArgsConstructor
-public class KakaoController {
-	private final KaKaoService kaKaoService;
+public class UserController {
+	private final UserService userService;
 
 	@GetMapping("/")
-	public String home(Model model, HttpSession httpSession, @AuthenticationPrincipal KakaoUserInfo kakaoUserInfo) {
+	public String home(Model model, HttpSession httpSession) {
 		model.addAttribute("nickname", httpSession.getAttribute("nickname"));
 		return "index";
 	}
@@ -26,7 +24,7 @@ public class KakaoController {
 	public ModelAndView logout(HttpSession session) {
 		ModelAndView mav = new ModelAndView();
 
-		kaKaoService.kakaoLogout((String)session.getAttribute("accessToken"));
+		userService.kakaoLogout((String)session.getAttribute("accessToken"));
 		session.removeAttribute("accessToken");
 		session.removeAttribute("username");
 		mav.setViewName("index");

@@ -1,7 +1,6 @@
 package com.dalcho.adme.oauth2;
 
-import com.dalcho.adme.model.Kakao;
-import com.dalcho.adme.model.UserRole;
+import com.dalcho.adme.model.User;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.oauth2.util.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +29,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws
 			IOException {
 		OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-		Kakao kakao = UserMapper.of(oAuth2User); // kakao type으로 넣기
-		String token = jwtProvider.generateToken(kakao.getNickname()); // string 으로 받는다
+		User user = UserMapper.of(oAuth2User); // kakao type으로 넣기
+		String token = jwtProvider.generateToken(user); // string 으로 받는다
 		response.sendRedirect(getRedirectionURI(token));
 	}
 

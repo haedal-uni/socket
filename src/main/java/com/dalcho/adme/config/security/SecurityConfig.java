@@ -22,6 +22,7 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http)throws Exception {
+		http.cors();
 		http.csrf().disable() // rest api 에서는 csrf 공격으로부터 안전하고 매번 api 요청으로부터 csrf 토큰을 받지 않아도 되어 disable로 설정
 				.sessionManagement(); // Rest Api 기반 애플리케이션 동작 방식 설정
 //				.sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않음
@@ -30,7 +31,7 @@ public class SecurityConfig {
 //					.exceptionHandling().authenticationEntryPoint(new RestAuthenticationEntryPoint())// 인증,인가가 되지 않은 요청 시 발생
 //					.and()
 		http.authorizeRequests()
-				.antMatchers("/css/**", "/login/**", "/oauth2/**").permitAll()
+				.antMatchers("/css/**", "/oauth2/**", "/user/**").permitAll()
 
 				.anyRequest().authenticated();
 
