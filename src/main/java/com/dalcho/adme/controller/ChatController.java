@@ -1,19 +1,20 @@
 package com.dalcho.adme.controller;
 
+import com.dalcho.adme.config.RedisConfig;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
-import com.dalcho.adme.dto.user.LoginInfo;
-import com.dalcho.adme.model.User;
 import com.dalcho.adme.service.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -31,34 +32,38 @@ public class ChatController {
 	@MessageMapping("/chat/sendMessage")
 	public void sendMessage(@Payload ChatMessage chatMessage, @Header("Authorization") String token) {
 		String nickname = jwtTokenProvider.getUsername(token);
-		System.out.println("sendMessage의 nickname " + nickname);
+		chatMessage.setSender(nickname);
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
 	@MessageMapping("/chat/addUser")
-	public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+	public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, @Header("Authorization") String token) {
 		//socket session 에 sender, roomId 저장
-		headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+		//headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
 		headerAccessor.getSessionAttributes().put("roomId", chatMessage.getRoomId());
+
+		String nickname = jwtTokenProvider.getUsername(token);
+		chatMessage.setSender(nickname);
 		chatService.connectUser("Connect", chatMessage.getRoomId());
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
 	@MessageMapping("/chat/user")
-	public LoginInfo getUserInfo() {
-		log.info("securitycontext : " + SecurityContextHolder.getContext());
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		log.info("authentication : " + authentication);
-		String name = authentication.getName();
-		log.info("chat/user 의 name " + name);
-		User user = User.builder()
-				.nickname(authentication.getName())
-				.build();
-		return LoginInfo.builder().name(name).token(jwtTokenProvider.generateToken(user)).build();
+	public void getUserInfo(@Header("Authorization") String token) {
+//		String nickname = jwtTokenProvider.getUsername(token);
+//		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//		String name = authentication.getName();
+//		log.info("chat user 의 name " + name);
+//		User user = User.builder()
+//				.nickname(authentication.getName())
+//				.build();
+//		return LoginInfo.builder().name(name).token(jwtTokenProvider.generateToken(user)).build();
 	}
 
 	@MessageMapping("/chat/end-chat")
-	public void endChat(@Payload ChatMessage chatMessage) {
+	public void endChat(@Payload ChatMessage chatMessage, @Header("Authorization") String token) {
+		String nickname = jwtTokenProvider.getUsername(token);
+		chatMessage.setSender(nickname);
 		log.info("endchat");
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}

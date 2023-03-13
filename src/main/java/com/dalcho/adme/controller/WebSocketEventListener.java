@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -30,17 +31,22 @@ public class WebSocketEventListener {
 	@EventListener
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-		String username = (String) headerAccessor.getSessionAttributes().get("username");
+		OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) headerAccessor.getHeader("simpUser");
+		String nickname = (String) token.getPrincipal().getAttributes().get("name");
+		String role = token.getPrincipal().getAuthorities().toString().replace("[","").replace("]","");
+
+		//String username = (String) headerAccessor.getSessionAttributes().get("username");
+
 		String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
 		if (roomId.startsWith("aaaa")) {
 			logger.info("User Disconnected - random");
 			String sessionId = (String) headerAccessor.getHeader("simpSessionId");
-			everyChatService.disconnectUser(sessionId, roomId, username);
+			everyChatService.disconnectUser(sessionId, roomId, nickname);
 		} else {
-			logger.info("User Disconnected : " + username);
+			logger.info("User Disconnected : " + nickname);
 			ChatMessage chatMessage = new ChatMessage();
 			chatMessage.setType(ChatMessage.MessageType.LEAVE);
-			chatMessage.setSender(username);
+			chatMessage.setSender(nickname);
 			chatMessage.setRoomId(roomId);
 			chatService.connectUser("Disconnect", roomId);
 			sendingOperations.convertAndSend("/topic/public/" + roomId, chatMessage);

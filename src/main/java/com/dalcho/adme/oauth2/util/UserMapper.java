@@ -35,7 +35,7 @@ public class UserMapper {
 
 		String auth = authority.toString().replace("[","").replace("]","");
 		return User.builder()
-				.email((String) attributes.get("email"))
+				//.email((String) attributes.get("email"))
 				.password("")
 				.nickname( (String) attributes.get("name"))
 				.role(UserRole.of(auth))
