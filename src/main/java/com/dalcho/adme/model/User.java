@@ -55,6 +55,11 @@ public class User implements UserDetails {
 		this.profile = DEFAULT_PROFILE_IMG_PATH;
 	}
 
+	public void addChat(Chat chat){
+		chat.addUser(this);
+		this.chat = chat;
+	}
+
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return null;

@@ -23,12 +23,17 @@ public class Chat {
 	@JsonIgnore
 	@ToString.Exclude
 	@JoinColumn(name = "user_id", nullable = false)
-	private User user;
+	private User users;
 
 
 	@Builder
 	public Chat(String roomId, User user) {
 		this.roomId = roomId;
-		this.user = user;
+		this.users = user;
+	}
+
+	public void addUser(User user){
+		user.addChat(this);
+		this.users = user;
 	}
 }
