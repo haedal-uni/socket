@@ -1,17 +1,26 @@
 //localStorage.removeItem('wschat.roomId')
+let username = localStorage.getItem('wschat.sender');
+
+function emptyUsername(token){
+	$.ajax({
+		type: "GET", url: `/find-nickname/` + token, contentType: false, processData: false, success: function(response) {
+			username = response;
+			localStorage.setItem('wschat.sender', username);
+			showList(username)
+		}
+	})
+}
 
 function findToken(){
 	let urlSearch = new URLSearchParams(location.search);
 	let token = urlSearch.get('token')
 	if(token!=null && token !== localStorage.getItem('token')){
 		localStorage.setItem('token', token);
+		emptyUsername(token)
 	}
 }
 
 function createRoom() {
-	let name = $("#header-title-login-user").text().replace(/\n|\r|\s*/g, "");
-	let username = name.replace("님", "");
-	localStorage.setItem('wschat.sender', username);
 	if ("" === username) {
 		alert("로그인해주세요");
 		return location.href = "/user/login";
@@ -30,8 +39,6 @@ function createRoom() {
 }
 
 function enterRoom(roomId) {
-	let name = $("#header-title-login-user").text().replace(/\n|\r|\s*/g, "");
-	let username = name.replace("님", "");
 	let roomName = document.getElementsByClassName(roomId)[0].textContent;
 	localStorage.setItem('wschat.roomName', roomName);
 
@@ -43,9 +50,11 @@ function enterRoom(roomId) {
 }
 
 $(document).ready(function() {
-	setInterval(showList(),1000)
 	alarmSubscribe();
 	findToken();
+	if (username){
+		showList(username)
+	}
 });
 
 function alarmSubscribe() {
@@ -56,9 +65,7 @@ function alarmSubscribe() {
 	}
 }
 
-function showList() {
-	let name = $("#header-title-login-user").text().replace(/\n|\r|\s*/g, "");
-	let username = name.replace("님", "");
+function showList(username) {
 	if (username === "admin") {
 		$.ajax({
 			type: "GET", url: `/rooms`, contentType: false, processData: false, success: function(response) {
@@ -78,7 +85,7 @@ function showList() {
 			}
 		})
 		return;
-	} else if (!username == "") {
+	} else if (username != null) {
 		$.ajax({
 			type: "GET", url: `/room/one/` + username, contentType: false, processData: false, success: function(response) {
 				console.log("채팅방 불러오기 (one) : " + JSON.stringify(response))

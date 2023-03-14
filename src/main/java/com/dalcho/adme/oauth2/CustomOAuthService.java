@@ -55,20 +55,24 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
             oAuth2UserInfo = new KakaoUserInfo(oAuth2User.getAttributes());
         }
 		 */
-		User user = userRepository.findByEmail(oAuth2Attribute.getEmail()).orElseGet(() -> { //authorization_request_not_found
+		int leftLimit = 48; // numeral '0'
+		int rightLimit = 122; // letter 'z'
+		int targetStringLength = 10;
+		Random random = new Random();
+		String nickname = random.ints(leftLimit, rightLimit + 1).filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+				.limit(targetStringLength).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
+		User user = userRepository.findByEmail(oAuth2Attribute.getEmail()).orElseGet(() -> {
 			log.info("[db save] : kakao social login");
-			User saved = UserMapper.ofKakao(oAuth2User);
+			User saved = UserMapper.ofKakao(oAuth2User, nickname);
 			log.info("saved : " + saved);
 			userRepository.save(saved);
 			return saved;
 		});
-
 		if (!user.isEnabled()) throw new OAuth2AuthenticationException(new OAuth2Error("Not Found"), new UserNotFoundException());
 		Map<String, Object> memberAttribute = oAuth2Attribute.convertToMap(); // {name=kakao에서 설정한 이름, id=email, key=email, email=test@kakao.com, picture=null}
 		memberAttribute.put("id", user.getId());
-		httpSession.setAttribute("nickname", oAuth2Attribute.getName());
-		return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority(user.getRole()
-				.name())), memberAttribute, "email");
+		//httpSession.setAttribute("nickname", oAuth2Attribute.getName());
+		return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority(user.getRole().name())), memberAttribute, "email");
 	}
 }
 

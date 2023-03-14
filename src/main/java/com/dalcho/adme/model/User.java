@@ -1,5 +1,6 @@
 package com.dalcho.adme.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +20,8 @@ public class User implements UserDetails {
 	@Column(name = "user_id")
 	private Long id;
 	@Column(nullable = false)
+	private String username;
+	@Column(nullable = false)
 	private String nickname;
 	@Column(nullable = false)
 	private String password;
@@ -36,11 +39,17 @@ public class User implements UserDetails {
 
 	private String profile = DEFAULT_PROFILE_IMG_PATH;
 
+	@OneToOne(mappedBy = "user", orphanRemoval = true, cascade = CascadeType.ALL) //고아 객체 제거 기능을 활성화
+	@JsonIgnore
+	@ToString.Exclude
+	private Chat chat;
+
 	@Builder // UserMapper와 연결
-	public User(Long kakaoId, String email, String password, UserRole role, String nickname) {
+	public User(Long kakaoId, String email, String password, UserRole role, String username, String nickname) {
 		this.kakaoId = kakaoId;
 		this.email = email;
 		this.password = password;
+		this.username = username;
 		this.nickname = nickname;
 		this.role = role == null ? UserRole.USER : role;
 		this.profile = DEFAULT_PROFILE_IMG_PATH;

@@ -75,7 +75,7 @@ public class JwtTokenProvider {
 		//return new UsernamePasswordAuthenticationToken(userDetails, " ", userDetails.getAuthorities());
 	}
 
-	public String getUsername(String token) { 	// jwt token을 복화하 하여 이름을 얻는다.
+	public String getNickname(String token) { 	// jwt token을 복화하 하여 이름을 얻는다.
 		log.info("[getUsername] 토큰 기반 회원 구별 정보 추출");
 		// 토큰을 생성할때 넣었던 sub 값 추출
 		String info = getClaims(token).getBody().getSubject();

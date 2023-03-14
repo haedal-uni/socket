@@ -6,8 +6,11 @@ import com.dalcho.adme.dto.ChatRoomMap;
 import com.dalcho.adme.exception.CustomException;
 import com.dalcho.adme.exception.notfound.ChatRoomNotFoundException;
 import com.dalcho.adme.exception.notfound.FileNotFoundException;
+import com.dalcho.adme.exception.notfound.UserNotFoundException;
 import com.dalcho.adme.model.Chat;
+import com.dalcho.adme.model.User;
 import com.dalcho.adme.repository.ChatRepository;
+import com.dalcho.adme.repository.UserRepository;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,7 @@ public class ChatServiceImpl {
 	private Map<String, Integer> connectUsers;
 	@Value("${spring.servlet.multipart.location}")
 	private String chatUploadLocation;
+	private final UserRepository userRepository;
 
 	@PostConstruct // @PostConstruct는 의존성 주입이 이루어진 후 초기화를 수행하는 메서드
 	private void setUp() { // 안그러면 NullPointerException
@@ -60,7 +64,8 @@ public class ChatServiceImpl {
 		List<Chat> all = chatRepository.findAll();
 		try {
 			for (int i = 0; i < all.size(); i++) {
-				chatRoomDtos.add(ChatRoomDto.of(all.get(i)));
+				User user = userRepository.findById(all.get(i).getIdx()).orElseThrow(UserNotFoundException::new);
+				chatRoomDtos.add(ChatRoomDto.of(all.get(i), user));
 			}
 		} catch (NullPointerException e) {
 			log.info(" [현재 채팅방 db 없음!] " + e);
@@ -75,24 +80,26 @@ public class ChatServiceImpl {
 
 	//채팅방 생성
 	public ChatRoomDto createRoom(String nickname) {
+		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
 		ChatRoomDto chatRoom = new ChatRoomDto();
-		if (!chatRepository.existsByNickname(nickname)) {
+		if (!chatRepository.existsByUserId(user.getId())) {
 			chatRoom = ChatRoomDto.create(nickname);
 			ChatRoomMap.getInstance().getChatRooms().put(chatRoom.getRoomId(), chatRoom);
-			Chat chat = new Chat(chatRoom.getRoomId(), nickname);
+			Chat chat = new Chat(chatRoom.getRoomId(), user);
 			log.info("Service chat :  " + chat);
 			chatRepository.save(chat);
 			return chatRoom;
 		} else {
-			Optional<Chat> byNickname = chatRepository.findByNickname(nickname);
-			return ChatRoomDto.of(byNickname.get());
+			Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
+			return ChatRoomDto.of(findChat.get(), user);
 		}
 	}
 
 	//채팅방 하나 불러오기
 	public ChatRoomDto roomOne(String nickname) throws CustomException {
-		Chat chat = chatRepository.findByNickname(nickname).orElseThrow(ChatRoomNotFoundException::new);
-		return ChatRoomDto.of(chat);
+		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
+		Chat chat = chatRepository.findByUserId(user.getId()).orElseThrow(ChatRoomNotFoundException::new);
+		return ChatRoomDto.of(chat, user);
 	}
 
 	public void deleteRoom(String roomId) {

@@ -1,8 +1,10 @@
 package com.dalcho.adme.oauth2;
 
+import com.dalcho.adme.exception.notfound.UserNotFoundException;
 import com.dalcho.adme.model.User;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.oauth2.util.UserMapper;
+import com.dalcho.adme.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,7 @@ import java.io.IOException;
 
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 	private final JwtTokenProvider jwtProvider;
+	private final UserRepository userRepository;
 	@Value("${oauth.redirection.url}")
 	private String REDIRECTION_URL;
 
@@ -29,7 +32,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws
 			IOException {
 		OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-		User user = UserMapper.of(oAuth2User); // kakao type으로 넣기
+		String email = (String) oAuth2User.getAttributes().get("email");
+		User userInfo = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
+		String nickname = userInfo.getNickname();
+		User user = UserMapper.of(oAuth2User, nickname); // kakao type으로 넣기
 		String token = jwtProvider.generateToken(user); // string 으로 받는다
 		response.sendRedirect(getRedirectionURI(token));
 	}

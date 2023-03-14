@@ -15,14 +15,20 @@ public class Chat {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "chat_id")
 	private Long idx;
-	@Column(nullable = false)
-	private String nickname;
+
 	@Column(nullable = false)
 	private String roomId;
 
+	@OneToOne(fetch = FetchType.LAZY)
+	@JsonIgnore
+	@ToString.Exclude
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
+
+
 	@Builder
-	public Chat(String roomId, String nickname) {
+	public Chat(String roomId, User user) {
 		this.roomId = roomId;
-		this.nickname = nickname;
+		this.user = user;
 	}
 }
