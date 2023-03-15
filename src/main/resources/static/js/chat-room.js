@@ -19,9 +19,6 @@ if (!username){
 	emptyUsername()
 }
 
-// function findNickname(){
-// 	stompClient.send("/app/chat/user", {Authorization:token});
-// }
 function emptyUsername(){
 	$.ajax({
 		type: "GET", url: `/find-nickname/` + token, contentType: false, processData: false, success: function(response) {
@@ -48,8 +45,8 @@ function onConnected() {
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
 	//(Object) subscribe(destination, callback, headers = {})
 
-	stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
-	//stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, type: 'JOIN'}))
+	//stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
+	stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, type: 'JOIN'}))
 	//(void) send(destination, headers = {}, body = '')
 	//findNickname()
 	connectingElement.classList.add('hidden');
