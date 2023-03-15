@@ -1,6 +1,7 @@
 package com.dalcho.adme.dto;
 
 import com.dalcho.adme.model.Chat;
+import com.dalcho.adme.model.User;
 import lombok.*;
 
 import java.util.UUID;
@@ -25,10 +26,10 @@ public class ChatRoomDto { // 일반 crud에서 쓰임
 		return room;
 	}
 
-	public static ChatRoomDto of(Chat chat) {
+	public static ChatRoomDto of(Chat chat, User user) {
 		return ChatRoomDto.builder().
 				roomId(chat.getRoomId())
-				.nickname(chat.getNickname())
+				.nickname(user.getNickname())
 				.build();
 	}
 }

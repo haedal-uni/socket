@@ -30,19 +30,14 @@ public class ChatController {
     위와 같이 회원 대화명(id)를 조회하는 코드를 삽입하여 유효성이 체크될 수 있도록 한다.
    */
 	@MessageMapping("/chat/sendMessage")
-	public void sendMessage(@Payload ChatMessage chatMessage, @Header("Authorization") String token) {
-		String nickname = jwtTokenProvider.getUsername(token);
-		chatMessage.setSender(nickname);
+	public void sendMessage(@Payload ChatMessage chatMessage) {
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
 	@MessageMapping("/chat/addUser")
 	public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, @Header("Authorization") String token) {
-		//socket session 에 sender, roomId 저장
-		//headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
 		headerAccessor.getSessionAttributes().put("roomId", chatMessage.getRoomId());
-
-		String nickname = jwtTokenProvider.getUsername(token);
+		String nickname = jwtTokenProvider.getNickname(token);
 		chatMessage.setSender(nickname);
 		chatService.connectUser("Connect", chatMessage.getRoomId());
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
@@ -59,11 +54,8 @@ public class ChatController {
 //				.build();
 //		return LoginInfo.builder().name(name).token(jwtTokenProvider.generateToken(user)).build();
 	}
-
 	@MessageMapping("/chat/end-chat")
-	public void endChat(@Payload ChatMessage chatMessage, @Header("Authorization") String token) {
-		String nickname = jwtTokenProvider.getUsername(token);
-		chatMessage.setSender(nickname);
+	public void endChat(@Payload ChatMessage chatMessage) {
 		log.info("endchat");
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}

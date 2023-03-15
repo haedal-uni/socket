@@ -20,7 +20,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final String BEARER = "Bearer ";
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-		String token = request.getHeader(HttpHeaders.AUTHORIZATION);
+		String token = request.getHeader("Authorization");
 		request.setAttribute("existsToken", true); // 토큰 존재 여부 초기화
 
 		if (isEmptyToken(token)) request.setAttribute("existsToken", false); // 토큰이 없는 경우 false로 변경

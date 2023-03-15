@@ -71,7 +71,7 @@ public class ChatRoomController {
 
 	@GetMapping("/find-nickname/{token}")
 	public String findNickname(@PathVariable String token){
-		return jwtTokenProvider.getUsername(token);
+		return jwtTokenProvider.getNickname(token);
 	}
 
 	@GetMapping("/room/subscribe")
