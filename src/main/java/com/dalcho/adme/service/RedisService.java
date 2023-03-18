@@ -32,13 +32,31 @@ public class RedisService {
 		Redis redis = new Redis(chatMessage.getSender(), chatMessage.getRoomId(), hours);
 		Redis save = redisRepository.save(redis);
 	}
-	public String getRedis(String key){
-		Redis byNickname = redisRepository.findByNickname(key);
+	public String getRedis(String nickname){
+		Redis byNickname = redisRepository.findByNickname(nickname);
 		return RedisResponseDto.of(byNickname).getRoomId();
 	}
 
-	public void deleteRedis(String key){
-		redisTemplate.delete(key);
+	public void addToken(String email, String accessToken){
+		Redis redis = new Redis();
+		redis.setEmail(email);
+		redis.setAccessToken(accessToken);
+		Redis save = redisRepository.save(redis);
+		System.out.println("accessToken save : " + save);
+	}
+
+	public String getToken(String email){
+		Redis byEmail = redisRepository.findByEmail(email);
+		return byEmail.getAccessToken();
+	}
+
+	public void deleteRedis(String nickname){
+		Redis byNickname = redisRepository.findByNickname(nickname);
+		redisRepository.delete(byNickname);
+	}
+	public void deleteToken(String email){
+		Redis byEmail = redisRepository.findByEmail(email);
+		redisRepository.delete(byEmail);
 	}
 
 
