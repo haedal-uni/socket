@@ -21,7 +21,6 @@ public class ChatController {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisService redisService;
 	private final Long hours = 10L;
-
 	/*
     websocket을 통해 서버에 메세지가 send 되었을 떄도 jwt token 유효성 검증이 필요하다.
     위와 같이 회원 대화명(id)를 조회하는 코드를 삽입하여 유효성이 체크될 수 있도록 한다.
@@ -35,9 +34,8 @@ public class ChatController {
 	public void addUser(@Payload ChatMessage chatMessage, @Header("Authorization") String token) {
 		String nickname = jwtTokenProvider.getNickname(token);
 		chatMessage.setSender(nickname);
-		redisService.addRedis(chatMessage);
-		System.out.println("chatMessage : " + chatMessage.getSender() + " , " + chatMessage.getRoomId());
-		log.info("redis : {}", redisService.getRedis(chatMessage.getSender()));
+		redisService.addRedis(chatMessage, hours);
+		log.info("redis roomId : {}", redisService.getRedis(chatMessage.getSender()));
 		chatService.connectUser("Connect", chatMessage.getRoomId());
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}

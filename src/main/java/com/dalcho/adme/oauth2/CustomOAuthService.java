@@ -7,7 +7,6 @@ import com.dalcho.adme.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -17,7 +16,6 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpSession;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
@@ -27,7 +25,6 @@ import java.util.Random;
 @Slf4j
 public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 	private final UserRepository userRepository;
-	private final HttpSession httpSession;
 
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -71,7 +68,7 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
 		if (!user.isEnabled()) throw new OAuth2AuthenticationException(new OAuth2Error("Not Found"), new UserNotFoundException());
 		Map<String, Object> memberAttribute = oAuth2Attribute.convertToMap(); // {name=kakao에서 설정한 이름, id=email, key=email, email=test@kakao.com, picture=null}
 		memberAttribute.put("id", user.getId());
-		//httpSession.setAttribute("nickname", oAuth2Attribute.getName());
+
 		return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority(user.getRole().name())), memberAttribute, "email");
 	}
 }

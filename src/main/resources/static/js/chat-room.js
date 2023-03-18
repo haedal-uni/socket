@@ -7,7 +7,7 @@ let messageArea = document.querySelector('#messageArea');
 let connectingElement = document.querySelector('.connecting');
 let endChatRoom = document.querySelector('#endChat');
 let stompClient = null;
-let username = localStorage.getItem('wschat.sender');
+let nickname = localStorage.getItem('wschat.sender');
 let roomName = localStorage.getItem('wschat.roomName');
 let date = new Date();
 let token = localStorage.getItem('token');
@@ -15,21 +15,21 @@ let ms;
 let colors = ['#2196F3', '#32c787', '#00BCD4', '#ff5652', '#ffc107', '#ff85af', '#FF9800', '#39bbb0'];
 $(".title").text(roomName + "님 ")
 $("#h2-chatRoomName").text(roomName + "님 고객센터 채팅방입니다.")
-if (!username){
+if (!nickname){
 	emptyUsername()
 }
 
 function emptyUsername(){
 	$.ajax({
 		type: "GET", url: `/find-nickname/` + token, contentType: false, processData: false, success: function(response) {
-			username = response;
-			localStorage.setItem('wschat.sender', username);
+			nickname = response;
+			localStorage.setItem('wschat.sender', nickname);
 		}
 	})
 }
 
 function connect(event) {
-	if (username) {
+	if (nickname) {
 		usernamePage.classList.add('hidden');
 		chatPage.classList.remove('hidden');
 		let socket = new SockJS('/ws');
@@ -45,7 +45,7 @@ function onConnected() {
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
 	//(Object) subscribe(destination, callback, headers = {})
 
-	//stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
+	//stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, sender: nickname, type: 'JOIN'}))
 	stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, type: 'JOIN'}))
 	//(void) send(destination, headers = {}, body = '')
 	//findNickname()
@@ -62,7 +62,7 @@ function sendMessage(event) {
 	let messageContent = messageInput.value.trim();
 	if (messageContent && stompClient) {
 		let chatMessage = {
-			roomId: roomId, sender:username, message: messageInput.value, type: 'TALK'
+			roomId: roomId, sender:nickname, message: messageInput.value, type: 'TALK'
 		};
 		saveFile(chatMessage)
 		stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
@@ -161,7 +161,7 @@ function deleteRoom() {
 				ms = date.getHours() + '시 ' + date.getMinutes() + '분  ' + date.getSeconds();
 			},
 			success: function(response) {
-				saveFile({roomId: roomId, sender: username, type: 'DELETE'})
+				saveFile({roomId: roomId, sender: nickname, type: 'DELETE'})
 				alert(roomName + "님 채팅방이 5분뒤에 삭제됩니다.");
 				localStorage.removeItem('wschat.roomId')
 				localStorage.removeItem('wschat.roomName')
@@ -175,7 +175,7 @@ function deleteRoom() {
 	}
 }
 
-if (username == "admin") {
+if (nickname == "admin") {
 	endChatRoom.classList.remove('hidden');
 }
 
@@ -197,7 +197,7 @@ messageForm.addEventListener('submit', sendMessage, true)
 
 function alarmMessage(){
 	document.querySelector('#messageForm').addEventListener("submit", () => {
-		fetch(`/room/publish?sender=${username}&roomId=${roomId}`);
+		fetch(`/room/publish?sender=${nickname}&roomId=${roomId}`);
 	});
 }
 alarmMessage()

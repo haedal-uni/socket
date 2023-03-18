@@ -15,18 +15,16 @@ public class UserController {
 	private final UserService userService;
 
 	@GetMapping("/")
-	public String home(Model model, HttpSession httpSession) {
-		model.addAttribute("nickname", httpSession.getAttribute("nickname"));
+	public String home(Model model) {
+		model.addAttribute("nickname", "");
 		return "index";
 	}
 
-	@GetMapping(value="/logout")
+	@GetMapping(value="/user/logout")
 	public ModelAndView logout(HttpSession session) {
 		ModelAndView mav = new ModelAndView();
-
 		userService.kakaoLogout((String)session.getAttribute("accessToken"));
 		session.removeAttribute("accessToken");
-		session.removeAttribute("username");
 		mav.setViewName("index");
 		return mav;
 	}

@@ -1,12 +1,21 @@
 package com.dalcho.adme.controller;
 
+import com.dalcho.adme.config.RedisConfig;
 import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.exception.notfound.UserNotFoundException;
+import com.dalcho.adme.model.User;
+import com.dalcho.adme.repository.UserRepository;
 import com.dalcho.adme.service.ChatServiceImpl;
 import com.dalcho.adme.service.EveryChatServiceImpl;
+import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -22,7 +31,9 @@ public class WebSocketEventListener {
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
 	private final EveryChatServiceImpl everyChatService;
 	private final ChatServiceImpl chatService;
-
+	private final RedisService redisService;
+	private final RedisTemplate<String, String> redisTemplate;
+	private final UserRepository userRepository;
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
 		logger.info("Received a new web socket connection  ");
@@ -32,12 +43,11 @@ public class WebSocketEventListener {
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) headerAccessor.getHeader("simpUser");
-		String nickname = (String) token.getPrincipal().getAttributes().get("name");
+		String email = (String) token.getPrincipal().getAttributes().get("email");
+		User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
+		String nickname = user.getNickname();
 		String role = token.getPrincipal().getAuthorities().toString().replace("[","").replace("]","");
-
-		//String username = (String) headerAccessor.getSessionAttributes().get("username");
-
-		String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
+		String roomId = redisService.getRedis(nickname);
 		if (roomId.startsWith("aaaa")) {
 			logger.info("User Disconnected - random");
 			String sessionId = (String) headerAccessor.getHeader("simpSessionId");
