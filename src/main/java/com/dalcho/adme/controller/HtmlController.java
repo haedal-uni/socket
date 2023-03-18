@@ -49,4 +49,9 @@ public class HtmlController {
 		return "error";
 	}
 
+	@GetMapping("/adme")
+	public String adme() {
+		return "adme";
+	}
+
 }

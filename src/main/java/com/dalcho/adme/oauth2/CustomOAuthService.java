@@ -4,6 +4,7 @@ import com.dalcho.adme.exception.notfound.UserNotFoundException;
 import com.dalcho.adme.model.User;
 import com.dalcho.adme.oauth2.util.UserMapper;
 import com.dalcho.adme.repository.UserRepository;
+import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,10 +27,12 @@ import java.util.Random;
 public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 	private final UserRepository userRepository;
 
+	private final RedisService redisService;
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 		OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService  = new DefaultOAuth2UserService();
 		OAuth2User oAuth2User = oAuth2UserService.loadUser(userRequest);
+		String accessToken = userRequest.getAccessToken().getTokenValue();
 
 		// OAuth2 서비스 id (구글, 카카오, 네이버)
 		String registrationId = userRequest.getClientRegistration().getRegistrationId(); // kakao
@@ -65,6 +68,7 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
 			userRepository.save(saved);
 			return saved;
 		});
+		redisService.addToken(user.getEmail(), accessToken);
 		if (!user.isEnabled()) throw new OAuth2AuthenticationException(new OAuth2Error("Not Found"), new UserNotFoundException());
 		Map<String, Object> memberAttribute = oAuth2Attribute.convertToMap(); // {name=kakao에서 설정한 이름, id=email, key=email, email=test@kakao.com, picture=null}
 		memberAttribute.put("id", user.getId());

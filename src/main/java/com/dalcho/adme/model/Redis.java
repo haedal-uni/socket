@@ -11,12 +11,25 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @RedisHash("chatRoom")
 @ToString
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
+//@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Redis {
 	@Id
 	private String id;
 	@Indexed // 필드 값으로 데이터 찾을 수 있게 하는 어노테이션(findByAccessToken)
 	private String nickname;
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
+	}
+
+	@Indexed
+	private String email;
+	private String accessToken;
 	private String roomId;
 	@TimeToLive(unit = TimeUnit.HOURS)
 	private Long expiration;
