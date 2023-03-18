@@ -1,9 +1,10 @@
 package com.dalcho.adme.controller;
 
 import com.dalcho.adme.dto.ChatMessage;
-import com.dalcho.adme.dto.EveryChatResponse;
 import com.dalcho.adme.dto.ChatRoomMap;
+import com.dalcho.adme.dto.EveryChatResponse;
 import com.dalcho.adme.service.EveryChatServiceImpl;
+import com.dalcho.adme.service.RedisService;
 import com.dalcho.adme.util.ServletUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,8 @@ import org.springframework.web.context.request.async.DeferredResult;
 public class EveryChatController {
 	private final EveryChatServiceImpl everyChatService;
 	private final SimpMessagingTemplate template;
+	private final RedisService redisService;
+	private final Long hours = 10L;
 
 	@GetMapping("/join")
 	public DeferredResult<EveryChatResponse> everyRoomChat() {
@@ -56,8 +59,7 @@ public class EveryChatController {
 
 	@MessageMapping("every-chat/addUser")
 	public void everyChatAddUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor){
-		headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
-		headerAccessor.getSessionAttributes().put("roomId", chatMessage.getRoomId());
+		redisService.addRedis(chatMessage, hours);
 		String sessionId = (String) headerAccessor.getHeader("simpSessionId");
 		everyChatService.connectUser(chatMessage.getRoomId(), sessionId);
 		template.convertAndSend("/every-chat/" + chatMessage.getRoomId(), chatMessage);

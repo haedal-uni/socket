@@ -94,7 +94,7 @@ public class ChatRoomController {
 				ChatMessage chatMessage = chatService.chatAlarm(sender, roomId);
 				emitter.send(chatMessage, MediaType.APPLICATION_JSON);
 			} catch (Exception e) {
-				log.error("[error]  " + e);
+				log.error("publish() : [error]  " + e);
 				deadIds.add(id);
 				log.warn("disconnected id : {}", id);
 			}

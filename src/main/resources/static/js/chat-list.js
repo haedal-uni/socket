@@ -52,8 +52,12 @@ function enterRoom(roomId) {
 $(document).ready(function() {
 	alarmSubscribe();
 	findToken();
+	let username = localStorage.getItem('wschat.sender');
 	if (username){
 		showList(username)
+	} else{
+		findToken()
+		setInterval(showList(username), 1000)
 	}
 });
 
