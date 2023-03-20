@@ -1,25 +1,6 @@
 //localStorage.removeItem('wschat.roomId')
 let username = localStorage.getItem('wschat.sender');
 
-function emptyUsername(token){
-	$.ajax({
-		type: "GET", url: `/find-nickname/` + token, contentType: false, processData: false, success: function(response) {
-			username = response;
-			localStorage.setItem('wschat.sender', username);
-			showList(username)
-		}
-	})
-}
-
-function findToken(){
-	let urlSearch = new URLSearchParams(location.search);
-	let token = urlSearch.get('token')
-	if(token!=null && token !== localStorage.getItem('token')){
-		localStorage.setItem('token', token);
-		emptyUsername(token)
-	}
-}
-
 function createRoom() {
 	if ("" === username) {
 		alert("로그인해주세요");
@@ -51,12 +32,10 @@ function enterRoom(roomId) {
 
 $(document).ready(function() {
 	alarmSubscribe();
-	findToken();
 	let username = localStorage.getItem('wschat.sender');
 	if (username){
 		showList(username)
 	} else{
-		findToken()
 		setInterval(showList(username), 1000)
 	}
 });
