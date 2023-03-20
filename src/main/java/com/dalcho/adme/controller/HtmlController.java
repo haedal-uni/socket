@@ -54,4 +54,9 @@ public class HtmlController {
 		return "adme";
 	}
 
+	@GetMapping("/taste")
+	public String taste(){
+		return "taste";
+	}
+
 }
