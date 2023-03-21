@@ -11,9 +11,9 @@
 	<script src="/webjars/sockjs-client/sockjs.min.js"></script>
 	<script src="/webjars/stomp-websocket/stomp.min.js"></script>
 	<script src="/webjars/bootstrap/4.3.1/dist/js/bootstrap.min.js"></script>
+
 </head>
 <body>
-
 <button id="openChat" class="btn btn-special fixed" onclick="openChat()">
 	Chat
 	<div class="badge">new</div>
@@ -36,17 +36,66 @@
 		<div class="list">
 			<input type="text" class="search" placeholder="&#xF002; Search">
 			<div class="conversations">
+<!--				<div id ="needChat" class="conversation">-->
+<!--					<div class="top">-->
+<!--						<span class="badge">개수띄우는건데 안본 항목 띄우면 될듯</span>-->
+<!--						<span class="title">리스트에서 제목</span>-->
+<!--						<span class="time">18:10</span>-->
+<!--					</div>-->
+<!--					<div class="bottom">-->
+<!--						<span class="user">마지막에 작성한 user</span>-->
+<!--						<span class="message">마지막 메세지</span>-->
+<!--					</div>-->
+<!--				</div>-->
+
+
+
+
 			</div>
 		</div>
 
 		<div class="chat close">
 			<div class="body">
+<!--	날짜 구분선			-->
+				<div class="seperator">
+					<div class="line"></div>
+					<div class="moment">17 Maio, 2019</div>
+					<div class="line"></div>
+				</div>
+
+<!--대화-->
+<!--				<div class="user left">-->
+<!--					<div class="messages">-->
+<!--						<div class="message">-->
+<!--							<div class="message-container">-->
+<!--								<div class="message-sender">João</div>-->
+<!--								<p class="text">Hi</p>-->
+<!--								<p class="text">What's up?</p>-->
+<!--							</div>-->
+<!--							<div class="message-time">12:08</div>-->
+<!--						</div>-->
+<!--					</div>-->
+<!--				</div>-->
+
+<!--				<div class="user right">-->
+<!--					<div class="messages">-->
+<!--						<div class="message">-->
+<!--							<div class="message-container">-->
+<!--								<div class="message-sender">Rui</div>-->
+<!--								<p class="text">Not much</p>-->
+<!--							</div>-->
+<!--							<div class="message-time">12:10</div>-->
+<!--						</div>-->
+<!--					</div>-->
+<!--				</div>-->
+
+
 			</div>
 
 			<div class="footer">
 				<div class="actions">
-						<textarea id="message-input" class="auto-expand input" rows="1" data-min-rows="1"
-								  placeholder="Write message"></textarea>
+					<textarea id="message-input" class="auto-expand input" rows="1" data-min-rows="1"
+							  placeholder="Write message"></textarea>
 					<div class="send">
 						<button class="btn btn-round btn-icon" id="sendButton" type="button" onclick="sendMessage()">send
 							<i class="fa fa-paper-plane"></i>
@@ -63,6 +112,7 @@
 					</label>
 					<input id="file" type="file" accept="*" multiple>
 				</div>
+
 			</div>
 		</div>
 
@@ -72,17 +122,17 @@
 				<i class="fa fa-times"></i>
 			</button>
 
-			<!--			options -->
+<!--			options -->
 			<div class="users">
 				<h2>Users</h2>
 				<div class="mentions">
 					<div class="pill">
 						<img src="http://cranesafeservices.com.au/wp-content/uploads/2016/09/240_F_215844325_ttX9YiIIyeaR7Ne6EaLLjMAmy4GvPC69.jpg">
-						<span>adme</span>
+						<span>João Roberto</span>
 					</div>
 					<div class="pill">
 						<img src="http://cranesafeservices.com.au/wp-content/uploads/2016/09/240_F_215844325_ttX9YiIIyeaR7Ne6EaLLjMAmy4GvPC69.jpg">
-						<span>User</span>
+						<span>Rui Gilberto</span>
 					</div>
 				</div>
 			</div>
@@ -134,7 +184,7 @@
 		</div>
 	</div>
 </div>
-</body>
+
 <script src="/js/chat.js"></script>
-<script src="/js/adme.js"></script>
+</body>
 </html>

@@ -6,17 +6,15 @@ function findToken(){
 		emptyUsername(token)
 	}
 }
-
-function logout(){
-	let nickname = localStorage.getItem('wschat.sender');
+function emptyUsername(token){
 	$.ajax({
-		type: "GET", url: `/user/logout/` + nickname, contentType: false, processData: false, success: function(response) {
-			if (response) {
-				location.href = "/taste"
-			}
+		type: "GET", url: `/find-nickname/` + token, contentType: false, processData: false, success: function(response) {
+			username = response;
+			localStorage.setItem('wschat.sender', username);
 		}
 	})
 }
 $(document).ready(function() {
+	//alarmSubscribe();
 	findToken();
 });
