@@ -12,7 +12,7 @@ function logout(){
 	$.ajax({
 		type: "GET", url: `/user/logout/` + nickname, contentType: false, processData: false, success: function(response) {
 			if (response) {
-				location.href = "/adme"
+				location.href = "/taste"
 			}
 		}
 	})

@@ -4,16 +4,16 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 	<title>Title</title>
-	<link rel="stylesheet" type="text/css" href="/css/chat-button.css">
+	<link rel="stylesheet" type="text/css" href="/css/chat.css">
 	<link rel="stylesheet" href="/webjars/bootstrap/4.3.1/dist/css/bootstrap.min.css">
 	<script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
-
 	<script src="/webjars/jquery/jquery.min.js"></script>
+	<script src="/webjars/sockjs-client/sockjs.min.js"></script>
+	<script src="/webjars/stomp-websocket/stomp.min.js"></script>
 	<script src="/webjars/bootstrap/4.3.1/dist/js/bootstrap.min.js"></script>
 
 </head>
 <body>
-
 <button id="openChat" class="btn btn-special fixed" onclick="openChat()">
 	Chat
 	<div class="badge">new</div>
@@ -48,17 +48,7 @@
 <!--					</div>-->
 <!--				</div>-->
 
-				<div id ="randomChat" class="conversation">
-					<div class="top">
-						<span></span>
-						<span class="title">랜덤 채팅방 참여하기</span>
-						<span class="time">15/05/2019</span>
-					</div>
-					<div class="bottom">
-						<span class="user">adme</span>
-						<span class="message">랜덤으로 2명 채팅이 가능합니다.</span>
-					</div>
-				</div>
+
 
 
 			</div>
@@ -74,30 +64,31 @@
 				</div>
 
 <!--대화-->
-				<div class="user left">
-					<div class="messages">
-						<div class="message">
-							<div class="message-container">
-								<div class="message-sender">João</div>
-								<p class="text">Hi</p>
-								<p class="text">What's up?</p>
-							</div>
-							<div class="message-time">12:08</div>
-						</div>
-					</div>
-				</div>
+<!--				<div class="user left">-->
+<!--					<div class="messages">-->
+<!--						<div class="message">-->
+<!--							<div class="message-container">-->
+<!--								<div class="message-sender">João</div>-->
+<!--								<p class="text">Hi</p>-->
+<!--								<p class="text">What's up?</p>-->
+<!--							</div>-->
+<!--							<div class="message-time">12:08</div>-->
+<!--						</div>-->
+<!--					</div>-->
+<!--				</div>-->
 
-				<div class="user right">
-					<div class="messages">
-						<div class="message">
-							<div class="message-container">
-								<div class="message-sender">Rui</div>
-								<p class="text">Not much</p>
-							</div>
-							<div class="message-time">12:10</div>
-						</div>
-					</div>
-				</div>
+<!--				<div class="user right">-->
+<!--					<div class="messages">-->
+<!--						<div class="message">-->
+<!--							<div class="message-container">-->
+<!--								<div class="message-sender">Rui</div>-->
+<!--								<p class="text">Not much</p>-->
+<!--							</div>-->
+<!--							<div class="message-time">12:10</div>-->
+<!--						</div>-->
+<!--					</div>-->
+<!--				</div>-->
+
 
 			</div>
 
@@ -106,7 +97,7 @@
 					<textarea id="message-input" class="auto-expand input" rows="1" data-min-rows="1"
 							  placeholder="Write message"></textarea>
 					<div class="send">
-						<button class="btn btn-round btn-icon">send
+						<button class="btn btn-round btn-icon" id="sendButton" type="button" onclick="sendMessage()">send
 							<i class="fa fa-paper-plane"></i>
 						</button>
 					</div>
@@ -194,6 +185,6 @@
 	</div>
 </div>
 
-<script src="/js/chat-button.js"></script>
+<script src="/js/chat.js"></script>
 </body>
 </html>
