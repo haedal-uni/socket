@@ -5,8 +5,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import javax.servlet.http.HttpSession;
-
 @Controller
 public class HtmlController {
 	// 채팅 리스트 화면
@@ -59,4 +57,8 @@ public class HtmlController {
 		return "taste";
 	}
 
+	@GetMapping("/chat-button")
+	public String chatB(){
+		return "chat-button";
+	}
 }
