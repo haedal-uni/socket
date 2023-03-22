@@ -55,6 +55,7 @@ public class ChatServiceImpl {
 			int num = connectUsers.get(roomId);
 			connectUsers.put(roomId, num-1);
 		}
+		log.info("현재 인원 : " + connectUsers.get(roomId));
 	}
 
 
@@ -80,6 +81,7 @@ public class ChatServiceImpl {
 
 	//채팅방 생성
 	public ChatRoomDto createRoom(String nickname) {
+		System.out.println("alksdjflajdflad");
 		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
 		ChatRoomDto chatRoom = new ChatRoomDto();
 		if (!chatRepository.existsByUserId(user.getId())) {

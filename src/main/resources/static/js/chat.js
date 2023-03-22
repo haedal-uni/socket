@@ -1,13 +1,50 @@
 let messageArea = document.querySelector('.body');
 let nickname = localStorage.getItem('wschat.sender');
-let roomName = localStorage.getItem('wschat.roomName');
+let roomName = nickname;
 let chatArea = document.querySelector('.chat');
 let messageInput = document.querySelector('#message-input');
-let roomId = localStorage.getItem('wschat.roomId');
 let stompClient = null;
 let token = localStorage.getItem('token');
+let urlSearch = new URLSearchParams(location.search);
+let count=0;
+function alarmCount(num){
+	if (num==0){
+		count=0;
+	}else{
+		count += num;
+	}
+	$(".badge").text(count);
 
-messageInput.addEventListener("keyup", function (event) {
+}
+function findToken() {
+	let token = urlSearch.get('token')
+	if (token != null && token !== localStorage.getItem('token')) {
+		localStorage.setItem('token', token);
+		emptyUsername(token)
+	}
+}
+
+function emptyUsername(token) {
+	$.ajax({
+		type: "GET", url: `/find-nickname/` + token, contentType: false, processData: false, success: function(response) {
+			nickname = response;
+			localStorage.setItem('wschat.sender', nickname);
+		}
+	})
+
+}
+
+$(document).ready(function() {
+	//alarmSubscribe();
+	if(token==null){
+		findToken();
+	}
+	else if(nickname==null){
+		emptyUsername(token)
+	}
+	alarmCount(0)
+});
+messageInput.addEventListener("keyup", function(event) {
 	if (event.keyCode === 13) {
 		event.preventDefault();
 		document.getElementById("sendButton").click();
@@ -15,11 +52,15 @@ messageInput.addEventListener("keyup", function (event) {
 });
 
 function openChat() {
-	if (nickname == null || nickname == undefined){
-		findToken()
-		setInterval(nickname, 1000)
-	}
 	document.getElementById('container').classList.add('open');
+	let nickname = localStorage.getItem('wschat.sender');
+	if (nickname!=null){
+		openChatList()
+	}
+}
+
+function openChatList() {
+	let nickname = localStorage.getItem('wschat.sender');
 	$.ajax({
 		type: "POST", url: `/room`, data: nickname, contentType: false, processData: false, success: function(response) {
 			localStorage.setItem('wschat.roomName', nickname);
@@ -39,8 +80,7 @@ function openChat() {
 	</div>
 			`
 				$(".conversations").append(temp);
-
-				if(!document.getElementById("randomChat")){
+				if (!document.getElementById("randomChat")) {
 					let temp_html = `	
 				<div id ="randomChat" class="conversation" onclick="randomChat()">
 					<div class="top">
@@ -54,15 +94,15 @@ function openChat() {
 					</div>
 				</div>`
 					$(".conversations").append(temp_html);
-
 				}
 			}
 		}
 	});
 }
 
-function randomChat(){
+function randomChat() {
 }
+
 function onMessageReceived(payload) { // 메세지 받기
 	let message;
 	try {
@@ -71,7 +111,7 @@ function onMessageReceived(payload) { // 메세지 받기
 		message = payload;
 	}
 	let divName;
-	if (message.sender == nickname) {
+	if (message.sender != "admin") {
 		divName = "user right"
 	} else {
 		divName = "user left"
@@ -79,6 +119,7 @@ function onMessageReceived(payload) { // 메세지 받기
 	let messageElement = document.createElement('div');
 	if (message.type === 'JOIN') {
 		if (message.sender != "admin") {
+			alarmCount(0);
 			message.message = message.sender + ' 님 안녕하세요';
 			seperator(message.message);
 		}
@@ -108,7 +149,7 @@ function onMessageReceived(payload) { // 메세지 받기
 	}
 }
 
-function seperator(message){
+function seperator(message) {
 	let temp = `
 <div class="seperator">
 	<div class="line"></div>
@@ -117,15 +158,22 @@ function seperator(message){
 </div>`
 	$(".body").append(temp)
 }
+
 function closeChat() {
 	document.getElementById('container').classList.remove('open');
 	document.querySelector('.list').classList.remove('close');
 	document.querySelector('.chat').classList.add('close');
 	document.getElementById('back').classList.add('hidden');
 	closeDrawer();
+	if(stompClient.connect()){
+		stompClient.disconnect({});
+	}
 }
 
 function backChat() {
+	if(stompClient.connect()){
+		stompClient.disconnect({});
+	}
 	document.querySelector('.list').classList.remove('close');
 	document.querySelector('.chat').classList.add('close');
 	document.getElementById('back').classList.add('hidden');
@@ -143,12 +191,12 @@ function closeDrawer() {
 
 function joinChat() {
 	document.querySelector('.chat').classList.remove('close');
-	let roomId = localStorage.getItem('wschat.roomId')
 	connect()
 	getFile()
 }
 
 function connect() {
+	let nickname = localStorage.getItem('wschat.sender');
 	if (nickname) {
 		let socket = new SockJS('/ws');
 		stompClient = Stomp.over(socket);
@@ -172,6 +220,8 @@ function onError(error) {
 
 // 메세지 보내기
 function sendMessage() {
+	let nickname = localStorage.getItem('wschat.sender');
+	let roomId = localStorage.getItem('wschat.roomId');
 	let messageContent = messageInput.value.trim();
 	if (messageContent && stompClient) {
 		let chatMessage = {
@@ -184,6 +234,7 @@ function sendMessage() {
 }
 
 function saveFile(chatMessage) {
+	let roomId = localStorage.getItem('wschat.roomId');
 	$.ajax({
 		type: "POST",
 		url: `/room/enter/` + roomId + '/' + roomName,
@@ -198,6 +249,7 @@ function saveFile(chatMessage) {
 let isRun = false;
 
 function getFile() {
+	let roomId = localStorage.getItem('wschat.roomId');
 	if (isRun == true) {
 		return;
 	}
@@ -211,13 +263,22 @@ function getFile() {
 	})
 }
 
+function alarmSubscribe() {
+	let roomId = localStorage.getItem('wschat.roomId')
+	let nickname = localStorage.getItem('wschat.sender');
+	if (nickname != null && roomId != null) {
+		start(nickname, roomId);
+	}
+}
+
 function alarmMessage() {
+	let roomId = localStorage.getItem('wschat.roomId');
 	if ($("#sendButton").click) {
 		fetch(`/room/publish?sender=${nickname}&roomId=${roomId}`);
 	}
 }
-alarmMessage()
 
+alarmMessage()
 document.addEventListener('DOMContentLoaded', function() {
 	document.querySelectorAll('.conversation').forEach(function(conversation) {
 		conversation.addEventListener('click', function() {
@@ -228,7 +289,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 });
-
 // Fire once
 document.querySelectorAll('focus.auto-expand, textarea.auto-expand').forEach(item => {
 	item.addEventListener('click', function(e) {
