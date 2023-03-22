@@ -15,11 +15,11 @@ public class HtmlController {
 	}
 
 	// 채팅방 입장 화면
-	@GetMapping("/room/enter/{roomId}")
-	public String roomDetail(Model model, @PathVariable String roomId) {
-		model.addAttribute("roomId", roomId);
-		return "chat-room";
-	}
+//	@GetMapping("/room/enter/{roomId}")
+//	public String roomDetail(Model model, @PathVariable String roomId) {
+//		model.addAttribute("roomId", roomId);
+//		return "chat-room";
+//	}
 
 	@GetMapping("/every-chat")
 	public String everyRoomDetail() {
@@ -57,8 +57,8 @@ public class HtmlController {
 		return "taste";
 	}
 
-	@GetMapping("/chat-button")
-	public String chatB(){
-		return "chat-button";
+	@GetMapping("/admin")
+	public String admin(){
+		return "admin-chat";
 	}
 }

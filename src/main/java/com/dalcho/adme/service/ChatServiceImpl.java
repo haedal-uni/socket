@@ -65,7 +65,7 @@ public class ChatServiceImpl {
 		List<Chat> all = chatRepository.findAll();
 		try {
 			for (int i = 0; i < all.size(); i++) {
-				User user = userRepository.findById(all.get(i).getIdx()).orElseThrow(UserNotFoundException::new);
+				User user = userRepository.findById(all.get(i).getUser().getId()).orElseThrow(UserNotFoundException::new);
 				chatRoomDtos.add(ChatRoomDto.of(all.get(i), user));
 			}
 		} catch (NullPointerException e) {
