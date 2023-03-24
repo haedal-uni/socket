@@ -116,7 +116,6 @@ function onMessageReceived(payload) { // 메세지 받기
 	} else {
 		divName = "user left"
 	}
-	let messageElement = document.createElement('div');
 	if (message.type === 'JOIN') {
 		if (message.sender != "admin") {
 			alarmCount(0);
