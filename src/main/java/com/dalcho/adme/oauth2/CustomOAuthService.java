@@ -62,11 +62,26 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
 		String nickname = random.ints(leftLimit, rightLimit + 1).filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
 				.limit(targetStringLength).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
 		User user = userRepository.findByEmail(oAuth2Attribute.getEmail()).orElseGet(() -> {
-			log.info("[db save] : kakao social login");
-			User saved = UserMapper.ofKakao(oAuth2User, nickname);
-			log.info("saved : " + saved);
-			userRepository.save(saved);
-			return saved;
+			log.info("[db save] : social login");
+			if (registrationId.equals("kakao")){
+				User saved = UserMapper.ofKakao(oAuth2User, nickname);
+				log.info("saved : " + saved);
+				userRepository.save(saved);
+				return saved;
+			} else if (registrationId.equals("naver")) {
+				User saved = UserMapper.ofNaver(oAuth2User, nickname);
+				log.info("saved : " + saved);
+				userRepository.save(saved);
+				return saved;
+			} else if(registrationId.equals("google")){
+				User saved = UserMapper.ofGoogle(oAuth2User, nickname);
+				log.info("saved : " + saved);
+				userRepository.save(saved);
+				return saved;
+			}
+			else{
+				throw new OAuth2AuthenticationException("save error");
+			}
 		});
 		redisService.addToken(user.getEmail(), accessToken);
 		if (!user.isEnabled()) throw new OAuth2AuthenticationException(new OAuth2Error("Not Found"), new UserNotFoundException());

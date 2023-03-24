@@ -80,7 +80,6 @@ public class JwtTokenProvider {
 		// 토큰을 생성할때 넣었던 sub 값 추출
 		String info = getClaims(token).getBody().getSubject();
 		log.info("[getUsername] 토큰 기반 회원 구별 정보 추출 완료 : " + info);
-
 		return info;
 	}
 

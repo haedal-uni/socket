@@ -34,8 +34,9 @@ public class User implements UserDetails {
 	@Column(nullable = false)
 	private boolean enabled = true; // 1
 
-	@Column()
-	private Long kakaoId;
+	@Column(nullable = false)
+	private String socialId;
+	private String social;
 
 	private String profile = DEFAULT_PROFILE_IMG_PATH;
 
@@ -45,14 +46,15 @@ public class User implements UserDetails {
 	private Chat chat;
 
 	@Builder // UserMapper와 연결
-	public User(Long kakaoId, String email, String password, UserRole role, String username, String nickname) {
-		this.kakaoId = kakaoId;
+	public User(String socialId, String email, String password, UserRole role, String username, String nickname, String social) {
+		this.socialId = socialId;
 		this.email = email;
 		this.password = password;
 		this.username = username;
 		this.nickname = nickname;
 		this.role = role == null ? UserRole.USER : role;
 		this.profile = DEFAULT_PROFILE_IMG_PATH;
+		this.social = social;
 	}
 
 	public void addChat(Chat chat){

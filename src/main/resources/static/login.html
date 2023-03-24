@@ -14,9 +14,22 @@
 <body>
 <div id="login-form">
 	<div id="login-title">Log into Adme Chat</div>
-	<button id="login-kakao-btn" onclick="location.href=`/oauth2/authorization/kakao`">
-		카카오로 로그인하기
-	</button>
+<!--	<button id="login-user-btn" onclick="location.href=`/oauth2/authorization/user`">-->
+<!--		카카오로 로그인하기-->
+<!--	</button>-->
+
+	<br><br>
+
+	<a href="/oauth2/authorization/naver" >Naver Login</a>
+
+	<br><br>
+
+	<a href="/oauth2/authorization/kakao" >Kakao Login</a>
+
+	<br><br>
+
+	<a href="/oauth2/authorization/google" >Google Login</a>
+
 	<div th:if="${loginError}" class="alert alert-danger" role="alert">로그인에 실패하였습니다.</div>
 <!--	<form action="/user/login" method="post">-->
 <!--		<div class="login-id-label">아이디</div>-->
