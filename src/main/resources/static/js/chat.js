@@ -8,7 +8,7 @@ let token = localStorage.getItem('token');
 let urlSearch = new URLSearchParams(location.search);
 let count=0;
 function alarmCount(num){
-	if (num==0){
+	if (num===0){
 		count=0;
 	}else{
 		count += num;
@@ -35,7 +35,7 @@ function emptyUsername(token) {
 }
 
 $(document).ready(function() {
-	//alarmSubscribe();
+	alarmSubscribe();
 	if(token==null){
 		findToken();
 	}
@@ -196,6 +196,7 @@ function joinChat() {
 
 function connect() {
 	let nickname = localStorage.getItem('wschat.sender');
+	let token = localStorage.getItem('token');
 	if (nickname) {
 		let socket = new SockJS('/ws');
 		stompClient = Stomp.over(socket);
@@ -204,6 +205,7 @@ function connect() {
 }
 
 function onConnected() {
+	let token = localStorage.getItem('token');
 	let roomId = localStorage.getItem('wschat.roomId')
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
 	//(Object) subscribe(destination, callback, headers = {})
@@ -219,6 +221,7 @@ function onError(error) {
 
 // 메세지 보내기
 function sendMessage() {
+	alarmMessage()
 	let nickname = localStorage.getItem('wschat.sender');
 	let roomId = localStorage.getItem('wschat.roomId');
 	let messageContent = messageInput.value.trim();
@@ -271,13 +274,14 @@ function alarmSubscribe() {
 }
 
 function alarmMessage() {
+	let nickname = localStorage.getItem('wschat.sender');
 	let roomId = localStorage.getItem('wschat.roomId');
-	if ($("#sendButton").click) {
+	//if ($("#sendButton").click) {
 		fetch(`/room/publish?sender=${nickname}&roomId=${roomId}`);
-	}
+	//}
 }
 
-alarmMessage()
+
 document.addEventListener('DOMContentLoaded', function() {
 	document.querySelectorAll('.conversation').forEach(function(conversation) {
 		conversation.addEventListener('click', function() {
