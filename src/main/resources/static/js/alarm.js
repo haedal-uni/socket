@@ -25,7 +25,7 @@ function alarmForm(data) {
 		let roomId = data.roomId
 		let toast = "<div class='toast' role='alert' aria-live='assertive' aria-atomic='true'>";
 		toast += "<div class='toast-header'><i class='fas fa-bell mr-2'></i><strong class='mr-auto'>알림</strong>";
-		toast += "<small class='text-muted'>just now</small><button type='button' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>";
+		toast += "<small class='text-muted'>just now</small><button type='button' onclick='closeAlarm()' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>";
 		toast += "<span aria-hidden='true'>&times;</span></button>";
 		toast += "</div> <div class='toast-body'>" + data.message + "</div></div>";
 		$("#msgStack").append(toast);   // msgStack div에 생성한 toast 추가

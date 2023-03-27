@@ -61,6 +61,7 @@ function openChat() {
 
 function openChatList() {
 	let nickname = localStorage.getItem('wschat.sender');
+	let count = $(".badge").text()
 	$.ajax({
 		type: "POST", url: `/room`, data: nickname, contentType: false, processData: false, success: function(response) {
 			localStorage.setItem('wschat.roomName', nickname);
@@ -69,7 +70,7 @@ function openChatList() {
 				let temp = `
 		<div id="needChat" class="conversation" onclick="joinChat()">
         <div class="top">
-			<span class="badge">0</span>
+			<span class="badge">${count}</span>
 			<span class="title">리스트에서 제목</span>
 			<span class="time">18:10</span>
 		</div>
@@ -192,6 +193,7 @@ function joinChat() {
 	document.querySelector('.chat').classList.remove('close');
 	connect()
 	getFile()
+	alarmCount(0)
 }
 
 function connect() {
