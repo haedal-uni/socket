@@ -11,21 +11,23 @@ function start(username, roomId){
 	};
 	eventSource.onmessage = (e) => {
 		let message = JSON.parse(e.data + "\n")// 문자 하나라서 /n만 사용 여러줄이라면 마지막에는 줄바꿈 문자 두개(\n\n)로 구분
-		if(message !== "" && message !== null && message !==undefined &&  message.sender === "admin" && roomId === message.roomId){
-			alarmForm(message)
+		if (message !== "" && message !== null && message !==undefined && message.sender !== "admin") {
+			adminAlarmForm(message)
 		}
 	};
 }
 
+function closeAlarm() {
+	$('.toast').toast('hide')
+}
 
-function alarmForm(data) {
-	alarmCount(1);
-	if ($(".toast-body").text() === "") {
-		let url = `/room/enter/${data.roomId}`
-		let roomId = data.roomId
+function adminAlarmForm(data) {
+	let idName = "#" + data.sender
+	$(idName).css('display','block');
+	if ($(".toast-body").text().split(" ")[0] !== data.sender) {
 		let toast = "<div class='toast' role='alert' aria-live='assertive' aria-atomic='true'>";
 		toast += "<div class='toast-header'><i class='fas fa-bell mr-2'></i><strong class='mr-auto'>알림</strong>";
-		toast += "<small class='text-muted'>just now</small><button type='button' onclick='closeAlarm()' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>";
+		toast += "<small class='text-muted'>just now</small><button type='button' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>";
 		toast += "<span aria-hidden='true'>&times;</span></button>";
 		toast += "</div> <div class='toast-body'>" + data.message + "</div></div>";
 		$("#msgStack").append(toast);   // msgStack div에 생성한 toast 추가
@@ -38,8 +40,4 @@ function alarmForm(data) {
 	if ($(".toast fade hide show")) {
 		$('.toast').toast('show')
 	}
-}
-
-function closeAlarm() {
-	$('.toast').toast('hide')
 }

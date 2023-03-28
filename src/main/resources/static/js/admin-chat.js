@@ -2,6 +2,7 @@ let nickname = "admin";
 let messageInput = document.querySelector(".write-message")
 localStorage.setItem('wschat.sender', nickname);
 let chatArea = document.querySelector('.messages-chat');
+let connectingElement = document.querySelector(".messages-chat")
 messageInput.addEventListener("keyup", function(event) {
 	if (event.keyCode === 13) {
 		event.preventDefault();
@@ -11,6 +12,7 @@ messageInput.addEventListener("keyup", function(event) {
 $(document).ready(function() {
 	findToken()
 	chatList()
+	setInterval(alarmSubscribe(),4000)
 	$(".messages-chat").text("");
 });
 function findToken(){
@@ -18,7 +20,6 @@ function findToken(){
 	let token = urlSearch.get('token')
 	if(token!=null && token !== localStorage.getItem('token')){
 		localStorage.setItem('token', token);
-		emptyUsername(token)
 	}
 }
 function chatList(){
@@ -36,7 +37,7 @@ function chatList(){
         </div>
         <div class="desc-contact">
           <p class="name">${nickname}</p>
-          <p class="message">Let's meet for a coffee or something today ?</p>
+          <p class="message">11</p>
           <div class=${roomId} style="display: none">${nickname}</div>
         </div>
       </div>
@@ -93,7 +94,6 @@ function onMessageReceived(payload) { // 메세지 받기
 	}
 	if (message.type === 'JOIN') {
 		if (message.sender != "admin") {
-			alarmCount(0);
 			message.message = message.sender + ' 님 안녕하세요';
 			seperator(message.message);
 		}
@@ -141,6 +141,7 @@ function onError(error) {
 
 // 메세지 보내기
 function sendMessage() {
+	alarmMessage()
 	let nickname = localStorage.getItem('wschat.sender');
 	let roomId = localStorage.getItem('wschat.roomId');
 	let messageContent = messageInput.value.trim();
@@ -191,29 +192,16 @@ function alarmSubscribe() {
 	if (nickname != null && roomId != null) {
 		start(nickname, roomId);
 	}
+	else if (nickname != null) {
+		start(nickname, "");
+	}
 }
 
-function closeAlarm() {
-	$('.toast').toast('hide')
-}
 
-function adminAlarmForm(data) {
-	let idName = "#" + data.sender
-	$(idName).css('display','block');
-	if ($(".toast-body").text().split(" ")[0] !== data.sender) {
-		let toast = "<div class='toast' role='alert' aria-live='assertive' aria-atomic='true'>";
-		toast += "<div class='toast-header'><i class='fas fa-bell mr-2'></i><strong class='mr-auto'>알림</strong>";
-		toast += "<small class='text-muted'>just now</small><button type='button' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>";
-		toast += "<span aria-hidden='true'>&times;</span></button>";
-		toast += "</div> <div class='toast-body'>" + data.message + "</div></div>";
-		$("#msgStack").append(toast);   // msgStack div에 생성한 toast 추가
-		$(".toast").toast({"animation": true, "autohide": false});
-		$('.toast').toast('show');
-	}
-	if ($('.toast').toast('hide')) {
-		$('.toast').toast('show')
-	}
-	if ($(".toast fade hide show")) {
-		$('.toast').toast('show')
-	}
+function alarmMessage() {
+	let nickname = localStorage.getItem('wschat.sender');
+	let roomId = localStorage.getItem('wschat.roomId');
+//	if ($("#sendButton").click) {
+		fetch(`/room/publish?sender=${nickname}&roomId=${roomId}`);
+//	}
 }
