@@ -61,11 +61,11 @@ function openChat() {
 
 function openChatList() {
 	let nickname = localStorage.getItem('wschat.sender');
-	let count = $(".badge").text()
 	$.ajax({
 		type: "POST", url: `/room`, data: nickname, contentType: false, processData: false, success: function(response) {
 			localStorage.setItem('wschat.roomName', nickname);
 			localStorage.setItem('wschat.roomId', response["roomId"]);
+			let count = response["userChat"];
 			if (!document.getElementById("needChat")) {
 				let temp = `
 		<div id="needChat" class="conversation" onclick="joinChat()">

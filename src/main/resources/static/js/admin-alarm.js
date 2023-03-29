@@ -11,7 +11,7 @@ function start(username, roomId){
 	};
 	eventSource.onmessage = (e) => {
 		let message = JSON.parse(e.data + "\n")// 문자 하나라서 /n만 사용 여러줄이라면 마지막에는 줄바꿈 문자 두개(\n\n)로 구분
-		if (message !== "" && message !== null && message !==undefined && message.sender !== "admin") {
+		if (message !== "" && message !== null && message !==undefined && message.sender !== "admin" && message.message != null) {
 			adminAlarmForm(message)
 		}
 	};
@@ -22,8 +22,12 @@ function closeAlarm() {
 }
 
 function adminAlarmForm(data) {
-	let idName = "#" + data.sender
-	$(idName).css('display','block');
+	$(".menu").load(location.href + ' .menu');
+	let idName = "#"+data.roomId
+	let alarmCount = $(".timer").text()
+	$(idName).text(Number(alarmCount)+1)
+	// let idName = "#" + data.sender
+	// $(idName).css('display','block');
 	if ($(".toast-body").text().split(" ")[0] !== data.sender) {
 		let toast = "<div class='toast' role='alert' aria-live='assertive' aria-atomic='true'>";
 		toast += "<div class='toast-header'><i class='fas fa-bell mr-2'></i><strong class='mr-auto'>알림</strong>";
@@ -36,6 +40,7 @@ function adminAlarmForm(data) {
 	}
 	if ($('.toast').toast('hide')) {
 		$('.toast').toast('show')
+		setTimeout(closeAlarm, 2500)
 	}
 	if ($(".toast fade hide show")) {
 		$('.toast').toast('show')

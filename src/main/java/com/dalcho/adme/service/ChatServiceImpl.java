@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -25,12 +26,11 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.*;
-
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -196,7 +196,15 @@ public class ChatServiceImpl {
 	}
 
 	public List lastLine(String roomId) {
+		File file1 = new File(chatUploadLocation + "/" + roomId + ".txt");
 		try{
+			// 1. ReversedLinesFileReader  준비
+			ReversedLinesFileReader reader
+					= new ReversedLinesFileReader(file1, Charset.forName("UTF-8"));
+
+			// 2. 뒤에서 7줄 읽기
+			List<String> lines = reader.readLines(7);
+/*
 			RandomAccessFile file = new RandomAccessFile(chatUploadLocation + "/" + roomId + ".txt", "r");
 			StringBuffer lastLine = new StringBuffer();
 			int lineCount = 7;
@@ -212,7 +220,7 @@ public class ChatServiceImpl {
 				// 3.2. pointer 위치의 글자를 읽는다.
 				char c = (char) file.read();
 
-				// 3.3. 줄바꿈이 3번(lineCount) 나타나면 더 이상 글자를 읽지 않는다.
+				// 3.3. 줄바꿈이 7번(lineCount) 나타나면 더 이상 글자를 읽지 않는다.
 				if (c == '\n') {
 					lineCount--;
 					if (lineCount == 0) {
@@ -221,12 +229,15 @@ public class ChatServiceImpl {
 				}
 				// 3.4. 결과 문자열의 앞에 읽어온 글자(c)를 붙여준다.
 				lastLine.insert(0, c);
+
 			}
-			int adminChat = lastLine.indexOf("adminChat");
-			int userChat = lastLine.indexOf("userChat");
-			List<Integer> chat = new ArrayList<>();
-			chat.add(Integer.valueOf(lastLine.substring(adminChat+12, adminChat+13)));
-			chat.add(Integer.valueOf(lastLine.substring(userChat+11, userChat+12)));
+			int adminChat = lastLine.indexOf("adminChat"); //lastLine.substring(adminChat+12, adminChat+13)
+			int userChat = lastLine.indexOf("userChat"); //lastLine.substring(userChat+11, userChat+12)
+*/
+			List<String> chat = new ArrayList<>();
+			chat.add(lines.get(6).substring(15, lines.get(6).length()-1)); // adminChat
+			chat.add(lines.get(4).substring(14, lines.get(4).length()-1)); // userChat
+			chat.add(lines.get(2).substring(14, lines.get(2).length()-2)); // message
 			return chat;
 			// 4. 결과 출력
 		}catch (FileNotFoundException e) {

@@ -181,7 +181,8 @@ body {
 	width: calc(65% - 75px);
 	height: 700px;
 	overflow: hidden;
-	display: inline-block;
+	/*display: inline-block;*/
+	display: none;
 }
 
 .header-chat {

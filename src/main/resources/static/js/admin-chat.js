@@ -26,20 +26,29 @@ function chatList(){
 	$.ajax({
 		type: "GET", url: `/rooms`, contentType: false, processData: false, success: function(response) {
 			console.log("채팅방 불러오기 (all) : " + JSON.stringify(response))
+			let json_arr = [response]
+			json_arr.sort(function(a,b) {
+				return b.adminChat - a.adminChat;
+			})
+			console.log("json_arr : " + JSON.stringify(json_arr))
+
 			for (let i = 0; i < response.length; i++) {
 				let nickname = response[i]["nickname"];
 				let roomId = response[i]["roomId"];
 				let roomName = nickname + " 님의 채팅방";
+				let count = response[i]["adminChat"];
+				let message = response[i]["message"];
 				let roomNum = "'" + roomId + "'"
 				let tempHtml = `
-                         <div id=${nickname} class="discussion" style="display:none" onclick="enterRoom(${roomNum})">
+                         <div id=${nickname} class="discussion" onclick="enterRoom(${roomNum})">
         <div class="photo" style="background-color: #82D1E3;">
         </div>
         <div class="desc-contact">
           <p class="name">${nickname}</p>
-          <p class="message">11</p>
+          <p class="message">${message}</p>
           <div class=${roomId} style="display: none">${nickname}</div>
         </div>
+        <div id=${roomId} class="timer">${count}</div>
       </div>
 `
 				$(".discussions").append(tempHtml);
@@ -50,6 +59,9 @@ function chatList(){
 
 function enterRoom(roomId) {
 	let roomName = document.getElementsByClassName(roomId)[0].textContent;
+	$(".chat").css('display','block');
+	let timer = "#"+roomId
+	$(timer).text(0)
 	localStorage.setItem('wschat.roomName', roomName);
 	localStorage.setItem('wschat.roomId', roomId);
 	$(".adme-name").text(roomName);
@@ -72,9 +84,11 @@ function joinChat(){
 	connect()
 }
 function leaveChat(){
-	let roomName = localStorage.getItem('wschat.roomName')
-	let idName = "#" + roomName
-	$(idName).css('display','none');
+	// let roomName = localStorage.getItem('wschat.roomName')
+	// let idName = "#" + roomName
+	//$(idName).css('display','none');
+	$(".chat").css('display','none');
+
 	stompClient.disconnect()
 }
 

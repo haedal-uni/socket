@@ -34,6 +34,7 @@ function alarmForm(data) {
 	}
 	if ($('.toast').toast('hide')) {
 		$('.toast').toast('show')
+		setTimeout(closeAlarm, 2500)
 	}
 	if ($(".toast fade hide show")) {
 		$('.toast').toast('show')

@@ -18,6 +18,7 @@ public class ChatRoomDto { // 일반 crud에서 쓰임
 	private String nickname;
 	private Integer adminChat;
 	private Integer userChat;
+	private String message;
 
 	public ChatRoomDto() {
 	}
@@ -29,12 +30,13 @@ public class ChatRoomDto { // 일반 crud에서 쓰임
 		return room;
 	}
 
-	public static ChatRoomDto of(Chat chat, User user, List<Integer> list) {
-		return ChatRoomDto.builder().
-				roomId(chat.getRoomId())
+	public static ChatRoomDto of(Chat chat, User user, List<String> list) {
+		return ChatRoomDto.builder()
+				.roomId(chat.getRoomId())
 				.nickname(user.getNickname())
-				.adminChat(list.get(0))
-				.userChat(list.get(1))
+				.adminChat(Integer.valueOf(list.get(0)))
+				.userChat(Integer.valueOf(list.get(1)))
+				.message(list.get(2))
 				.build();
 	}
 }
