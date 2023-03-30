@@ -22,15 +22,25 @@ function findToken(){
 		localStorage.setItem('token', token);
 	}
 }
+var sortJSON = function(data, key, type) {
+	if (type == undefined) {
+		type = "asc";
+	}
+	return data.sort(function(a, b) {
+		var x = a[key];
+		var y = b[key];
+		if (type == "desc") {
+			return x > y ? -1 : x < y ? 1 : 0;
+		} else if (type == "asc") {
+			return x < y ? -1 : x > y ? 1 : 0;
+		}
+	});
+};
 function chatList(){
 	$.ajax({
 		type: "GET", url: `/rooms`, contentType: false, processData: false, success: function(response) {
 			console.log("채팅방 불러오기 (all) : " + JSON.stringify(response))
-			let json_arr = [response]
-			json_arr.sort(function(a,b) {
-				return b.adminChat - a.adminChat;
-			})
-			console.log("json_arr : " + JSON.stringify(json_arr))
+			sortJSON(response, "adminChat", "desc");
 
 			for (let i = 0; i < response.length; i++) {
 				let nickname = response[i]["nickname"];
