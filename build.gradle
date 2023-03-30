@@ -53,6 +53,9 @@ dependencies {
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.session:spring-session-data-redis'
+
+    //file
+    implementation 'commons-io:commons-io:2.11.0'
 }
 
 test {
