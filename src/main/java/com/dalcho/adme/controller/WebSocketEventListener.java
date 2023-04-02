@@ -59,6 +59,9 @@ public class WebSocketEventListener {
 			chatMessage.setSender(nickname);
 			chatMessage.setRoomId(roomId);
 			chatService.connectUser("Disconnect", roomId, chatMessage);
+			if (nickname.equals("admin")){
+				redisService.deleteRedis(nickname);
+			}
 			sendingOperations.convertAndSend("/topic/public/" + roomId, chatMessage);
 		}
 	}
