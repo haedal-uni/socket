@@ -52,11 +52,12 @@ public class ChatServiceImpl {
 		this.userChat = new HashMap<>();
 	}
 
-	public void connectUser(String status, String roomId) {
+	public void connectUser(String status, String roomId, ChatMessage chatMessage) {
 		if (Objects.equals(status, "Connect")){
 			connectUsers.putIfAbsent(roomId, 0); // 값이 없으면 이걸 수행하고 있으면 수행안함 (값이 있으므로)
 			int num = connectUsers.get(roomId);
 			connectUsers.put(roomId, num+1);
+			saveFile(chatMessage);
 		} else if (Objects.equals(status, "Disconnect")) {
 			//connectUsers.putIfAbsent(roomId, 0);
 			int num = connectUsers.get(roomId);
@@ -135,8 +136,13 @@ public class ChatServiceImpl {
 	}
 
 	public void saveFile(ChatMessage chatMessage) { // 파일 저장
-		if (connectUsers.get(chatMessage.getRoomId())>0){
-			countChat(chatMessage.getSender(), chatMessage.getRoomId());
+		if (connectUsers.get(chatMessage.getRoomId())!=0){
+			if ((chatMessage.getType().toString()).equals("JOIN")){
+				reset(chatMessage.getSender(), chatMessage.getRoomId());
+			} else {
+				System.out.println(" = = = = = else = = = = =");
+				countChat(chatMessage.getSender(), chatMessage.getRoomId());
+			}
 		}
 		JSONObject json = new JSONObject();
 		json.put("roomId", chatMessage.getRoomId());
@@ -160,6 +166,18 @@ public class ChatServiceImpl {
 			file.close(); // 연결 끊기
 		} catch (IOException e) {
 			log.error("[error] " + e);
+		}
+	}
+
+	public void reset(String sender, String roomId){
+		if (sender.equals("admin")){
+			adminChat.putIfAbsent(roomId, 0);
+			userChat.putIfAbsent(roomId, 0);
+			adminChat.put(roomId,0);
+		} else {
+			userChat.putIfAbsent(roomId, 0);
+			adminChat.putIfAbsent(roomId, 0);
+			userChat.put(roomId,0);
 		}
 	}
 

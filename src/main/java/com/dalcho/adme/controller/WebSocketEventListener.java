@@ -58,7 +58,7 @@ public class WebSocketEventListener {
 			chatMessage.setType(ChatMessage.MessageType.LEAVE);
 			chatMessage.setSender(nickname);
 			chatMessage.setRoomId(roomId);
-			chatService.connectUser("Disconnect", roomId);
+			chatService.connectUser("Disconnect", roomId, chatMessage);
 			sendingOperations.convertAndSend("/topic/public/" + roomId, chatMessage);
 		}
 	}
