@@ -56,12 +56,11 @@ public class ChatServiceImpl {
 		if (Objects.equals(status, "Connect")){
 			connectUsers.putIfAbsent(roomId, 0); // 값이 없으면 이걸 수행하고 있으면 수행안함 (값이 있으므로)
 			int num = connectUsers.get(roomId);
-			connectUsers.put(roomId, num+1);
+			connectUsers.put(roomId, (num+1));
 			saveFile(chatMessage);
 		} else if (Objects.equals(status, "Disconnect")) {
-			//connectUsers.putIfAbsent(roomId, 0);
 			int num = connectUsers.get(roomId);
-			connectUsers.put(roomId, num-1);
+			connectUsers.put(roomId, (num-1));
 		}
 		log.info("현재 인원 : " + connectUsers.get(roomId));
 	}
@@ -140,7 +139,6 @@ public class ChatServiceImpl {
 			if ((chatMessage.getType().toString()).equals("JOIN")){
 				reset(chatMessage.getSender(), chatMessage.getRoomId());
 			} else {
-				System.out.println(" = = = = = else = = = = =");
 				countChat(chatMessage.getSender(), chatMessage.getRoomId());
 			}
 		}

@@ -22,10 +22,14 @@ function closeAlarm() {
 }
 
 function adminAlarmForm(data) {
-	$(".menu").load(location.href + ' .menu');
 	let idName = "#"+data.roomId
-	let alarmCount = $(".timer").text()
-	$(idName).text(Number(alarmCount)+1)
+	//let msg = "'" + " "+idName + "'"
+	let alarmCount = $(idName).text()
+	$(".discussions").text("")
+	//$(idName).load(location.href + msg);
+	//$(idName).text("")
+	//$(idName).text(Number(alarmCount)+1)
+	chatList()
 	// let idName = "#" + data.sender
 	// $(idName).css('display','block');
 	if ($(".toast-body").text().split(" ")[0] !== data.sender) {
