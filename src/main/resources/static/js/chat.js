@@ -212,7 +212,8 @@ function onConnected() {
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
 	//(Object) subscribe(destination, callback, headers = {})
 	//stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, sender: nickname, type: 'JOIN'}))
-	stompClient.send("/app/chat/addUser", {Authorization: token}, JSON.stringify({roomId: roomId, type: 'JOIN'}))
+	let message = $(".message").last().text().trim();
+	stompClient.send("/app/chat/addUser", {Authorization: token}, JSON.stringify({roomId: roomId, type: 'JOIN', message: message}))
 	//(void) send(destination, headers = {}, body = '')
 }
 

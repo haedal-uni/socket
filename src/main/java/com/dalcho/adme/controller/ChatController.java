@@ -34,9 +34,10 @@ public class ChatController {
 	public void addUser(@Payload ChatMessage chatMessage, @Header("Authorization") String token) {
 		String nickname = jwtTokenProvider.getNickname(token);
 		chatMessage.setSender(nickname);
+		chatMessage.setType(ChatMessage.MessageType.JOIN);
 		redisService.addRedis(chatMessage, hours);
 		log.info("redis roomId : {}", redisService.getRedis(chatMessage.getSender()));
-		chatService.connectUser("Connect", chatMessage.getRoomId());
+		chatService.connectUser("Connect", chatMessage.getRoomId(), chatMessage);
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
