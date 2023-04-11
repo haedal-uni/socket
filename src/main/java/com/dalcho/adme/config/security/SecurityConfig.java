@@ -31,8 +31,8 @@ public class SecurityConfig {
 //					.exceptionHandling().authenticationEntryPoint(new RestAuthenticationEntryPoint())// 인증,인가가 되지 않은 요청 시 발생
 //					.and()
 		http.authorizeRequests()
-				.antMatchers("/css/**", "/oauth2/**", "/user/**", "/taste/**", "/js/**", "/login/**").permitAll()
-
+				.antMatchers("/css/**", "/oauth2/**", "/user/**", "/taste/**", "/js/**").permitAll()
+				.antMatchers("/admin/**").hasAuthority("ADMIN")
 				.anyRequest().authenticated();
 
 		http.oauth2Login().loginPage("/user/login")
