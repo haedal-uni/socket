@@ -66,6 +66,7 @@ function openChatList() {
 			localStorage.setItem('wschat.roomName', nickname);
 			localStorage.setItem('wschat.roomId', response["roomId"]);
 			let count = response["userChat"];
+			let message = response["message"];
 			if (!document.getElementById("needChat")) {
 				let temp = `
 		<div id="needChat" class="conversation" onclick="joinChat()">
@@ -75,8 +76,8 @@ function openChatList() {
 			<span class="time">18:10</span>
 		</div>
 		<div class="bottom">
-			<span class="user">마지막에 작성한 user</span>
-			<span class="message">마지막 메세지</span>
+			<span class="user">${nickname}</span>
+			<span class="message">${message}</span>
 		</div>
 	</div>
 			`
@@ -212,7 +213,7 @@ function onConnected() {
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
 	//(Object) subscribe(destination, callback, headers = {})
 	//stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, sender: nickname, type: 'JOIN'}))
-	let message = $(".message").last().text().trim();
+	let message = $(".message").last().text().trim().split("\n")[1].trim();
 	stompClient.send("/app/chat/addUser", {Authorization: token}, JSON.stringify({roomId: roomId, type: 'JOIN', message: message}))
 	//(void) send(destination, headers = {}, body = '')
 }
