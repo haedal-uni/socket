@@ -13,10 +13,10 @@ import com.dalcho.adme.repository.ChatRepository;
 import com.dalcho.adme.repository.UserRepository;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.input.ReversedLinesFileReader;
-import org.json.simple.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +26,7 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
@@ -142,15 +142,20 @@ public class ChatServiceImpl {
 				countChat(chatMessage.getSender(), chatMessage.getRoomId());
 			}
 		}
-		JSONObject json = new JSONObject();
-		json.put("roomId", chatMessage.getRoomId());
-		json.put("type", chatMessage.getType().toString());
-		json.put("sender", chatMessage.getSender());
-		json.put("message", chatMessage.getMessage());
-		json.put("adminChat", adminChat.get(chatMessage.getRoomId()));
-		json.put("userChat", userChat.get(chatMessage.getRoomId()));
+		JsonObject jsonObject = new JsonObject();
+		jsonObject.addProperty("roomId", chatMessage.getRoomId());
+		jsonObject.addProperty("type", chatMessage.getType().toString());
+		jsonObject.addProperty("sender", chatMessage.getSender());
+		if (chatMessage.getType().toString().equals("JOIN")){
+			jsonObject.addProperty("message", "");
+		}else {
+			jsonObject.addProperty("message", chatMessage.getMessage());
+		}
+		jsonObject.addProperty("adminChat", adminChat.get(chatMessage.getRoomId()));
+		jsonObject.addProperty("userChat", userChat.get(chatMessage.getRoomId()));
+
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		String json1 = gson.toJson(json);
+		String json1 = gson.toJson(jsonObject);
 		try {
 			FileWriter file = new FileWriter(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt", true);
 			File file1 = new File(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt");
@@ -212,17 +217,18 @@ public class ChatServiceImpl {
 	}
 
 	public List lastLine(String roomId) {
-		File file1 = new File(chatUploadLocation + "/" + roomId + ".txt");
-		try{
-			// 1. ReversedLinesFileReader  준비
-			ReversedLinesFileReader reader
-					= new ReversedLinesFileReader(file1, Charset.forName("UTF-8"));
+//		File file1 = new File(chatUploadLocation + "/" + roomId + ".txt");
 
-			// 2. 뒤에서 7줄 읽기
-			List<String> lines = reader.readLines(7);
-/*
+		try{
+//			// 1. ReversedLinesFileReader  준비
+//			ReversedLinesFileReader reader
+//					= new ReversedLinesFileReader(file1, Charset.forName("UTF-8"));
+//
+//			// 2. 뒤에서 7줄 읽기
+//			List<String> lines = reader.readLines(7);
 			RandomAccessFile file = new RandomAccessFile(chatUploadLocation + "/" + roomId + ".txt", "r");
-			StringBuffer lastLine = new StringBuffer();
+			StringBuilder lastLine = new StringBuilder();
+
 			int lineCount = 7;
 			// 2. 전체 파일 길이
 			long fileLength = file.length();
@@ -247,13 +253,25 @@ public class ChatServiceImpl {
 				lastLine.insert(0, c);
 
 			}
-			int adminChat = lastLine.indexOf("adminChat"); //lastLine.substring(adminChat+12, adminChat+13)
-			int userChat = lastLine.indexOf("userChat"); //lastLine.substring(userChat+11, userChat+12)
-*/
+
+			StringTokenizer st = new StringTokenizer(lastLine.toString(), ",");
+			String roomNum = st.nextToken().trim();
+			String type = st.nextToken().trim();
+			String sender = st.nextToken().trim();
+			String msg = st.nextToken().trim();
+			String admin = st.nextToken().trim();
+			String user = StringUtils.removeEnd(st.nextToken().trim(), "}");
+
+			String adminChat = admin.substring(admin.indexOf("adminChat")+12);
+			String userChat = user.substring(user.indexOf("userChat")+11);
+			String message = msg.substring(msg.indexOf("message")+10);
+			String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+
 			List<String> chat = new ArrayList<>();
-			chat.add(lines.get(6).substring(15, lines.get(6).length()-1)); // adminChat
-			chat.add(lines.get(4).substring(14, lines.get(4).length()-1)); // userChat
-			chat.add(lines.get(2).substring(14, lines.get(2).length()-2)); // message
+			chat.add(adminChat.trim());
+			chat.add(userChat.trim());
+			chat.add(messages.trim());
+
 			return chat;
 			// 4. 결과 출력
 		}catch (FileNotFoundException e) {
