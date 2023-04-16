@@ -5,6 +5,7 @@ import com.dalcho.adme.dto.RedisResponseDto;
 import com.dalcho.adme.model.Redis;
 import com.dalcho.adme.repository.RedisRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -28,10 +29,13 @@ public class RedisService {
 //		return redisTemplate.opsForValue().get(key);
 //	}
 
+	@Cacheable(key = "#chatMessage.sender", unless = "#chatMessage.sender == 'null'", value = "chatMessage.roomId") //,
 	public void addRedis(ChatMessage chatMessage, Long hours){
 		Redis redis = new Redis(chatMessage.getSender(), chatMessage.getRoomId(), hours);
 		Redis save = redisRepository.save(redis);
 	}
+
+	@Cacheable(key = "#nickname", value = "chatMessage.value")
 	public String getRedis(String nickname){
 		Redis byNickname = redisRepository.findByNickname(nickname);
 		return RedisResponseDto.of(byNickname).getRoomId();

@@ -3,7 +3,9 @@ package com.dalcho.adme.dto;
 import com.dalcho.adme.model.Chat;
 import com.dalcho.adme.model.User;
 import lombok.*;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,7 +14,7 @@ import java.util.UUID;
 @ToString
 @Builder
 @AllArgsConstructor
-public class ChatRoomDto { // 일반 crud에서 쓰임
+public class ChatRoomDto implements Serializable { // 일반 crud에서 쓰임
 	private String roomId; // 채팅방 아이디
 	private String roomName; // 채팅방 이름(사용자가 설정한 이름)
 	private String nickname;

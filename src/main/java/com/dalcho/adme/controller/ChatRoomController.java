@@ -6,6 +6,8 @@ import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.service.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +43,7 @@ public class ChatRoomController {
 
 	// 채팅방 생성
 	@PostMapping("/room")
+	@Cacheable(key = "#nickname", cacheNames = "cacheManager", unless = "#nickname == 'null'")
 	public ChatRoomDto createRoom(@RequestBody String nickname) {
 		return chatService.createRoom(nickname);
 	}
