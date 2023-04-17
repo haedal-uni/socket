@@ -29,13 +29,13 @@ public class RedisService {
 //		return redisTemplate.opsForValue().get(key);
 //	}
 
-	@Cacheable(key = "#chatMessage.sender", unless = "#chatMessage.sender == 'null'", value = "chatMessage.roomId") //,
+	@Cacheable(key = "#chatMessage.sender", unless = "#chatMessage.sender == 'null'", value = "roomId", cacheManager = "cacheManager")
 	public void addRedis(ChatMessage chatMessage, Long hours){
 		Redis redis = new Redis(chatMessage.getSender(), chatMessage.getRoomId(), hours);
 		Redis save = redisRepository.save(redis);
 	}
 
-	@Cacheable(key = "#nickname", value = "chatMessage.value")
+	@Cacheable(key = "#nickname", value = "roomId")
 	public String getRedis(String nickname){
 		Redis byNickname = redisRepository.findByNickname(nickname);
 		return RedisResponseDto.of(byNickname).getRoomId();

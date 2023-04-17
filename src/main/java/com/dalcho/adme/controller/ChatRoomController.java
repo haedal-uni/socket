@@ -43,7 +43,7 @@ public class ChatRoomController {
 
 	// 채팅방 생성
 	@PostMapping("/room")
-	@Cacheable(key = "#nickname", cacheNames = "cacheManager", unless = "#nickname == 'null'")
+	@Cacheable(key = "#nickname", value = "ChatRoomDto", unless = "#nickname == 'null'", cacheManager = "cacheManager")
 	public ChatRoomDto createRoom(@RequestBody String nickname) {
 		return chatService.createRoom(nickname);
 	}
