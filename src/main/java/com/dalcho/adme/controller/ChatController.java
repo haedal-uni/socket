@@ -6,6 +6,7 @@ import com.dalcho.adme.service.ChatServiceImpl;
 import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -37,6 +38,8 @@ public class ChatController {
 		chatMessage.setType(ChatMessage.MessageType.JOIN);
 		redisService.addRedis(chatMessage, hours);
 		log.info("redis roomId : {}", redisService.getRedis(chatMessage.getSender()));
+		//redisService.addRedis(chatMessage, hours);
+		//log.info("redis roomId : {}", redisService.getRedis(chatMessage.getSender()));
 		chatService.connectUser("Connect", chatMessage.getRoomId(), chatMessage);
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}

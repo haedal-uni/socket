@@ -1,6 +1,5 @@
 package com.dalcho.adme.controller;
 
-import com.dalcho.adme.config.RedisConfig;
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.exception.notfound.UserNotFoundException;
 import com.dalcho.adme.model.User;
@@ -11,11 +10,8 @@ import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
