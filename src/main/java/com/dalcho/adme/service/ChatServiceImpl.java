@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -31,6 +32,8 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -39,6 +42,8 @@ public class ChatServiceImpl {
 	private Map<String, Integer> connectUsers;
 	private Map<String, Integer> adminChat;
 	private Map<String, Integer> userChat;
+	private final RedisTemplate<String, ChatRoomDto> redisTemplate;
+	private final Long hours = 10L;
 
 
 	@Value("${spring.servlet.multipart.location}")
@@ -73,7 +78,7 @@ public class ChatServiceImpl {
 		try {
 			for (int i = 0; i < all.size(); i++) {
 				User user = userRepository.findById(all.get(i).getUser().getId()).orElseThrow(UserNotFoundException::new);
-				chatRoomDtos.add(ChatRoomDto.of(all.get(i), user, lastLine(all.get(i).getRoomId())));
+				chatRoomDtos.add(ChatRoomDto.of(all.get(i).getRoomId(), user.getNickname(), user, lastLine(all.get(i).getRoomId())));
 			}
 		} catch (NullPointerException e) {
 			log.info(" [현재 채팅방 db 없음!] " + e);
@@ -96,10 +101,18 @@ public class ChatServiceImpl {
 			Chat chat = new Chat(chatRoom.getRoomId(), user);
 			log.info("Service chat :  " + chat);
 			chatRepository.save(chat);
+			long expireTimeInSeconds = 24 * 60 * 60;
+			long creationTimeInMillis = System.currentTimeMillis();
+			long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);
+			redisTemplate.opsForValue().set(nickname, chatRoom, remainingTimeInSeconds, TimeUnit.SECONDS);
 			return chatRoom;
 		} else {
-			Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
-			return ChatRoomDto.of(findChat.get(), user, lastLine(findChat.get().getRoomId()));
+			ChatRoomDto chatRoomDto = redisTemplate.opsForValue().get(nickname);
+			if(chatRoomDto ==null){
+				Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
+				return ChatRoomDto.of(findChat.get().getRoomId(), nickname, user, lastLine(findChat.get().getRoomId()));
+			}
+			return ChatRoomDto.of(chatRoomDto.getRoomId(), chatRoomDto.getNickname(), user,lastLine(chatRoomDto.getRoomId()) );
 		}
 	}
 
@@ -107,7 +120,7 @@ public class ChatServiceImpl {
 	public ChatRoomDto roomOne(String nickname) throws CustomException {
 		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
 		Chat chat = chatRepository.findByUserId(user.getId()).orElseThrow(ChatRoomNotFoundException::new);
-		return ChatRoomDto.of(chat, user, new ArrayList<>());
+		return ChatRoomDto.of(chat.getRoomId(), nickname, user, new ArrayList<>());
 	}
 
 	public void deleteRoom(String roomId) {
@@ -144,13 +157,14 @@ public class ChatServiceImpl {
 		}
 		JsonObject jsonObject = new JsonObject();
 		jsonObject.addProperty("roomId", chatMessage.getRoomId());
-		jsonObject.addProperty("type", chatMessage.getType().toString());
-		jsonObject.addProperty("sender", chatMessage.getSender());
 		if (chatMessage.getType().toString().equals("JOIN")){
-			jsonObject.addProperty("message", "");
+			jsonObject.addProperty("type", "JOINED");
 		}else {
-			jsonObject.addProperty("message", chatMessage.getMessage());
+			jsonObject.addProperty("type", chatMessage.getType().toString());
 		}
+		jsonObject.addProperty("sender", chatMessage.getSender());
+
+		jsonObject.addProperty("message", chatMessage.getMessage());
 		jsonObject.addProperty("adminChat", adminChat.get(chatMessage.getRoomId()));
 		jsonObject.addProperty("userChat", userChat.get(chatMessage.getRoomId()));
 
@@ -200,6 +214,7 @@ public class ChatServiceImpl {
 	}
 
 	public Object readFile(String roomId) {
+		long startTime = System.currentTimeMillis();
 		try {
 			//FileReader reader = new FileReader(chatUploadLocation + "/" + roomName + "-" + roomId + ".txt");
 			String str = Files.readString(Paths.get(chatUploadLocation + "/" + roomId + ".txt"));
@@ -207,6 +222,8 @@ public class ChatServiceImpl {
 			//Object object = parser.parse(reader);
 			Object obj = parser.parse("[" + str + "]");
 			//reader.close();
+			long stopTime = System.currentTimeMillis();
+			log.info("readFile : " + (stopTime - startTime) + " 초");
 			return obj;
 		} catch (NoSuchFileException e) {
 			throw new FileNotFoundException();
