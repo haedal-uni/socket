@@ -2,6 +2,7 @@ package com.dalcho.adme.service;
 
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.RedisResponseDto;
+import com.dalcho.adme.model.Chat;
 import com.dalcho.adme.model.Redis;
 import com.dalcho.adme.repository.RedisRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,38 +11,52 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
 @Service
 @RequiredArgsConstructor
-public class RedisService {
+public class RedisService { //https://loosie.tistory.com/807
+	//https://jane096.github.io/project/redis-caching-part2/
+	//https://sihyung92.oopy.io/database/redis/1
 	private final RedisTemplate<String, String> redisTemp;
 	private final StringRedisTemplate redisTemplate;
 	private final RedisRepository redisRepository;
+	// expireTimeInSeconds: key의 만료 시간을 초 단위로 설정
+// remainingTimeInSeconds: key의 만료 시간까지 남은 시간 (하루를 기준으로 계산)
+
 
 	/*
 	StringRedisTemplate
 	 */
 	// string (opsForValue)
-//	public void setRedisTemplate(ChatMessage chatMessage, Long expirationTime){
-//		redisTemplate.opsForValue().set(chatMessage.getSender(), chatMessage.getRoomId(), expirationTime, TimeUnit.HOURS);
-//		//키가 이미 있다면 마지막에 Set한 값으로 덮어씀
-//	}
-//	public String getRedisTemplate(String key){
-//		return redisTemplate.opsForValue().get(key);
-//	}
+	//키가 이미 있다면 마지막에 Set한 값으로 덮어씀
+	@Cacheable(key = "'roomId:' + #chatMessage.sender", value = "roomId", unless = "#chatMessage.roomId == null")
+	public void addRedis(ChatMessage chatMessage, Long expirationTime){
+		long expireTimeInSeconds = 24 * 60 * 60;
+		long creationTimeInMillis = System.currentTimeMillis();
+		long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);
+		redisTemplate.opsForValue().set(chatMessage.getSender(), chatMessage.getRoomId(), remainingTimeInSeconds, TimeUnit.SECONDS);
+	}
 
-	@Cacheable(key = "#chatMessage.sender", unless = "#chatMessage.sender == 'null'", value = "roomId", cacheManager = "cacheManager")
+	@Cacheable(value = "roomId", key = "#nickname")
+	public String getRedis(String nickname){
+		return redisTemplate.opsForValue().get(nickname);
+	}
+
+/* Repository
+	@Cacheable(key = "#chatMessage.roomId", value = "roomId", unless = "#chatMessage.roomId == 'null'")
 	public void addRedis(ChatMessage chatMessage, Long hours){
 		Redis redis = new Redis(chatMessage.getSender(), chatMessage.getRoomId(), hours);
 		Redis save = redisRepository.save(redis);
 	}
 
-	@Cacheable(key = "#nickname", value = "roomId")
+	@Cacheable(value = "roomId")
 	public String getRedis(String nickname){
 		Redis byNickname = redisRepository.findByNickname(nickname);
 		return RedisResponseDto.of(byNickname).getRoomId();
 	}
-
-	public void addToken(String email, String accessToken){
+		public void addToken(String email, String accessToken){
 		Redis redis = new Redis();
 		redis.setEmail(email);
 		redis.setAccessToken(accessToken);
@@ -52,6 +67,20 @@ public class RedisService {
 	public String getToken(String email){
 		Redis byEmail = redisRepository.findByEmail(email);
 		return byEmail.getAccessToken();
+	}
+*/
+
+	@Cacheable(key = "#email", value = "accessToken", unless = "#accessToken == 'null'")
+	public void addToken(String email, String accessToken){
+		long expireTimeInSeconds = 24 * 60 * 60;
+		long creationTimeInMillis = System.currentTimeMillis();
+		long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);
+		redisTemplate.opsForValue().set(email, accessToken, remainingTimeInSeconds, TimeUnit.SECONDS);
+		//키가 이미 있다면 마지막에 Set한 값으로 덮어씀
+	}
+	@Cacheable(value = "accessToken")
+	public String getToken(String email){
+		return redisTemplate.opsForValue().get(email);
 	}
 
 	public void deleteRedis(String nickname){
