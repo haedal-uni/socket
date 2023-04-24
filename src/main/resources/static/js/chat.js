@@ -7,6 +7,8 @@ let stompClient = null;
 let token = localStorage.getItem('token');
 let urlSearch = new URLSearchParams(location.search);
 let count=0;
+let connectingElement = $(".body");
+let roomId = null;
 function alarmCount(num){
 	if (num===0){
 		count=0;
@@ -102,9 +104,6 @@ function openChatList() {
 	});
 }
 
-function randomChat() {
-}
-
 function onMessageReceived(payload) { // 메세지 받기
 	let message;
 	try {
@@ -161,19 +160,30 @@ function seperator(message) {
 }
 
 function closeChat() {
+	$(".body").text("")
+	isRun = false;
 	document.getElementById('container').classList.remove('open');
 	document.querySelector('.list').classList.remove('close');
 	document.querySelector('.chat').classList.add('close');
 	document.getElementById('back').classList.add('hidden');
 	closeDrawer();
-	if(stompClient.connect()){
+    if(stompClient==null){
+		$("#randomSendButton").css("display","none")
+	} else if(stompClient.connect()){
 		stompClient.disconnect({});
+		$("#sendButton").css("display","none")
 	}
 }
 
 function backChat() {
-	if(stompClient.connect()){
+	isRun = false;
+
+	$(".body").text("")
+	if(stompClient==null){
+		$("#randomSendButton").css("display","none")
+	} else if(stompClient.connect()){
 		stompClient.disconnect({});
+		$("#sendButton").css("display","none")
 	}
 	document.querySelector('.list').classList.remove('close');
 	document.querySelector('.chat').classList.add('close');
@@ -192,9 +202,16 @@ function closeDrawer() {
 
 function joinChat() {
 	document.querySelector('.chat').classList.remove('close');
+	document.getElementById('back').classList.remove('hidden');
 	connect()
 	getFile()
 	alarmCount(0)
+	let temp = `
+	<button class="btn btn-round btn-icon" id="sendButton" type="button" onclick="sendMessage()">send
+<i class="fa fa-paper-plane"></i>
+</button>
+	`
+	$("#sendButtonType").append(temp)
 }
 
 function connect() {
@@ -213,7 +230,7 @@ function onConnected() {
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
 	//(Object) subscribe(destination, callback, headers = {})
 	//stompClient.send("/app/chat/addUser", {Authorization:token}, JSON.stringify({roomId: roomId, sender: nickname, type: 'JOIN'}))
-	let message = $(".message").last().text().trim().split("\n")[1].trim();
+	let message = $(".message-container").last().text().trim().split("\n")[1].trim()
 	stompClient.send("/app/chat/addUser", {Authorization: token}, JSON.stringify({roomId: roomId, type: 'JOIN', message: message}))
 	//(void) send(destination, headers = {}, body = '')
 }
@@ -259,14 +276,148 @@ function getFile() {
 	if (isRun == true) {
 		return;
 	}
-	isRun = true;
+	//isRun = true;
 	$.ajax({
 		type: "GET", url: `/room/enter/` + roomId + '/' + roomName, contentType: false, processData: false, success: function(response) {
+			console.log("ressss  : " + response[1])
 			for (let i = 0; i < response.length; i++) {
 				onMessageReceived(response[i])
 			}
 		}
 	})
+}
+function timer(){
+	let time = 20;
+	let min = "";
+	let sec = "";
+	let x = setInterval(function(){
+		min = parseInt(time/60);
+		sec = time%60;
+		connectingElement.text("  현재 1명의 접속을 기다리고 있는 중입니다.  [ " + min + " 분  " + sec + " 초 ]");
+		time--;
+		if (time < 0) {
+			clearInterval(x);
+			connectingElement.text("시간 초과 다시 시도해주세요");
+		}
+	}, 1000)
+}
+function randomChat() {
+	document.querySelector('.chat').classList.remove('close');
+	$.ajax({
+		type: "GET", url: `/join`, contentType: 'application/json', async:true, processData: false,
+		beforeSend: function() {
+			connectingElement.text("다른 user가 접속할 때 까지 대기중입니다.")
+			timer();
+			joinInterval = setInterval(function() {
+				//connectingElement.text("현재 접속을 기다리고 있는 중입니다.")
+
+			});
+		},
+		success: function(chatMessage) {
+			response = JSON.stringify(chatMessage)
+			clearInterval(joinInterval);
+			if (!response){
+				return;
+			}
+			let message = JSON.parse(response);
+			if (message.type === 'SUCCESS') {
+				connectingElement.text("모두 접속하여 채팅방이 open 되었습니다.");
+				sessionId = message.sessionId;
+				roomId = message.roomId;
+				randomConnect(true)
+			} else if (message.type === 'TIMEOUT') {
+				//connectingElement.text("시간 초과 다시 시도해주세요");
+				console.log("timeout!")
+			}
+		}, error: function(jqxhr) {
+			console.log("http staus " + JSON.stringify(jqxhr))
+			clearInterval(joinInterval);
+			connectingElement.text("다시 시도해주세요")
+		}, complete: function() {
+			clearInterval(joinInterval);
+		},
+	})
+}
+function randomConnect(event){
+	let temp = `
+	<button class="btn btn-round btn-icon" id="randomSendButton" type="button" onclick="randomSendMessage()">send
+<i class="fa fa-paper-plane"></i>
+</button>
+	`
+	$("#sendButtonType").append(temp)
+
+	let nickname = localStorage.getItem('wschat.sender');
+	let token = localStorage.getItem('token');
+	if(nickname){
+		let socket = new SockJS('/ws/chat');
+		stompClient = Stomp.over(socket);
+		stompClient.connect({roomId : roomId}, randomOnConnected, onError);
+	}
+}
+
+function randomOnConnected(){
+	setTimeout(function(){
+		connectingElement.text("");
+	}, 1900)
+
+	setTimeout( function() {
+		stompClient.subscribe('/every-chat/' + roomId, randomMessageReceived);
+		//(Object) subscribe(destination, callback, headers = {})
+
+		stompClient.send("/app/every-chat/addUser", {}, JSON.stringify({roomId: roomId, sender: username, type: 'JOIN'}))
+		//(void) send(destination, headers = {}, body = '')
+		$("#message").removeAttr("disabled");
+	}, 2100)
+}
+
+function randomMessageReceived(payload){
+	let message;
+	try {
+		message = JSON.parse(payload.body);
+	} catch (SyntaxError) {
+		message = payload;
+	}
+	let divName;
+	if (message.sender != "admin") {
+		divName = "user right"
+	} else {
+		divName = "user left"
+	}
+	if (message.type === 'JOIN') {
+		if (message.sender != "admin") {
+			message.message = message.sender + ' 님 안녕하세요';
+			seperator(message.message);
+		}
+	} else if (message.type === 'TALK' && message.message != null) {
+		let temp = `
+    <div class="${divName}">
+    <i class = "avatar">${message.sender[0]}</i>
+        <div class="messages">
+            <div class="message">
+                <div class="message-container">
+                    <div class="message-sender">${message.sender}</div>
+                    <p class="text">${message.message}</p>
+                </div>
+            <div class="message-time">12:08</div>
+        </div>
+    </div>
+</div>
+		`
+		$(".body").append(temp)
+		chatArea.scrollTop = chatArea.scrollHeight;
+	}
+}
+function randomSendMessage(event){
+	let nickname = localStorage.getItem('wschat.sender');
+	let roomId = localStorage.getItem('wschat.roomId');
+	let messageContent = messageInput.value.trim();
+	if (messageContent && stompClient) {
+		let chatMessage = {
+			roomId: roomId, sender: nickname, message: messageContent, type: 'TALK'
+		};
+		stompClient.send("/app/every-chat/message/"+ roomId, {}, JSON.stringify(chatMessage));
+		messageInput.value = '';
+	}
 }
 
 function alarmSubscribe() {
