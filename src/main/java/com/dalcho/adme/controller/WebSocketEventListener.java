@@ -8,6 +8,7 @@ import com.dalcho.adme.service.ChatServiceImpl;
 import com.dalcho.adme.service.EveryChatServiceImpl;
 import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -22,6 +23,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 //@EventListener는 동기적으로 처리를 진행
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class WebSocketEventListener {
 	private final SimpMessageSendingOperations sendingOperations;
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
@@ -42,6 +44,7 @@ public class WebSocketEventListener {
 		String email = (String) token.getPrincipal().getAttributes().get("email");
 		User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 		String nickname = user.getNickname();
+		log.info("disconnected name : " + nickname);
 		String role = token.getPrincipal().getAuthorities().toString().replace("[","").replace("]","");
 		String roomId = redisService.getRedis(nickname);
 		if (roomId.startsWith("aaaa")) {

@@ -1,9 +1,7 @@
 package com.dalcho.adme.dto;
 
-import com.dalcho.adme.model.Chat;
 import com.dalcho.adme.model.User;
 import lombok.*;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 
 import java.io.Serializable;
 import java.util.List;
