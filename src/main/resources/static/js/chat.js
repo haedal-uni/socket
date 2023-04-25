@@ -62,44 +62,85 @@ function openChat() {
 }
 
 function openChatList() {
+	if (document.getElementById("needChat")) {
+		needLine()
+	}else{
+		let nickname = localStorage.getItem('wschat.sender');
+		$.ajax({
+			type: "POST",
+			url: `/room`,
+			data: nickname,
+			contentType: false,
+			processData: false,
+			success: function(response) {
+				localStorage.setItem('wschat.roomName', nickname);
+				localStorage.setItem('wschat.roomId', response["roomId"]);
+				let count = response["userChat"];
+				let message = response["message"];
+				let temp = `
+          <div id="needChat" class="conversation" onclick="joinChat()">
+            <div class="top">
+              <span class="badge">${count}</span>
+              <span class="title">리스트에서 제목</span>
+              <span class="time">18:10</span>
+            </div>
+            <div class="bottom">
+              <span class="user">${nickname}</span>
+              <span class="message">${message}</span>
+            </div>
+          </div>
+            <div id ="randomChat" class="conversation" onclick="randomChat()">
+              <div class="top">
+                <span></span>
+                <span class="title">랜덤 채팅방 참여하기</span>
+                <span class="time">15/05/2019</span>
+              </div>
+              <div class="bottom">
+                <span class="user">adme</span>
+                <span class="message">랜덤으로 2명 채팅이 가능합니다.</span>
+              </div>
+            </div>`
+				$(".conversations").append(temp);
+			}
+		});
+	}
+}
+function needLine(){
+	$(".conversations").empty();
+	let roomId = localStorage.getItem('wschat.roomId');
 	let nickname = localStorage.getItem('wschat.sender');
 	$.ajax({
-		type: "POST", url: `/room`, data: nickname, contentType: false, processData: false, success: function(response) {
-			localStorage.setItem('wschat.roomName', nickname);
-			localStorage.setItem('wschat.roomId', response["roomId"]);
-			let count = response["userChat"];
-			let message = response["message"];
-			if (!document.getElementById("needChat")) {
-				let temp = `
-		<div id="needChat" class="conversation" onclick="joinChat()">
-        <div class="top">
-			<span class="badge">${count}</span>
-			<span class="title">리스트에서 제목</span>
-			<span class="time">18:10</span>
-		</div>
-		<div class="bottom">
-			<span class="user">${nickname}</span>
-			<span class="message">${message}</span>
-		</div>
-	</div>
-			`
-				$(".conversations").append(temp);
-				if (!document.getElementById("randomChat")) {
-					let temp_html = `	
-				<div id ="randomChat" class="conversation" onclick="randomChat()">
-					<div class="top">
-					<span></span>
-					<span class="title">랜덤 채팅방 참여하기</span>
-					<span class="time">15/05/2019</span>
-					</div>
-					<div class="bottom">
-					<span class="user">adme</span>
-					<span class="message">랜덤으로 2명 채팅이 가능합니다.</span>
-					</div>
-				</div>`
-					$(".conversations").append(temp_html);
-				}
-			}
+		type: "GET",
+		url: `/room/enter/`+ roomId,
+		contentType: false,
+		processData: false,
+		success: function(response) {
+			let count = response[1];
+			let message = response[2];
+			let temp = `
+          <div id="needChat" class="conversation" onclick="joinChat()">
+            <div class="top">
+              <span class="badge">${count}</span>
+              <span class="title">리스트에서 제목</span>
+              <span class="time">18:10</span>
+            </div>
+            <div class="bottom">
+              <span class="user">${nickname}</span>
+              <span class="message">${message}</span>
+            </div>
+          </div>
+            <div id ="randomChat" class="conversation" onclick="randomChat()">
+              <div class="top">
+                <span></span>
+                <span class="title">랜덤 채팅방 참여하기</span>
+                <span class="time">15/05/2019</span>
+              </div>
+              <div class="bottom">
+                <span class="user">adme</span>
+                <span class="message">랜덤으로 2명 채팅이 가능합니다.</span>
+              </div>
+            </div>`
+			$(".conversations").append(temp);
 		}
 	});
 }
@@ -177,7 +218,6 @@ function closeChat() {
 
 function backChat() {
 	isRun = false;
-
 	$(".body").text("")
 	if(stompClient==null){
 		$("#randomSendButton").css("display","none")

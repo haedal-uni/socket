@@ -1,8 +1,6 @@
 package com.dalcho.adme.service;
 
 import com.dalcho.adme.dto.ChatMessage;
-import com.dalcho.adme.dto.RedisResponseDto;
-import com.dalcho.adme.model.Chat;
 import com.dalcho.adme.model.Redis;
 import com.dalcho.adme.repository.RedisRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,14 +9,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-public class RedisService { //https://loosie.tistory.com/807
-	//https://jane096.github.io/project/redis-caching-part2/
-	//https://sihyung92.oopy.io/database/redis/1
+public class RedisService {
 	private final RedisTemplate<String, String> redisTemp;
 	private final StringRedisTemplate redisTemplate;
 	private final RedisRepository redisRepository;
@@ -69,8 +64,7 @@ public class RedisService { //https://loosie.tistory.com/807
 		return byEmail.getAccessToken();
 	}
 */
-
-	@Cacheable(key = "#email", value = "accessToken", unless = "#accessToken == 'null'")
+	@Cacheable(key = "#email", value = "accessToken", unless = "#result == null || #accessToken == null")
 	public void addToken(String email, String accessToken){
 		long expireTimeInSeconds = 24 * 60 * 60;
 		long creationTimeInMillis = System.currentTimeMillis();

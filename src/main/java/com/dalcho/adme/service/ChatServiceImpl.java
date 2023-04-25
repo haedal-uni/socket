@@ -12,11 +12,11 @@ import com.dalcho.adme.model.User;
 import com.dalcho.adme.repository.ChatRepository;
 import com.dalcho.adme.repository.UserRepository;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,15 +24,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -44,8 +42,6 @@ public class ChatServiceImpl {
 	private Map<String, Integer> userChat;
 	private final RedisTemplate<String, ChatRoomDto> redisTemplate;
 	private final Long hours = 10L;
-
-
 	@Value("${spring.servlet.multipart.location}")
 	private String chatUploadLocation;
 	private final UserRepository userRepository;
@@ -58,18 +54,17 @@ public class ChatServiceImpl {
 	}
 
 	public void connectUser(String status, String roomId, ChatMessage chatMessage) {
-		if (Objects.equals(status, "Connect")){
+		if (Objects.equals(status, "Connect")) {
 			connectUsers.putIfAbsent(roomId, 0); // 값이 없으면 이걸 수행하고 있으면 수행안함 (값이 있으므로)
 			int num = connectUsers.get(roomId);
-			connectUsers.put(roomId, (num+1));
+			connectUsers.put(roomId, (num + 1));
 			saveFile(chatMessage);
 		} else if (Objects.equals(status, "Disconnect")) {
 			int num = connectUsers.get(roomId);
-			connectUsers.put(roomId, (num-1));
+			connectUsers.put(roomId, (num - 1));
 		}
 		log.info("현재 인원 : " + connectUsers.get(roomId));
 	}
-
 
 	//채팅방 불러오기
 	public List<ChatRoomDto> findAllRoom() {
@@ -94,6 +89,9 @@ public class ChatServiceImpl {
 	//채팅방 생성
 	public ChatRoomDto createRoom(String nickname) {
 		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
+		long expireTimeInSeconds = 24 * 60 * 60;
+		long creationTimeInMillis = System.currentTimeMillis();
+		long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);
 		ChatRoomDto chatRoom = new ChatRoomDto();
 		if (!chatRepository.existsByUserId(user.getId())) {
 			chatRoom = ChatRoomDto.create(nickname);
@@ -101,18 +99,21 @@ public class ChatServiceImpl {
 			Chat chat = new Chat(chatRoom.getRoomId(), user);
 			log.info("Service chat :  " + chat);
 			chatRepository.save(chat);
-			long expireTimeInSeconds = 24 * 60 * 60;
-			long creationTimeInMillis = System.currentTimeMillis();
-			long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);
 			redisTemplate.opsForValue().set(nickname, chatRoom, remainingTimeInSeconds, TimeUnit.SECONDS);
 			return chatRoom;
 		} else {
-			ChatRoomDto chatRoomDto = redisTemplate.opsForValue().get(nickname);
-			if(chatRoomDto ==null){
+			ChatRoomDto chatRoomDto = null;
+			// 위의 if문 chatRepository가 아니라 추후에 redis로 값이 있는지 check
+//			try{
+//				chatRoomDto = redisTemplate.opsForValue().get(nickname);
+//			}catch (Exception e) {
+//				redisTemplate.opsForValue().set(nickname, chatRoom, remainingTimeInSeconds, TimeUnit.SECONDS);
+//			}
+			if (chatRoomDto == null) {
 				Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
 				return ChatRoomDto.of(findChat.get().getRoomId(), nickname, user, lastLine(findChat.get().getRoomId()));
 			}
-			return ChatRoomDto.of(chatRoomDto.getRoomId(), chatRoomDto.getNickname(), user,lastLine(chatRoomDto.getRoomId()) );
+			return ChatRoomDto.of(chatRoomDto.getRoomId(), chatRoomDto.getNickname(), user, lastLine(chatRoomDto.getRoomId()));
 		}
 	}
 
@@ -130,9 +131,9 @@ public class ChatServiceImpl {
 		log.warn("5분뒤에 삭제 됩니다.");
 	}
 
-	public ChatMessage chatAlarm(String sender, String roomId){
+	public ChatMessage chatAlarm(String sender, String roomId) {
 		ChatMessage chatMessage = new ChatMessage();
-		if (Objects.equals(sender, "admin") && connectUsers.get(roomId) == 1){
+		if (Objects.equals(sender, "admin") && connectUsers.get(roomId) == 1) {
 			chatMessage.setRoomId(roomId);
 			chatMessage.setSender(sender);
 			chatMessage.setMessage("고객센터에 문의한 글에 답글이 달렸습니다.");
@@ -142,14 +143,14 @@ public class ChatServiceImpl {
 			chatMessage.setSender(sender);
 			chatMessage.setMessage(sender + " 님이 답을 기다리고 있습니다.");
 			return chatMessage;
-		}else {
+		} else {
 			return chatMessage;
 		}
 	}
 
-	public void saveFile(ChatMessage chatMessage) { // 파일 저장
-		if (connectUsers.get(chatMessage.getRoomId())!=0){
-			if ((chatMessage.getType().toString()).equals("JOIN")){
+	public void saveFile(ChatMessage chatMessage) {
+		if (connectUsers.get(chatMessage.getRoomId()) != 0) {
+			if (chatMessage.getType() == ChatMessage.MessageType.JOIN) {
 				reset(chatMessage.getSender(), chatMessage.getRoomId());
 			} else {
 				countChat(chatMessage.getSender(), chatMessage.getRoomId());
@@ -163,65 +164,59 @@ public class ChatServiceImpl {
 			jsonObject.addProperty("type", chatMessage.getType().toString());
 		}
 		jsonObject.addProperty("sender", chatMessage.getSender());
-
 		jsonObject.addProperty("message", chatMessage.getMessage());
 		jsonObject.addProperty("adminChat", adminChat.get(chatMessage.getRoomId()));
 		jsonObject.addProperty("userChat", userChat.get(chatMessage.getRoomId()));
 
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		String json1 = gson.toJson(jsonObject);
-		try {
-			FileWriter file = new FileWriter(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt", true);
-			File file1 = new File(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt");
-			if (file1.exists() && file1.length() == 0) {
-				file.write(json1);
+		Gson gson = new Gson();
+		String json = gson.toJson(jsonObject);
+
+		try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt", true)))){
+			if (new File(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt").length() == 0) {
+				out.println("[" + json + "]");
 				chatAlarm(chatMessage.getSender(), chatMessage.getRoomId());
 			} else {
-				file.write("," + json1);
+				out.println("," + json);
 			}
-			file.flush();
-			file.close(); // 연결 끊기
 		} catch (IOException e) {
 			log.error("[error] " + e);
 		}
 	}
 
-	public void reset(String sender, String roomId){
-		if (sender.equals("admin")){
+
+	public void reset(String sender, String roomId) {
+		if (sender.equals("admin")) {
 			adminChat.putIfAbsent(roomId, 0);
 			userChat.putIfAbsent(roomId, 0);
-			adminChat.put(roomId,0);
+			adminChat.put(roomId, 0);
 		} else {
 			userChat.putIfAbsent(roomId, 0);
 			adminChat.putIfAbsent(roomId, 0);
-			userChat.put(roomId,0);
+			userChat.put(roomId, 0);
 		}
 	}
 
-	public void countChat(String sender, String roomId){
-		if(sender.equals("admin")) {
+	public void countChat(String sender, String roomId) {
+		if (sender.equals("admin")) {
 			userChat.putIfAbsent(roomId, 0);
 			int num = userChat.get(roomId);
-			userChat.put(roomId, num+1);
-			adminChat.put(roomId,0);
-		}
-		else {
+			userChat.put(roomId, num + 1);
+			adminChat.put(roomId, 0);
+		} else {
 			adminChat.putIfAbsent(roomId, 0);
 			int num = adminChat.get(roomId);
-			adminChat.put(roomId, num+1);
-			userChat.put(roomId,0);
+			adminChat.put(roomId, num + 1);
+			userChat.put(roomId, 0);
 		}
 	}
 
 	public Object readFile(String roomId) {
 		long startTime = System.currentTimeMillis();
 		try {
-			//FileReader reader = new FileReader(chatUploadLocation + "/" + roomName + "-" + roomId + ".txt");
-			String str = Files.readString(Paths.get(chatUploadLocation + "/" + roomId + ".txt"));
+			List<String> lines = Files.lines(Paths.get(chatUploadLocation, roomId + ".txt")).collect(Collectors.toList());
+			String jsonString = "[" + String.join(",", lines) + "]";
 			JSONParser parser = new JSONParser();
-			//Object object = parser.parse(reader);
-			Object obj = parser.parse("[" + str + "]");
-			//reader.close();
+			Object obj = parser.parse(jsonString);
 			long stopTime = System.currentTimeMillis();
 			log.info("readFile : " + (stopTime - startTime) + " 초");
 			return obj;
@@ -233,70 +228,49 @@ public class ChatServiceImpl {
 		}
 	}
 
-	public List lastLine(String roomId) {
-//		File file1 = new File(chatUploadLocation + "/" + roomId + ".txt");
-
-		try{
-//			// 1. ReversedLinesFileReader  준비
-//			ReversedLinesFileReader reader
-//					= new ReversedLinesFileReader(file1, Charset.forName("UTF-8"));
-//
-//			// 2. 뒤에서 7줄 읽기
-//			List<String> lines = reader.readLines(7);
-			RandomAccessFile file = new RandomAccessFile(chatUploadLocation + "/" + roomId + ".txt", "r");
-			StringBuilder lastLine = new StringBuilder();
-
-			int lineCount = 7;
-			// 2. 전체 파일 길이
+	public List<String> lastLine(String roomId) {
+		try (RandomAccessFile file = new RandomAccessFile(chatUploadLocation + "/" + roomId + ".txt", "r")) {
 			long fileLength = file.length();
 
-			// 3. 포인터를 이용하여 뒤에서부터 앞으로 데이터를 읽는다.
-			for (long pointer = fileLength - 1; pointer >= 0; pointer--) {
+			// 파일 포인터를 파일 끝으로 이동시킴
+			file.seek(fileLength);
 
-				// 3.1. pointer를 읽을 글자 앞으로 옮긴다.
+			// 파일 포인터를 끝에서 두 번째 줄의 시작 지점으로 이동시킴
+			long pointer = fileLength - 2;
+			while (pointer > 0) {
 				file.seek(pointer);
-
-				// 3.2. pointer 위치의 글자를 읽는다.
 				char c = (char) file.read();
-
-				// 3.3. 줄바꿈이 7번(lineCount) 나타나면 더 이상 글자를 읽지 않는다.
 				if (c == '\n') {
-					lineCount--;
-					if (lineCount == 0) {
-						break;
-					}
+					break;
 				}
-				// 3.4. 결과 문자열의 앞에 읽어온 글자(c)를 붙여준다.
-				lastLine.insert(0, c);
-
+				pointer--;
 			}
+			file.seek(pointer + 1);
 
-			StringTokenizer st = new StringTokenizer(lastLine.toString(), ",");
-			String roomNum = st.nextToken().trim();
-			String type = st.nextToken().trim();
-			String sender = st.nextToken().trim();
-			String msg = st.nextToken().trim();
-			String admin = st.nextToken().trim();
-			String user = StringUtils.removeEnd(st.nextToken().trim(), "}");
-
-			String adminChat = admin.substring(admin.indexOf("adminChat")+12);
-			String userChat = user.substring(user.indexOf("userChat")+11);
-			String message = msg.substring(msg.indexOf("message")+10);
+			// 두 번째 줄의 내용을 읽어서 반환함
+			String line = file.readLine();
+			if (line == null || line.trim().isEmpty()) {
+				return Collections.emptyList();
+			}
+			if (line.startsWith(",")) {
+				line = line.substring(1);
+			}
+			JSONObject json = new JSONObject(line);
+			int adminChat = json.getInt("adminChat");
+			int userChat = json.getInt("userChat");
+			String message = json.getString("message").trim();
 			String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
 
 			List<String> chat = new ArrayList<>();
-			chat.add(adminChat.trim());
-			chat.add(userChat.trim());
-			chat.add(messages.trim());
-
+			chat.add(Integer.toString(adminChat));
+			chat.add(Integer.toString(userChat));
+			chat.add(messages);
 			return chat;
-			// 4. 결과 출력
-		}catch (FileNotFoundException e) {
+
+		} catch (IOException | JSONException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			return Collections.emptyList();
 		}
-		return new ArrayList<>();
 	}
 
 }
