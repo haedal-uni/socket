@@ -58,6 +58,12 @@ dependencies {
 
     //file
     implementation 'commons-io:commons-io:2.11.0'
+
+    //test
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.assertj:assertj-core:3.23.1'
 }
 
 test {
