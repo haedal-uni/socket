@@ -2,14 +2,14 @@ package com.dalcho.adme.controller;
 
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.model.User;
 import com.dalcho.adme.service.ChatServiceImpl;
 import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
@@ -32,11 +32,14 @@ public class ChatController {
 	}
 
 	@MessageMapping("/chat/addUser")
-	public void addUser(@Payload ChatMessage chatMessage, @Header("Authorization") String token) {
-		String nickname = jwtTokenProvider.getNickname(token);
-		chatMessage.setSender(nickname);
+	public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+		String token = headerAccessor.getFirstNativeHeader("Authorization");
+		User user= jwtTokenProvider.getUserFromToken(token);
+		log.info("[chat] addUser token 검사: " + user.getNickname());
+		chatMessage.setSender(user.getNickname());
 		chatMessage.setType(ChatMessage.MessageType.JOIN);
-		redisService.addRedis(chatMessage, hours);
+		System.out.println(chatMessage.getRoomId());
+		redisService.addRedis(chatMessage);
 		log.info("redis roomId : {}", redisService.getRedis(chatMessage.getSender()));
 		//redisService.addRedis(chatMessage, hours);
 		//log.info("redis roomId : {}", redisService.getRedis(chatMessage.getSender()));

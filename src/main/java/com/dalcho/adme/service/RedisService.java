@@ -26,8 +26,8 @@ public class RedisService {
 	 */
 	// string (opsForValue)
 	//키가 이미 있다면 마지막에 Set한 값으로 덮어씀
-	@Cacheable(key = "'roomId:' + #chatMessage.sender", value = "roomId", unless = "#chatMessage.roomId == null")
-	public void addRedis(ChatMessage chatMessage, Long expirationTime){
+	@Cacheable(key = "'roomId:' + #chatMessage.roomId", value = "roomId", unless = "#chatMessage.roomId == null")
+	public void addRedis(ChatMessage chatMessage){
 		long expireTimeInSeconds = 24 * 60 * 60;
 		long creationTimeInMillis = System.currentTimeMillis();
 		long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);

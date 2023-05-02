@@ -25,7 +25,6 @@ public class EveryChatController {
 	private final EveryChatServiceImpl everyChatService;
 	private final SimpMessagingTemplate template;
 	private final RedisService redisService;
-	private final Long hours = 10L;
 
 	@GetMapping("/join")
 	public DeferredResult<EveryChatResponse> everyRoomChat() {
@@ -59,7 +58,7 @@ public class EveryChatController {
 
 	@MessageMapping("every-chat/addUser")
 	public void everyChatAddUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor){
-		redisService.addRedis(chatMessage, hours);
+		redisService.addRedis(chatMessage);
 		String sessionId = (String) headerAccessor.getHeader("simpSessionId");
 		everyChatService.connectUser(chatMessage.getRoomId(), sessionId);
 		template.convertAndSend("/every-chat/" + chatMessage.getRoomId(), chatMessage);
