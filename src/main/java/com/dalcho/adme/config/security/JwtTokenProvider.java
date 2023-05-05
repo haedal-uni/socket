@@ -121,5 +121,18 @@ public class JwtTokenProvider {
 			throw e;
 		}
 	}
+
+	public User getUserFromToken(String token) {
+		Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+		String nickname = claims.getSubject();
+		String role = claims.get("roles", String.class);
+		log.info("[chat] token - user 전체 정보 확인");
+		UserRole userRole = UserRole.of(role);
+		return User.builder()
+				.nickname(nickname)
+				.role(userRole)
+				.build();
+	}
+
 }
 
