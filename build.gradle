@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '2.7.5'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
+    id "me.champeau.jmh" version "0.6.4"
 }
 
 group = 'com.dalcho'
@@ -41,7 +42,7 @@ dependencies {
     // chat-file
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
-    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.commons:commons-lang3' //StringUtils
 
     // securtiy
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -57,15 +58,23 @@ dependencies {
     //implementation 'org.springframework.session:spring-session-data-redis'
 
     //file
-    implementation 'commons-io:commons-io:2.11.0'
+    //implementation 'commons-io:commons-io:2.11.0'
 
     //test
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'org.assertj:assertj-core:3.23.1'
-}
 
+    // JMH
+    //implementation 'org.openjdk.jmh:jmh-core:1.32'
+    //implementation 'org.openjdk.jmh:jmh-generator-annprocess:1.32'
+}
+jmh{
+    fork = 1
+    warmupIterations = 10
+    iterations = 1
+}
 test {
     useJUnitPlatform()
 }

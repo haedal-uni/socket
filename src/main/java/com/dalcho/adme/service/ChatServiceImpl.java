@@ -41,7 +41,6 @@ public class ChatServiceImpl {
 	private Map<String, Integer> adminChat;
 	private Map<String, Integer> userChat;
 	private final RedisTemplate<String, ChatRoomDto> redisTemplate;
-	private final Long hours = 10L;
 	@Value("${spring.servlet.multipart.location}")
 	private String chatUploadLocation;
 	private final UserRepository userRepository;
