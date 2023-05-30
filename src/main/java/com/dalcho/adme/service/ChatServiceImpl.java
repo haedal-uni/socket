@@ -56,14 +56,15 @@ public class ChatServiceImpl {
 
 	public void connectUser(String status, String roomId, ChatMessage chatMessage) {
 		log.info("[ connectUser ] roomId : " + roomId);
+		int num = 0;
 		synchronized (lock) {
 			if (Objects.equals(status, "Connect")) {
 				connectUsers.putIfAbsent(roomId, 0); // 값이 없으면 이걸 수행하고 있으면 수행안함 (값이 있으므로)
-				int num = connectUsers.get(roomId);
+				num = connectUsers.get(roomId);
 				connectUsers.put(roomId, (num + 1));
 				saveFile(chatMessage);
 			} else if (Objects.equals(status, "Disconnect")) {
-				int num = connectUsers.get(roomId);
+				num = connectUsers.get(roomId);
 				connectUsers.put(roomId, (num - 1));
 			}
 			log.info("현재 인원 : " + connectUsers.get(roomId));
