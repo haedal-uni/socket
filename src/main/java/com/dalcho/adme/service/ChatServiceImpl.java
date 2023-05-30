@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -44,25 +45,30 @@ public class ChatServiceImpl {
 	@Value("${spring.servlet.multipart.location}")
 	private String chatUploadLocation;
 	private final UserRepository userRepository;
+	private final Object lock = new Object();
 
 	@PostConstruct // @PostConstruct는 의존성 주입이 이루어진 후 초기화를 수행하는 메서드
 	private void setUp() { // 안그러면 NullPointerException
-		this.connectUsers = new HashMap<>();
+		this.connectUsers = new ConcurrentHashMap<>();
 		this.adminChat = new HashMap<>();
 		this.userChat = new HashMap<>();
 	}
 
 	public void connectUser(String status, String roomId, ChatMessage chatMessage) {
-		if (Objects.equals(status, "Connect")) {
-			connectUsers.putIfAbsent(roomId, 0); // 값이 없으면 이걸 수행하고 있으면 수행안함 (값이 있으므로)
-			int num = connectUsers.get(roomId);
-			connectUsers.put(roomId, (num + 1));
-			saveFile(chatMessage);
-		} else if (Objects.equals(status, "Disconnect")) {
-			int num = connectUsers.get(roomId);
-			connectUsers.put(roomId, (num - 1));
+		log.info("[ connectUser ] roomId : " + roomId);
+		int num = 0;
+		synchronized (lock) {
+			if (Objects.equals(status, "Connect")) {
+				connectUsers.putIfAbsent(roomId, 0); // 값이 없으면 이걸 수행하고 있으면 수행안함 (값이 있으므로)
+				num = connectUsers.get(roomId);
+				connectUsers.put(roomId, (num + 1));
+				saveFile(chatMessage);
+			} else if (Objects.equals(status, "Disconnect")) {
+				num = connectUsers.get(roomId);
+				connectUsers.put(roomId, (num - 1));
+			}
+			log.info("현재 인원 : " + connectUsers.get(roomId));
 		}
-		log.info("현재 인원 : " + connectUsers.get(roomId));
 	}
 
 	//채팅방 불러오기
