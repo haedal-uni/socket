@@ -1,9 +1,9 @@
 package com.dalcho.adme.service;
 
 import com.dalcho.adme.dto.ChatMessage;
-import com.dalcho.adme.model.Redis;
-import com.dalcho.adme.repository.RedisRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -13,10 +13,11 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RedisService {
 	private final RedisTemplate<String, String> redisTemp;
 	private final StringRedisTemplate redisTemplate;
-	private final RedisRepository redisRepository;
+	//private final RedisRepository redisRepository;
 	// expireTimeInSeconds: key의 만료 시간을 초 단위로 설정
 // remainingTimeInSeconds: key의 만료 시간까지 남은 시간 (하루를 기준으로 계산)
 
@@ -26,17 +27,22 @@ public class RedisService {
 	 */
 	// string (opsForValue)
 	//키가 이미 있다면 마지막에 Set한 값으로 덮어씀
-	@Cacheable(key = "'roomId:' + #chatMessage.roomId", value = "roomId", unless = "#chatMessage.roomId == null")
+	@Cacheable(key = "#chatMessage.sender", value = "roomId", unless = "#chatMessage.roomId == null")
 	public void addRedis(ChatMessage chatMessage){
+		log.info("[addRedis의 KEY] : " + chatMessage.getSender());
 		long expireTimeInSeconds = 24 * 60 * 60;
 		long creationTimeInMillis = System.currentTimeMillis();
 		long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);
 		redisTemplate.opsForValue().set(chatMessage.getSender(), chatMessage.getRoomId(), remainingTimeInSeconds, TimeUnit.SECONDS);
 	}
 
-	@Cacheable(value = "roomId", key = "#nickname")
+	@CachePut(value = "roomId", key = "#nickname", unless = "#result == null")
 	public String getRedis(String nickname){
 		return redisTemplate.opsForValue().get(nickname);
+	}
+
+	public void deleteRedis(String nickname){
+		redisTemplate.delete(nickname);
 	}
 
 /* Repository
@@ -76,30 +82,6 @@ public class RedisService {
 	public String getToken(String email){
 		return redisTemplate.opsForValue().get(email);
 	}
-
-	public void deleteRedis(String nickname){
-		Redis byNickname = redisRepository.findByNickname(nickname);
-		redisRepository.delete(byNickname);
-	}
-	public void deleteToken(String email){
-		Redis byEmail = redisRepository.findByEmail(email);
-		redisRepository.delete(byEmail);
-	}
-
-
-	/*
-	RedisTemplate
-	 */
-//	public void setRedisValue(ChatMessage chatMessage, Long hours){
-//		ValueOperations<String, String> values = redisTemp.opsForValue();
-//		values.set(chatMessage.getSender(), chatMessage.getRoomId(), hours);
-//	}
-//	public String getRedisValue(String key){
-//		ValueOperations<String, String> values = redisTemp.opsForValue();
-//		return values.get(key);
-//	}
-
-
 }
 
 

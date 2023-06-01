@@ -35,6 +35,5 @@ public class UserController {
 		String accessToken = redisService.getToken(byNickname.getEmail());
 		userService.kakaoLogout(accessToken);
 		redisService.deleteRedis(nickname);
-		redisService.deleteToken(byNickname.getEmail());
 	}
 }
