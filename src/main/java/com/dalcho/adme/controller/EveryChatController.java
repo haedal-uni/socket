@@ -5,7 +5,6 @@ import com.dalcho.adme.dto.ChatRoomMap;
 import com.dalcho.adme.dto.EveryChatResponse;
 import com.dalcho.adme.service.EveryChatServiceImpl;
 import com.dalcho.adme.service.RedisService;
-import com.dalcho.adme.util.ServletUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -15,6 +14,7 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -26,12 +26,10 @@ public class EveryChatController {
 	private final SimpMessagingTemplate template;
 	private final RedisService redisService;
 
-	@GetMapping("/join")
-	public DeferredResult<EveryChatResponse> everyRoomChat() {
-		String sessionId = ServletUtil.getSession().getId();
-		log.info(">> Join request. session id : {}", sessionId);
-
-		final ChatRoomMap user = new ChatRoomMap(sessionId);
+	@GetMapping("/join/{nickname}")
+	public DeferredResult<EveryChatResponse> everyRoomChat(@PathVariable String nickname) { // session Id 대신 nickname으로 변경
+		log.info(">> Join request. nickname : {}", nickname);
+		final ChatRoomMap user = new ChatRoomMap(nickname);
 		final DeferredResult<EveryChatResponse> deferredResult = new DeferredResult<>(null);
 
 		everyChatService.addUser(user, deferredResult);
@@ -59,8 +57,8 @@ public class EveryChatController {
 	@MessageMapping("every-chat/addUser")
 	public void everyChatAddUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor){
 		redisService.addRedis(chatMessage);
-		String sessionId = (String) headerAccessor.getHeader("simpSessionId");
-		everyChatService.connectUser(chatMessage.getRoomId(), sessionId);
+		//String sessionId = (String) headerAccessor.getHeader("simpSessionId");
+		everyChatService.connectUser(chatMessage.getRoomId(), chatMessage.getSender());
 		template.convertAndSend("/every-chat/" + chatMessage.getRoomId(), chatMessage);
 	}
 }

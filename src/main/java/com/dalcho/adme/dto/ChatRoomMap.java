@@ -11,7 +11,7 @@ import java.util.Map;
 @Setter
 @ToString
 public class ChatRoomMap {
-	private String sessionId;
+	private String nickname;
 	private static ChatRoomMap chatRoomMap = new ChatRoomMap();
 	private Map<String, ChatRoomDto> chatRooms = new LinkedHashMap<>();
 //    @PostConstruct
@@ -22,11 +22,11 @@ public class ChatRoomMap {
 	public ChatRoomMap() {
 	}
 
-	public ChatRoomMap(String sessionId) {
-		this.sessionId = sessionId;
+	public ChatRoomMap(String nickname) {
+		this.nickname = nickname;
 	}
-	public String getSessionId() {
-		return sessionId;
+	public String getNickname() {
+		return nickname;
 	}
 
 	public static ChatRoomMap getInstance() {
