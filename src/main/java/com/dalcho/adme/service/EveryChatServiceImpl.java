@@ -20,7 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Service
 public class EveryChatServiceImpl {
 	private Map<ChatRoomMap, DeferredResult<EveryChatResponse>> waitingUsers;
-	// {key : websocket session id, value : chat room id}
+	// {key : nickname, value : chat room id}
 	private Map<String, DeferredResult<EveryChatResponse>> watingQueue;
 	private Map<String, String> connectedUsers;
 	private ReentrantReadWriteLock lock;
@@ -44,7 +44,7 @@ public class EveryChatServiceImpl {
 		}
 		try {
 			lock.writeLock().lock();
-			waitingUsers.put(request, deferredResult); // sessionId, roomId
+			waitingUsers.put(request, deferredResult); // nickname, roomId
 		} catch (TaskRejectedException e){
 			log.warn(String.valueOf(e));
 		}
@@ -61,7 +61,7 @@ public class EveryChatServiceImpl {
 		if (watingQueue.size() < 2) {
 			try {
 				lock.writeLock().lock();
-				setJoinResult(waitingUsers.remove(chatRoomMap), new EveryChatResponse(EveryChatResponse.ResponseType.TIMEOUT, null, chatRoomMap.getSessionId()));
+				setJoinResult(waitingUsers.remove(chatRoomMap), new EveryChatResponse(EveryChatResponse.ResponseType.TIMEOUT, null, chatRoomMap.getNickname()));
 			} finally {
 				lock.writeLock().unlock();
 			}
@@ -75,6 +75,7 @@ public class EveryChatServiceImpl {
 			if (waitingUsers.size() < 2) { // 대기 큐에 2명 미만이면 대기
 				return;
 			}
+			log.info("[random chat] chat start !!");
 			// 대기 큐에 2명 이상
 			Iterator<ChatRoomMap> itr = waitingUsers.keySet().iterator();
 			// next() : Iterator가 자신이 가리키는 데이터저장소에서 현재위치를 순차적으로 하나 증가해서 이동
@@ -84,8 +85,8 @@ public class EveryChatServiceImpl {
 			DeferredResult<EveryChatResponse> user1Result = waitingUsers.remove(user1);
 			DeferredResult<EveryChatResponse> user2Result = waitingUsers.remove(user2);
 			//UUID로 채팅방 이름 생성 + Success (+ 채팅방 이름 포함)
-			user1Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user1.getSessionId()));
-			user2Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user2.getSessionId()));
+			user1Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user1.getNickname()));
+			user2Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user2.getNickname()));
 		} catch (Exception e) {
 			log.error("Exception occur while checking waiting users", e);
 		} finally {
@@ -104,22 +105,22 @@ public class EveryChatServiceImpl {
 		template.convertAndSend(destination, chatMessage);
 	}
 
-	public void connectUser(String roomId, String websocketSessionId) {
-		connectedUsers.put(websocketSessionId, roomId);
+	public void connectUser(String roomId, String nickname) {
+		connectedUsers.put(nickname, roomId);
 	}
 
-	public void disconnectUser(String websocketSessionId, String sessionRoomId,	String username) {
-		String roomId = connectedUsers.get(websocketSessionId);
+	public void disconnectUser(String nickname, String sessionRoomId) {
+		String roomId = connectedUsers.get(nickname);
 		if (!Objects.equals(roomId, sessionRoomId)) {
 			log.error(" [error] : Map에 저장된 roomId와 session에 저장된 roomId가 같지 않습니다. ");
 			log.info(" [roomId] : " + roomId + "  , [sessionRoomId] : " + sessionRoomId);
 		}
 		ChatMessage chatMessage = new ChatMessage();
 		chatMessage.setType(ChatMessage.MessageType.LEAVE);
-		chatMessage.setSender(username);
+		chatMessage.setSender(nickname);
 		chatMessage.setRoomId(roomId);
 		sendMessage(roomId, chatMessage);
-		connectedUsers.remove(websocketSessionId, roomId);
+		connectedUsers.remove(nickname, roomId);
 	}
 
 	private String getDestination(String roomId) { // 채팅방 url 주소
@@ -130,9 +131,15 @@ public class EveryChatServiceImpl {
 		log.info(" = = = = = = = cancelChatRoom = = = = = = = ");
 		try {
 			lock.writeLock().lock();
-			setJoinResult(waitingUsers.remove(chatRoomMap), new EveryChatResponse(EveryChatResponse.ResponseType.CANCEL, null, chatRoomMap.getSessionId()));
+			setJoinResult(waitingUsers.remove(chatRoomMap), new EveryChatResponse(EveryChatResponse.ResponseType.CANCEL, null, chatRoomMap.getNickname()));
 		} finally {
 			lock.writeLock().unlock();
 		}
 	}
+	/*
+	writeLock()을 사용하여 쓰기 락(lock)을 획득한다. 이는 동시에 여러 스레드가 cancelChatRoom() 메소드를 호출할 때 동기화를 보장하기 위해 사용된다.
+	waitingUsers에서 chatRoomMap을 제거하고, 해당 chatRoomMap을 사용하여 EveryChatResponse 객체를 생성한다.
+	setJoinResult()를 호출하여 EveryChatResponse 객체를 결과로 설정한다. 이 메소드는 어디에 정의되어 있는지에 따라 다른 동작을 수행할 수 있다.
+	writeLock()을 해제한다.
+	 */
 }
