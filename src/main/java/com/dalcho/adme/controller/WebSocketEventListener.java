@@ -45,12 +45,13 @@ public class WebSocketEventListener {
 		User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 		String nickname = user.getNickname();
 		log.info("disconnected name : " + nickname);
-		String role = token.getPrincipal().getAuthorities().toString().replace("[","").replace("]","");
+//		String role = token.getPrincipal().getAuthorities().toString().replace("[","").replace("]","");
 		String roomId = redisService.getRedis(nickname);
+		log.info("redis roomId : {}", redisService.getRedis(nickname));
+		log.info("disconnect roomId: " + roomId);
 		if (roomId.startsWith("aaaa")) {
 			logger.info("User Disconnected - random");
-			String sessionId = (String) headerAccessor.getHeader("simpSessionId");
-			everyChatService.disconnectUser(sessionId, roomId, nickname);
+			everyChatService.disconnectUser(nickname, roomId);
 		} else {
 			logger.info("User Disconnected : " + nickname);
 			ChatMessage chatMessage = new ChatMessage();
