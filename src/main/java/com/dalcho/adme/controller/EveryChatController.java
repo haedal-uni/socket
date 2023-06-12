@@ -41,6 +41,15 @@ public class EveryChatController {
 		return deferredResult;
 	}
 
+	@GetMapping("/random/cancel/{nickname}")
+	public DeferredResult<EveryChatResponse> abortChat(@PathVariable String nickname) {
+		final ChatRoomMap user = new ChatRoomMap(nickname);
+		DeferredResult<EveryChatResponse> deferredResult = new DeferredResult<>(null);
+		everyChatService.cancelChatRoom(user);
+		deferredResult.setErrorResult(new EveryChatResponse()); // 에러 결과 설정
+		return deferredResult;
+	}
+
 	@MessageMapping("/every-chat/message/{roomId}")
 	public void sendsMessage(@DestinationVariable("roomId") String roomId, @Payload ChatMessage chatMessage) {
 		log.info("Request message. roomd id : {} | chat message : {} | principal : {}", roomId, chatMessage);
@@ -56,6 +65,7 @@ public class EveryChatController {
 
 	@MessageMapping("every-chat/addUser")
 	public void everyChatAddUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor){
+		System.out.println(" = = = = = = = = =  RANDOM CHAT = = = = = = = = = = ");
 		redisService.addRedis(chatMessage);
 		//String sessionId = (String) headerAccessor.getHeader("simpSessionId");
 		everyChatService.connectUser(chatMessage.getRoomId(), chatMessage.getSender());

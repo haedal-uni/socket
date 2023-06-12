@@ -3,10 +3,8 @@ package com.dalcho.adme.dto;
 import lombok.*;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class EveryChatResponse {
 
 	public enum ResponseType {
@@ -14,5 +12,5 @@ public class EveryChatResponse {
 	}
 	private ResponseType type;
 	private String roomId;
-	private String sessionId;
+	private String nickname;
 }

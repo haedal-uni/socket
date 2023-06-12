@@ -6,6 +6,7 @@ import lombok.ToString;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -31,5 +32,18 @@ public class ChatRoomMap {
 
 	public static ChatRoomMap getInstance() {
 		return chatRoomMap;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof ChatRoomMap)) return false;
+		ChatRoomMap other = (ChatRoomMap) o;
+		return Objects.equals(nickname, other.nickname);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(nickname);
 	}
 }

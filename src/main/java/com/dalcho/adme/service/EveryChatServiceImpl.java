@@ -74,19 +74,20 @@ public class EveryChatServiceImpl {
 			lock.readLock().lock();
 			if (waitingUsers.size() < 2) { // 대기 큐에 2명 미만이면 대기
 				return;
+			}else{
+				log.info("[random chat] chat start !!");
+				// 대기 큐에 2명 이상
+				Iterator<ChatRoomMap> itr = waitingUsers.keySet().iterator();
+				// next() : Iterator가 자신이 가리키는 데이터저장소에서 현재위치를 순차적으로 하나 증가해서 이동
+				ChatRoomMap user1 = itr.next();
+				ChatRoomMap user2 = itr.next();
+				String uuid = "aaaa" + UUID.randomUUID().toString();
+				DeferredResult<EveryChatResponse> user1Result = waitingUsers.remove(user1);
+				DeferredResult<EveryChatResponse> user2Result = waitingUsers.remove(user2);
+				//UUID로 채팅방 이름 생성 + Success (+ 채팅방 이름 포함)
+				user1Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user1.getNickname()));
+				user2Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user2.getNickname()));
 			}
-			log.info("[random chat] chat start !!");
-			// 대기 큐에 2명 이상
-			Iterator<ChatRoomMap> itr = waitingUsers.keySet().iterator();
-			// next() : Iterator가 자신이 가리키는 데이터저장소에서 현재위치를 순차적으로 하나 증가해서 이동
-			ChatRoomMap user1 = itr.next();
-			ChatRoomMap user2 = itr.next();
-			String uuid = "aaaa" + UUID.randomUUID().toString();
-			DeferredResult<EveryChatResponse> user1Result = waitingUsers.remove(user1);
-			DeferredResult<EveryChatResponse> user2Result = waitingUsers.remove(user2);
-			//UUID로 채팅방 이름 생성 + Success (+ 채팅방 이름 포함)
-			user1Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user1.getNickname()));
-			user2Result.setResult(new EveryChatResponse(EveryChatResponse.ResponseType.SUCCESS, uuid, user2.getNickname()));
 		} catch (Exception e) {
 			log.error("Exception occur while checking waiting users", e);
 		} finally {
