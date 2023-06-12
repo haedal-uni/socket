@@ -230,7 +230,7 @@ function closeChat() {
     if(stompClient==null){
 		$("#randomSendButton").css("display","none")
 	} else if(stompClient.connect()){
-		stompClient.send('/app/disconnect', {}, JSON.stringify({ roomId: roomId, nickname:nickname }));
+		//stompClient.send('/app/disconnect', {}, JSON.stringify({ roomId: roomId, nickname:nickname }));
 		stompClient.disconnect();
 		$("#sendButton").css("display","none")
 	}
@@ -242,7 +242,7 @@ function backChat() {
 	if(stompClient==null){
 		$("#randomSendButton").css("display","none")
 	} else if(stompClient.connect()){
-		stompClient.send('/app/disconnect', {}, JSON.stringify({ roomId: roomId, nickname:nickname }));
+		//stompClient.send('/app/disconnect', {}, JSON.stringify({ roomId: roomId, nickname:nickname }));
 		stompClient.disconnect();
 		$("#sendButton").css("display","none")
 	}

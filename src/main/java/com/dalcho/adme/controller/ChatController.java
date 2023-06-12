@@ -47,12 +47,6 @@ public class ChatController {
 		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
-	@MessageMapping("/chat/end-chat")
-	public void endChat(@Payload ChatMessage chatMessage) {
-		log.info("endchat");
-		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
-	}
-
 	// 일반 chat과 random chat 분리
 	@MessageMapping("/disconnect")
 	public void disConnect(@Payload DisconnectPayload disconnectPayload){
