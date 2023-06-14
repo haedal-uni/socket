@@ -44,23 +44,23 @@ public class WebSocketEventListener {
 		String email = (String) token.getPrincipal().getAttributes().get("email");
 		User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 		String nickname = user.getNickname();
-		log.info("disconnected name : " + nickname);
-//		String role = token.getPrincipal().getAuthorities().toString().replace("[","").replace("]","");
+		String role = token.getPrincipal().getAuthorities().toString().replace("[","").replace("]","");
 		String roomId = redisService.getRedis(nickname);
-		log.info("redis roomId : {}", redisService.getRedis(nickname));
-		log.info("disconnect roomId: " + roomId);
 		if (roomId.startsWith("aaaa")) {
-			logger.info("User Disconnected - random");
+			log.info("[랜덤 채팅] disconnected chat");
 			everyChatService.disconnectUser(nickname, roomId);
 		} else {
-			logger.info("User Disconnected : " + nickname);
+			log.info("[고객센터] disconnected chat - {} 의 roomId : {}", nickname, redisService.getRedis(nickname));
 			ChatMessage chatMessage = new ChatMessage();
 			chatMessage.setType(ChatMessage.MessageType.LEAVE);
 			chatMessage.setSender(nickname);
 			chatMessage.setRoomId(roomId);
 			chatService.connectUser("Disconnect", roomId, chatMessage);
-			if (nickname.equals("admin")){
+			if (role.equals("ADMIN")){
 				redisService.deleteRedis(nickname);
+			}
+			if (role.equals("USER")){
+
 			}
 			sendingOperations.convertAndSend("/topic/public/" + roomId, chatMessage);
 		}
