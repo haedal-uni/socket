@@ -73,7 +73,7 @@ dependencies {
 jmh{
     fork = 1
     warmupIterations = 10
-    iterations = 1
+    iterations = 10
 }
 test {
     useJUnitPlatform()

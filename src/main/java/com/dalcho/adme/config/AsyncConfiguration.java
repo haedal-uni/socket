@@ -23,7 +23,6 @@ public class AsyncConfiguration {
 		taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
 		taskExecutor.setAwaitTerminationSeconds(60);
 		taskExecutor.initialize();
-
 		return taskExecutor;
 	}
 }

@@ -151,7 +151,7 @@ public class ChatServiceImpl {
 		}
 		JsonObject jsonObject = new JsonObject();
 		jsonObject.addProperty("roomId", chatMessage.getRoomId());
-		if (chatMessage.getType().toString().equals("JOIN")){
+		if (chatMessage.getType() == ChatMessage.MessageType.JOIN){
 			jsonObject.addProperty("type", "JOINED");
 		}else {
 			jsonObject.addProperty("type", chatMessage.getType().toString());
@@ -166,7 +166,7 @@ public class ChatServiceImpl {
 
 		try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt", true)))){
 			if (new File(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt").length() == 0) {
-				out.println("[" + json + "]");
+				out.println(json);
 				chatAlarm(chatMessage.getSender(), chatMessage.getRoomId());
 			} else {
 				out.println("," + json);
