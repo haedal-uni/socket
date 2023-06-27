@@ -151,7 +151,7 @@ public class ChatServiceImpl {
 		}
 		JsonObject jsonObject = new JsonObject();
 		jsonObject.addProperty("roomId", chatMessage.getRoomId());
-		if (chatMessage.getType().toString().equals("JOIN")){
+		if (chatMessage.getType() == ChatMessage.MessageType.JOIN){
 			jsonObject.addProperty("type", "JOINED");
 		}else {
 			jsonObject.addProperty("type", chatMessage.getType().toString());
