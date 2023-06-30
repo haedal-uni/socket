@@ -89,32 +89,43 @@ public class ChatServiceImpl {
 	}
 
 	//채팅방 생성
-	@Cacheable(key = "#nickname", value = "createRoom", unless = "#nickname == 'null'", cacheManager = "cacheManager1")
+	@Cacheable(key = "#nickname", value = "createRoom", unless = "#result == null", cacheManager = "cacheManager1")
 	public ChatRoomDto createRoom(String nickname) {
+		long startTime = System.currentTimeMillis();
 		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
 		ChatRoomDto chatRoom = new ChatRoomDto();
+		long stopTime;
 		if (!chatRepository.existsByUserId(user.getId())) {
 			log.info("[createRoom] roomId 값이 없음");
 			chatRoom = ChatRoomDto.create(nickname);
 			ChatRoomMap.getInstance().getChatRooms().put(chatRoom.getRoomId(), chatRoom);
 			Chat chat = new Chat(chatRoom.getRoomId(), user);
 			chatRepository.save(chat);
-			//redisTemplate.opsForValue().set(nickname, chatRoom, remainingTimeInSeconds, TimeUnit.SECONDS);
+			stopTime = System.currentTimeMillis();
+			log.info("readFile : " + (stopTime - startTime) + " 초");
 			return chatRoom;
 		} else {
 			log.info("[createRoom] roomId 값은 있지만 cache 적용 안됨");
 			Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
 			chatRoom.setRoomId(findChat.get().getRoomId());
-			//redisTemplate.opsForValue().set(nickname, chatRoom, remainingTimeInSeconds, TimeUnit.SECONDS);
-			return ChatRoomDto.of(findChat.get().getRoomId(), nickname, user, lastLine(findChat.get().getRoomId()));
+
+			// 채팅 파일이 없을 경우 ChatRoomDto에 값을 담지 않음
+			if (!isChatFileExists(findChat.get().getRoomId())) {
+				return null;
+			}
+			List<String> lastLine = lastLine(findChat.get().getRoomId());
+			if (lastLine == null || lastLine.isEmpty()) {
+				return null;
+			}
+			stopTime = System.currentTimeMillis();
+			log.info("readFile : " + (stopTime - startTime) + " 초");
+			return ChatRoomDto.of(findChat.get().getRoomId(), nickname, user, lastLine);
 		}
 	}
-
-	//채팅방 하나 불러오기
-	public ChatRoomDto roomOne(String nickname) throws CustomException {
-		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
-		Chat chat = chatRepository.findByUserId(user.getId()).orElseThrow(ChatRoomNotFoundException::new);
-		return ChatRoomDto.of(chat.getRoomId(), nickname, user, new ArrayList<>());
+	private boolean isChatFileExists(String roomId) {
+		String filePath = chatUploadLocation + "/" + roomId + ".txt";
+		File file = new File(filePath);
+		return file.exists();
 	}
 
 	public void deleteRoom(String roomId) {
@@ -205,8 +216,19 @@ public class ChatServiceImpl {
 
 	public Object readFile(String roomId) {
 		long startTime = System.currentTimeMillis();
+		String filePath = chatUploadLocation + "/" + roomId + ".txt";
+		File file = new File(filePath);
+		if (!file.exists()) {
+			try {
+				// 파일이 존재하지 않는 경우 새로 생성
+				file.createNewFile();
+			} catch (IOException e) {
+				log.error("[error] " + e);
+				return null;
+			}
+		}
 		try {
-			List<String> lines = Files.lines(Paths.get(chatUploadLocation, roomId + ".txt")).collect(Collectors.toList());
+			List<String> lines = Files.lines(file.toPath()).collect(Collectors.toList());
 			String jsonString = "[" + String.join(",", lines) + "]";
 			JSONParser parser = new JSONParser();
 			Object obj = parser.parse(jsonString);
@@ -222,26 +244,37 @@ public class ChatServiceImpl {
 	}
 
 	public List<String> lastLine(String roomId) {
-		try (RandomAccessFile file = new RandomAccessFile(chatUploadLocation + "/" + roomId + ".txt", "r")) {
+		String filePath = chatUploadLocation + "/" + roomId + ".txt";
+		File file = new File(filePath);
+		// 파일의 존재 여부 확인
+		if (!file.exists()) {
+			try {
+				// 파일이 존재하지 않는 경우 새로 생성
+				file.createNewFile();
+				return Collections.emptyList();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return Collections.emptyList();
+			}
+		}
+		try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
+
 			long fileLength = file.length();
-
-			// 파일 포인터를 파일 끝으로 이동시킴
-			file.seek(fileLength);
-
-			// 파일 포인터를 끝에서 두 번째 줄의 시작 지점으로 이동시킴
+			if (fileLength <= 0) {
+				return Collections.emptyList();
+			}
+			randomAccessFile.seek(fileLength);
 			long pointer = fileLength - 2;
 			while (pointer > 0) {
-				file.seek(pointer);
-				char c = (char) file.read();
+				randomAccessFile.seek(pointer);
+				char c = (char) randomAccessFile.read();
 				if (c == '\n') {
 					break;
 				}
 				pointer--;
 			}
-			file.seek(pointer + 1);
-
-			// 두 번째 줄의 내용을 읽어서 반환함
-			String line = file.readLine();
+			randomAccessFile.seek(pointer + 1);
+			String line = randomAccessFile.readLine();
 			if (line == null || line.trim().isEmpty()) {
 				return Collections.emptyList();
 			}
@@ -253,17 +286,14 @@ public class ChatServiceImpl {
 			int userChat = json.getInt("userChat");
 			String message = json.getString("message").trim();
 			String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
-
 			List<String> chat = new ArrayList<>();
 			chat.add(Integer.toString(adminChat));
 			chat.add(Integer.toString(userChat));
 			chat.add(messages);
 			return chat;
-
 		} catch (IOException | JSONException e) {
 			e.printStackTrace();
 			return Collections.emptyList();
 		}
 	}
-
 }
