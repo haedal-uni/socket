@@ -89,7 +89,7 @@ public class ChatServiceImpl {
 	}
 
 	//채팅방 생성
-	@Cacheable(key = "#nickname", value = "createRoom", unless = "#nickname == 'null'", cacheManager = "cacheManager")
+	@Cacheable(key = "#nickname", value = "createRoom", unless = "#result == null", cacheManager = "cacheManager1")
 	public ChatRoomDto createRoom(String nickname) {
 		long startTime = System.currentTimeMillis();
 		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
