@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
@@ -25,12 +25,12 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @Component
 @Slf4j
 public class WebSocketEventListener {
-	private final SimpMessageSendingOperations sendingOperations;
+	private final SimpMessagingTemplate sendingOperations;
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
 	private final EveryChatServiceImpl everyChatService;
 	private final ChatServiceImpl chatService;
 	private final RedisService redisService;
-	private final RedisTemplate<String, String> redisTemplate;
+	private final RedisTemplate<String, ChatMessage> redisTemplate;
 	private final UserRepository userRepository;
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
@@ -59,7 +59,7 @@ public class WebSocketEventListener {
 			if (role.equals("ADMIN")){
 				redisService.deleteRedis(nickname);
 			}
-			sendingOperations.convertAndSend("/topic/public/" + roomId, chatMessage);
+			redisTemplate.convertAndSend("/topic/public/" + roomId, chatMessage);
 		}
 	}
 }
