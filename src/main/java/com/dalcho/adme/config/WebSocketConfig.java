@@ -1,11 +1,8 @@
 package com.dalcho.adme.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -26,8 +23,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 		// Redis를 메시지 브로커로 사용하도록 설정
 		//중간에 연결이 끊긴 경우 다시 연결을 시도
-		config.enableSimpleBroker("")
-				.setHeartbeatValue(new long[]{0, 30000});
+//		config.enableSimpleBroker("")
+//				.setHeartbeatValue(new long[]{0, 30000});
 
 	}
 	/*
@@ -49,13 +46,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 		registration.interceptors(stompHandler);
 	}
 
-	@Bean
-	public RedisMessageListenerContainer redisMessageListenerContainer(ChatMessageListener chatMessageListener) {
-		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-		container.setConnectionFactory(redisConnectionFactory);
-
-		// 채널 구독 설정을 지정 (@EventListener SessionConnectedEvent와 같은 개념)
-		container.addMessageListener(chatMessageListener, new ChannelTopic("/app/chat/addUser:*"));
-		return container;
-	}
 }
