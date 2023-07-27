@@ -1,5 +1,7 @@
 package com.dalcho.adme.controller;
 
+import com.dalcho.adme.config.RedisPublisher;
+import com.dalcho.adme.config.RedisSubscriber;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.DisconnectPayload;
@@ -10,11 +12,17 @@ import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+
+import javax.annotation.PostConstruct;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,33 +33,44 @@ public class ChatController {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisService redisService;
 	private final EveryChatServiceImpl everyChatService;
-	private final RedisTemplate<String, ChatMessage> redisTemplate;
+	private final RedisTemplate<String, Object> redisTemplate;
 
+	private final RedisMessageListenerContainer redisMessageListener;
+	private final RedisPublisher redisPublisher;
+	private final RedisSubscriber redisSubscriber;
+	private  Map<String, ChannelTopic> channels;
+
+	@PostConstruct
+	public void init(){
+		channels = new HashMap<>();
+	}
 	/*
     websocket을 통해 서버에 메세지가 send 되었을 떄도 jwt token 유효성 검증이 필요하다.
    */
 	@MessageMapping("/chat/sendMessage")
 	public void sendMessage(@Payload ChatMessage chatMessage) {
-		//template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
-		String channel = "/topic/public/" + chatMessage.getRoomId();
-		log.info("sendMessage : " + redisTemplate.opsForValue().get(channel));
-		redisTemplate.convertAndSend(channel, chatMessage);
-		String chatRoomKey = chatMessage.getRoomId(); // 채팅방 식별을 위한 키
-		redisTemplate.opsForList().leftPush(chatRoomKey, chatMessage); // 왼쪽으로 메시지를 추가하여 채팅 기록 저장
+		ChannelTopic channel = channels.get(chatMessage.getRoomId());
+		redisPublisher.publish(channel, chatMessage.getMessage());
+		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
 	@MessageMapping("/chat/addUser")
 	public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
 		String token = headerAccessor.getFirstNativeHeader("Authorization");
 		User user= jwtTokenProvider.getUserFromToken(token);
+
+		String roomId = chatMessage.getRoomId();
+		ChannelTopic channel = new ChannelTopic(roomId);
+		redisMessageListener.addMessageListener(redisSubscriber, channel);
+		channels.put(roomId, channel);
+
 		log.info("[chat] addUser token 검사: " + user.getNickname());
 		chatMessage.setSender(user.getNickname());
 		chatMessage.setType(ChatMessage.MessageType.JOIN);
-		System.out.println(chatMessage.getRoomId());
+
 		redisService.addRedis(chatMessage);
-		chatService.connectUser("Connect", chatMessage.getRoomId(), chatMessage);
-		//template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
-		redisTemplate.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
+		chatService.connectUser("Connect", roomId, chatMessage);
+		template.convertAndSend("/topic/public/" + roomId, chatMessage);
 	}
 
 	// 일반 chat과 random chat 분리
@@ -64,6 +83,11 @@ public class ChatController {
 			everyChatService.disconnectUser(nickname, roomId);
 		} else {
 			log.info("User Disconnected : " + nickname);
+
+			ChannelTopic channel = channels.get(roomId);
+			redisMessageListener.removeMessageListener(redisSubscriber, channel);
+			channels.remove(roomId);
+
 			ChatMessage chatMessage = new ChatMessage();
 			chatMessage.setType(ChatMessage.MessageType.LEAVE);
 			chatMessage.setSender(nickname);
@@ -72,8 +96,7 @@ public class ChatController {
 			if (nickname.equals("admin")){
 				redisService.deleteRedis(nickname);
 			}
-			//template.convertAndSend("/topic/public/" + roomId, chatMessage);
-			redisTemplate.convertAndSend("/topic/public/" + roomId, chatMessage);
+			template.convertAndSend("/topic/public/" + roomId, chatMessage);
 		}
 	}
 }

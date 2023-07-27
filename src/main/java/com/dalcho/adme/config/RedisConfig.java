@@ -1,6 +1,5 @@
 package com.dalcho.adme.config;
 
-import com.dalcho.adme.dto.ChatMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -41,8 +40,8 @@ public class RedisConfig {
 	}
 
 	@Bean
-	public RedisTemplate<String, ChatMessage> chatMessageRedisTemplate(RedisConnectionFactory connectionFactory) {
-		RedisTemplate<String, ChatMessage> redisTemplate = new RedisTemplate<>();
+	public RedisTemplate<String, Object> chatMessageRedisTemplate(RedisConnectionFactory connectionFactory) {
+		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(connectionFactory);
 		redisTemplate.setKeySerializer(new StringRedisSerializer());
 		redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
@@ -60,13 +59,13 @@ public class RedisConfig {
 //		return builder.build();
 //	}
 
-
 	@Bean // RedisMessageListenerContainer : Redis에서 발행되는 메시지를 수신하고 처리하기 위한 컨테이너
 	public RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory connectionFactory) {
 		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 		container.setConnectionFactory(connectionFactory); // 컨테이너와 Redis 서버 간의 연결을 설정
 		return container;
 	}
+
 	@Bean
 	public CacheManager cacheManager1() { // TTL
 		long expireTimeInSeconds = 24 * 60 * 60;

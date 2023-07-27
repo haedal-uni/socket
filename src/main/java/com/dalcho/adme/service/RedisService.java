@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Slf4j
 public class RedisService {
-	private final RedisTemplate<String, String> redisTemp;
 	private final StringRedisTemplate redisTemplate;
 	//private final RedisRepository redisRepository;
 	// expireTimeInSeconds: key의 만료 시간을 초 단위로 설정
