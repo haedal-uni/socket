@@ -298,6 +298,13 @@ function onConnected() {
 	}
 	stompClient.send("/app/chat/addUser", {Authorization: token}, JSON.stringify({roomId: roomId, type: 'JOIN', message: message}))
 	//(void) send(destination, headers = {}, body = '')
+
+	// //redis로 응답 받기
+	// socket.onmessage = (event) => {
+	// 	const message = event.data;
+	// 	console.log('받은 메시지:', message)
+	// 	onMessageReceived(message)
+	// };
 }
 
 function onError(error) {
