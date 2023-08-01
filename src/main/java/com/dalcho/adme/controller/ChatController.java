@@ -23,7 +23,6 @@ import org.springframework.stereotype.Controller;
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
-
 @Controller
 @RequiredArgsConstructor
 @Slf4j
@@ -50,8 +49,8 @@ public class ChatController {
 	@MessageMapping("/chat/sendMessage")
 	public void sendMessage(@Payload ChatMessage chatMessage) {
 		ChannelTopic channel = channels.get(chatMessage.getRoomId());
-		redisPublisher.publish(channel, chatMessage.getMessage());
-		template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
+		redisPublisher.publish(channel, chatMessage);
+		//template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
 	@MessageMapping("/chat/addUser")
@@ -60,7 +59,7 @@ public class ChatController {
 		User user= jwtTokenProvider.getUserFromToken(token);
 
 		String roomId = chatMessage.getRoomId();
-		ChannelTopic channel = new ChannelTopic(roomId);
+		ChannelTopic channel = new ChannelTopic("/topic/public/" + roomId);
 		redisMessageListener.addMessageListener(redisSubscriber, channel);
 		channels.put(roomId, channel);
 
