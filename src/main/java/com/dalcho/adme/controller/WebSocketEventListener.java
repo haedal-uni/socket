@@ -59,7 +59,7 @@ public class WebSocketEventListener {
 			if (role.equals("ADMIN")){
 				redisService.deleteRedis(nickname);
 			}
-			redisTemplate.convertAndSend("/topic/public/" + roomId, chatMessage);
+			sendingOperations.convertAndSend("/topic/public/" + roomId, chatMessage);
 		}
 	}
 }
