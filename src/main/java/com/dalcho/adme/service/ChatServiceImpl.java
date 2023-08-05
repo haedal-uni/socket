@@ -3,8 +3,6 @@ package com.dalcho.adme.service;
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.ChatRoomDto;
 import com.dalcho.adme.dto.ChatRoomMap;
-import com.dalcho.adme.exception.CustomException;
-import com.dalcho.adme.exception.notfound.ChatRoomNotFoundException;
 import com.dalcho.adme.exception.notfound.FileNotFoundException;
 import com.dalcho.adme.exception.notfound.UserNotFoundException;
 import com.dalcho.adme.model.Chat;
@@ -13,21 +11,20 @@ import com.dalcho.adme.repository.ChatRepository;
 import com.dalcho.adme.repository.UserRepository;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -89,7 +86,7 @@ public class ChatServiceImpl {
 	}
 
 	//채팅방 생성
-	@Cacheable(key = "#nickname", value = "createRoom", unless = "#result == null", cacheManager = "cacheManager1")
+	@CachePut(key = "#nickname", value = "createRoom", unless = "#result == null", cacheManager = "cacheManager1")
 	public ChatRoomDto createRoom(String nickname) {
 		long startTime = System.currentTimeMillis();
 		User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
@@ -281,17 +278,21 @@ public class ChatServiceImpl {
 			if (line.startsWith(",")) {
 				line = line.substring(1);
 			}
-			JSONObject json = new JSONObject(line);
-			int adminChat = json.getInt("adminChat");
-			int userChat = json.getInt("userChat");
-			String message = json.getString("message").trim();
+
+			// Parsing JSON using com.google.gson.JsonObject
+			JsonParser parser = new JsonParser();
+			JsonObject json = parser.parse(line).getAsJsonObject();
+			int adminChat = json.get("adminChat").getAsInt();
+			int userChat = json.get("userChat").getAsInt();
+			String message = json.get("message").getAsString().trim();
 			String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+
 			List<String> chat = new ArrayList<>();
 			chat.add(Integer.toString(adminChat));
 			chat.add(Integer.toString(userChat));
 			chat.add(messages);
 			return chat;
-		} catch (IOException | JSONException e) {
+		} catch (IOException | JsonSyntaxException e) {
 			e.printStackTrace();
 			return Collections.emptyList();
 		}
