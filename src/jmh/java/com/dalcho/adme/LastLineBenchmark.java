@@ -1,10 +1,14 @@
 package com.dalcho.adme;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.openjdk.jmh.annotations.*;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -35,6 +39,13 @@ public class LastLineBenchmark {
 		String roomId = "3afa20e1-39a0-4237-be14-f2bdcfb75949";
 		return lastLineImproved(chatUploadLocation + "/" + roomId + ".txt");
 	}
+
+	@Benchmark
+	public List<String> testUpdateJson() throws IOException{
+		String roomId = "3afa20e1-39a0-4237-be14-f2bdcfb75949";
+		return updateJson(chatUploadLocation + "/" + roomId + ".txt");
+	}
+
 	public List lastLineOriginal(String filepath) {
 		try{
 			RandomAccessFile file = new RandomAccessFile(filepath, "r");
@@ -116,6 +127,63 @@ public class LastLineBenchmark {
 			return chat;
 
 		} catch (IOException | JSONException e) {
+			e.printStackTrace();
+			return Collections.emptyList();
+		}
+	}
+
+	public List<String> updateJson(String roomId) {
+		File file = new File(roomId);
+		// 파일의 존재 여부 확인
+		if (!file.exists()) {
+			try {
+				// 파일이 존재하지 않는 경우 새로 생성
+				file.createNewFile();
+				return Collections.emptyList();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return Collections.emptyList();
+			}
+		}
+		try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
+
+			long fileLength = file.length();
+			if (fileLength <= 0) {
+				return Collections.emptyList();
+			}
+			randomAccessFile.seek(fileLength);
+			long pointer = fileLength - 2;
+			while (pointer > 0) {
+				randomAccessFile.seek(pointer);
+				char c = (char) randomAccessFile.read();
+				if (c == '\n') {
+					break;
+				}
+				pointer--;
+			}
+			randomAccessFile.seek(pointer + 1);
+			String line = randomAccessFile.readLine();
+			if (line == null || line.trim().isEmpty()) {
+				return Collections.emptyList();
+			}
+			if (line.startsWith(",")) {
+				line = line.substring(1);
+			}
+
+			// Parsing JSON using com.google.gson.JsonObject
+			JsonParser parser = new JsonParser();
+			JsonObject json = parser.parse(line).getAsJsonObject();
+			int adminChat = json.get("adminChat").getAsInt();
+			int userChat = json.get("userChat").getAsInt();
+			String message = json.get("message").getAsString().trim();
+			String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+
+			List<String> chat = new ArrayList<>();
+			chat.add(Integer.toString(adminChat));
+			chat.add(Integer.toString(userChat));
+			chat.add(messages);
+			return chat;
+		} catch (IOException | JsonSyntaxException e) {
 			e.printStackTrace();
 			return Collections.emptyList();
 		}
