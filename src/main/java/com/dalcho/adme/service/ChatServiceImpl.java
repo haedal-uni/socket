@@ -287,9 +287,6 @@ public class ChatServiceImpl {
 			String message = json.get("message").getAsString().trim();
 			String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
 
-			System.out.println("admin chat : " + adminChat);
-			System.out.println("user chat : " + userChat);
-			System.out.println("message :  " + message);
 			List<String> chat = new ArrayList<>();
 			chat.add(Integer.toString(adminChat));
 			chat.add(Integer.toString(userChat));
