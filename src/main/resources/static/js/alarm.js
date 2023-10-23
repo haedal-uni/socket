@@ -7,7 +7,10 @@ function start(username, roomId){
 	eventSource.onerror = (e) => {
 		if (e.readyState == EventSource.CLOSED) {
 			// Connection was closed.
+			// 종료 시 할 일
 		}
+		// 종료 또는 에러 발생 시 할 일
+		eventSource.close();
 	};
 	eventSource.onmessage = (e) => {
 		let message = JSON.parse(e.data + "\n")// 문자 하나라서 /n만 사용 여러줄이라면 마지막에는 줄바꿈 문자 두개(\n\n)로 구분
