@@ -12,6 +12,9 @@ let roomId = null;
 let status = ""
 let currentXHR;
 let timerInterval;
+const unsentMessages = [];
+let messageToSend = null;
+
 function alarmCount(num){
 	if (num===0){
 		count=0;
@@ -288,6 +291,8 @@ function connect() {
 }
 
 function onConnected() {
+	console.log("onConnected : " + unsentMessages);
+	console.log("onConnected : " + JSON.stringify(unsentMessages));
 	let token = localStorage.getItem('token');
 	roomId = localStorage.getItem('wschat.roomId')
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
@@ -308,10 +313,24 @@ function onConnected() {
 }
 
 function onError(error) {
-	if (connectingElement) {
-		connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
-		connectingElement.style.color = 'red';
+	// if (connectingElement) {
+	// 	connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
+	// 	connectingElement.style.color = 'red';
+	// }
+	stompClient = null;
+	let temp = `
+<div class="seperator">
+    <div class="text-warning" style="color: red; font-size: 15px">채팅을 이용할 수 없습니다.<br />서버 연결을 확인해주세요.</div>
+</div>`
+	$(".body").append(temp);
+	if (messageToSend) {
+		unsentMessages.push(messageToSend);
+		console.log("messageToSend : " + messageToSend);
 	}
+	/*
+	{"roomId":"111","type":"TALK","sender":"nickname","message":"11"}
+	이런 형식으로 저장해야됨
+	 */
 }
 
 // 메세지 보내기
@@ -320,30 +339,34 @@ function sendMessage() {
 	let nickname = localStorage.getItem('wschat.sender');
 	roomId = localStorage.getItem('wschat.roomId');
 	let messageContent = messageInput.value.trim();
+	let chatMessage = {
+		roomId: roomId,
+		sender: nickname,
+		message: messageContent,
+		type: 'TALK'
+	};
 	if (messageContent && stompClient) {
-		let chatMessage = {
-			roomId: roomId,
-			sender: nickname,
-			message: messageContent,
-			type: 'TALK'
-		};
 		saveFile(chatMessage)
 		stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
 		messageInput.value = '';
+	}else{
+		messageToSend = chatMessage;
 	}
 }
 
 function saveFile(chatMessage) {
-	roomId = localStorage.getItem('wschat.roomId');
-	$.ajax({
-		type: "POST",
-		url: `/room/enter/` + roomId + '/' + roomName,
-		data: JSON.stringify(chatMessage),
-		contentType: 'application/json',
-		processData: false,
-		success: function(response) {
-		}
-	});
+	if(stompClient){
+		roomId = localStorage.getItem('wschat.roomId');
+		$.ajax({
+			type: "POST",
+			url: `/room/enter/` + roomId + '/' + roomName,
+			data: JSON.stringify(chatMessage),
+			contentType: 'application/json',
+			processData: false,
+			success: function(response) {
+			}
+		});
+	}
 }
 
 let isRun = false;
@@ -522,17 +545,20 @@ function randomSendMessage(event){
 function alarmSubscribe() {
 	roomId = localStorage.getItem('wschat.roomId')
 	let nickname = localStorage.getItem('wschat.sender');
-	if (nickname != null && roomId != null) {
+	console.log("stomp : " + stompClient);
+	if (nickname != null && roomId != null && stompClient) {
 		start(nickname, roomId);
 	}
 }
 
 function alarmMessage() {
-	let nickname = localStorage.getItem('wschat.sender');
-	roomId = localStorage.getItem('wschat.roomId');
-	//if ($("#sendButton").click) {
+	if(stompClient){
+		let nickname = localStorage.getItem('wschat.sender');
+		roomId = localStorage.getItem('wschat.roomId');
+		//if ($("#sendButton").click) {
 		fetch(`/room/publish?sender=${nickname}&roomId=${roomId}`);
-	//}
+		//}
+	}
 }
 
 

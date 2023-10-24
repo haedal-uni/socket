@@ -2,6 +2,9 @@ package com.dalcho.adme.config;
 
 import com.dalcho.adme.dto.ChatMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -39,10 +42,22 @@ public class RedisSubscriber implements MessageListener { // 구독자
             // //String data = objectMapper.readValue(msg, String.class);
             //JsonNode jsonNode = objectMapper.readTree(msg); // JSON 문자열을 파싱
 
+
+            // lettuce
+//            RedisClient redisClient = RedisClient.create("localhost");
+//            StatefulRedisConnection<String, String> connection = redisClient.connect();
+//            RedisCommands<String, String> redisCommands = connection.sync();
+//
+//            Map<String, Long> stringLongMap = redisCommands.pubsubNumsub(channel);
+//            System.out.println("구독자 수 :" + stringLongMap);
+//            connection.close();
+//            redisClient.shutdown();
+
+            // Jedis
             try (Jedis jedis = new Jedis("localhost")) {
                 // 특정 채널의 구독자 수 조회
                 Map<String, String> stringStringMap = jedis.pubsubNumSub(channel);
-                log.info("구독자 수: " + stringStringMap);
+                log.info("구독자 수: " + stringStringMap.get(channel));
             }
 
             //messagingTemplate.convertAndSend(channel, jsonNode);
