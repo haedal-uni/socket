@@ -2,9 +2,6 @@ package com.dalcho.adme.config;
 
 import com.dalcho.adme.dto.ChatMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.sync.RedisCommands;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -14,7 +11,6 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Component
@@ -28,12 +24,11 @@ public class RedisSubscriber implements MessageListener { // 구독자
     @Override // Redis 메시지를 수신하면 호출되는 메소드
     public void onMessage(Message message, byte[] pattern) {
         try{
+            String msg = redisTemplate.getStringSerializer().deserialize(message.getBody());
+
             // Redis로부터 수신된 메시지 처리 로직을 구현
             String channel = new String(message.getChannel());
             log.info("Received message from channel: " + channel);
-
-            // publish에서 String으로 처리 할 경우
-            String msg = new String(message.getBody(), StandardCharsets.UTF_8); // Convert message body to String
 
             // publish에서 ChatMessage로 처리 할 경우
             ChatMessage chatMessage = objectMapper.readValue(msg, ChatMessage.class);

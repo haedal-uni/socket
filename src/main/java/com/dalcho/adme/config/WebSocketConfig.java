@@ -18,8 +18,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	private final RedisConnectionFactory redisConnectionFactory;
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
-		config.enableSimpleBroker("/topic", "/every-chat");
-		config.setApplicationDestinationPrefixes("/app");
+		config.enableSimpleBroker("/topic", "/every-chat"); // sub
+		config.setApplicationDestinationPrefixes("/app"); // pub
 
 		// Redis를 메시지 브로커로 사용하도록 설정
 		//중간에 연결이 끊긴 경우 다시 연결을 시도
