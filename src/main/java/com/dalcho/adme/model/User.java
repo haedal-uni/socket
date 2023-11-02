@@ -8,6 +8,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import javax.persistence.*;
 import java.util.Collection;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -15,18 +17,23 @@ import java.util.Collection;
 public class User implements UserDetails {
 	public static final String DEFAULT_PROFILE_IMG_PATH = "images/default-profile.png";
 
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = IDENTITY)
 	@Id
 	@Column(name = "user_id")
 	private Long id;
+
 	@Column(nullable = false)
 	private String username;
+
 	@Column(nullable = false)
 	private String nickname;
+
 	@Column(nullable = false)
 	private String password;
+
 	@Column(nullable = false)
 	private String email;
+
 	@Column(nullable = false)
 	@Enumerated(value = EnumType.STRING)
 	private UserRole role;
