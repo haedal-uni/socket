@@ -16,4 +16,6 @@ public class ChatMessage {
 	private MessageType type; // message type
 	private String sender; // message 보내는 사람
 	private String message; // 내용(message)
+	private String day;
+	private String time;
 }

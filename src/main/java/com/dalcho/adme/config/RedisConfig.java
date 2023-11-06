@@ -30,14 +30,14 @@ public class RedisConfig {
 		return new LettuceConnectionFactory(redisHost, redisPort);
 	}
 
-//	@Bean //Redis 데이터에 쉽게 접근하기 위한 코드
-//	public RedisTemplate<?, ?> redisTemplate() { //RedisTemplate 에 LettuceConnectionFactory 을 적용
-//		RedisTemplate<?, ?> redisTemplate = new RedisTemplate<>();
-//		redisTemplate.setConnectionFactory(redisConnectionFactory());
-//		redisTemplate.setKeySerializer(new StringRedisSerializer());//redisTemplate.setKeySerializer(new GenericToStringSerializer<>(Object.class));
-//		redisTemplate.setValueSerializer(new StringRedisSerializer());
-//		return redisTemplate;
-//	}
+	@Bean //Redis 데이터에 쉽게 접근하기 위한 코드
+	public RedisTemplate<?, ?> redisTemplate() { //RedisTemplate 에 LettuceConnectionFactory 을 적용
+		RedisTemplate<?, ?> redisTemplate = new RedisTemplate<>();
+		redisTemplate.setConnectionFactory(redisConnectionFactory());
+		redisTemplate.setKeySerializer(new StringRedisSerializer());//redisTemplate.setKeySerializer(new GenericToStringSerializer<>(Object.class));
+		redisTemplate.setValueSerializer(new StringRedisSerializer());
+		return redisTemplate;
+	}
 
 	@Bean
 	public RedisTemplate<String, Object> chatMessageRedisTemplate(RedisConnectionFactory connectionFactory) {
