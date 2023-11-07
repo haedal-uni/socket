@@ -14,6 +14,9 @@ let currentXHR;
 let timerInterval;
 const unsentMessages = [];
 let messageToSend = null;
+let today = new Date();
+let month = today.getMonth()+1;
+let days = today.getDate();
 
 function alarmCount(num){
 	if (num===0){
@@ -69,7 +72,7 @@ function openChat() {
 
 function openChatList() {
 	if (document.getElementById("needChat")) {
-		needLine()
+		//needLine()
 	}else{
 		let nickname = localStorage.getItem('wschat.sender');
 		$.ajax({
@@ -83,12 +86,24 @@ function openChatList() {
 				localStorage.setItem('wschat.roomId', response["roomId"]);
 				let count = response["userChat"];
 				let message = response["message"];
+				let day = response["day"]
+				let time = response["time"]
+				today = new Date();
+				month = today.getMonth()+1;
+				days = today.getDate();
+				let now = month + "/" + days
+				let dayTime
+				if(now!==day){
+					dayTime = day + " " + time;
+				}else{
+					dayTime = time;
+				}
 				let temp = `
           <div id="needChat" class="conversation" onclick="joinChat()">
             <div class="top">
               <span class="badge">${count}</span>
               <span class="title">리스트에서 제목</span>
-              <span class="time">18:10</span>
+              <span class="time">${dayTime}</span>
             </div>
             <div class="bottom">
               <span class="user">${nickname}</span>
@@ -123,12 +138,25 @@ function needLine(){
 		success: function(response) {
 			let count = response[1];
 			let message = response[2];
+			let day = response[3];
+			let time = response[4];
+			today = new Date();
+			month = today.getMonth()+1;
+			days = today.getDate();
+			let now = month + "/" + days;
+			let dayTime
+			if(now !== day){
+				dayTime = day + " " + time;
+			}else{
+				dayTime = time;
+			}
+
 			let temp = `
           <div id="needChat" class="conversation" onclick="joinChat()">
             <div class="top">
               <span class="badge">${count}</span>
               <span class="title">리스트에서 제목</span>
-              <span class="time">18:10</span>
+              <span class="time">${dayTime}</span>
             </div>
             <div class="bottom">
               <span class="user">${nickname}</span>
@@ -177,6 +205,16 @@ function onMessageReceived(payload) { // 메세지 받기
 		message.message = roomName + ' 님 채팅이 종료되어 ' + '현재 시간 [ ' + ms + ' ]  ' + ' 으로 부터 5분 뒤에 삭제될 예정입니다.';
 		seperator(message.message);
 	} else if (message.type === 'TALK' && message.message != null) {
+		today = new Date();
+		month = today.getMonth()+1;
+		days = today.getDate();
+		let dd = month + "/" + days;
+		let dayTime
+		if(dd !== message.day){
+			dayTime = message.day + " " + message.time;
+		}else{
+			dayTime = message.time;
+		}
 		let temp = `
     <div class="${divName}">
     <i class = "avatar">${message.sender[0]}</i>
@@ -186,7 +224,7 @@ function onMessageReceived(payload) { // 메세지 받기
                     <div class="message-sender">&#9989; _ ${message.sender}</div>
                     <p class="text">${message.message}</p>
                 </div>
-            <div class="message-time">12:08</div>
+            <div class="message-time">${dayTime}</div>
         </div>
     </div>
 </div>
@@ -291,8 +329,6 @@ function connect() {
 }
 
 function onConnected() {
-	console.log("onConnected : " + unsentMessages);
-	console.log("onConnected : " + JSON.stringify(unsentMessages));
 	let token = localStorage.getItem('token');
 	roomId = localStorage.getItem('wschat.roomId')
 	stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
@@ -339,11 +375,19 @@ function sendMessage() {
 	let nickname = localStorage.getItem('wschat.sender');
 	roomId = localStorage.getItem('wschat.roomId');
 	let messageContent = messageInput.value.trim();
+	today = new Date();
+	month = today.getMonth()+1;
+	days = today.getDate();
+	let hour = ('0' + today.getHours()).slice(-2);
+	let minute = ('0' + today.getMinutes()).slice(-2);
+
 	let chatMessage = {
 		roomId: roomId,
 		sender: nickname,
 		message: messageContent,
-		type: 'TALK'
+		type: 'TALK',
+		day : month + "/" + days,
+		time : hour + ":" + minute
 	};
 	if (messageContent && stompClient) {
 		saveFile(chatMessage)
@@ -545,7 +589,6 @@ function randomSendMessage(event){
 function alarmSubscribe() {
 	roomId = localStorage.getItem('wschat.roomId')
 	let nickname = localStorage.getItem('wschat.sender');
-	console.log("stomp : " + stompClient);
 	if (nickname != null && roomId != null && stompClient) {
 		start(nickname, roomId);
 	}
