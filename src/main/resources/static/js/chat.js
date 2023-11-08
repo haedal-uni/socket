@@ -187,18 +187,18 @@ function onMessageReceived(payload) { // 메세지 받기
 		message = payload;
 	}
 	let divName;
-	if (message.sender != "admin") {
+	if (message.sender !== "admin") {
 		divName = "user right"
 	} else {
 		divName = "user left"
 	}
 	if (message.type === 'JOIN') {
-		if (message.sender != "admin") {
+		if (message.sender !== "admin") {
 			alarmCount(0);
 			message.message = message.sender + ' 님 안녕하세요';
 			seperator(message.message);
 		}
-	} else if (message.type === 'LEAVE' && message.sender != "admin") {
+	} else if (message.type === 'LEAVE' && message.sender !== "admin") {
 		message.message = message.sender + ' 님이 나가셨습니다.';
 		seperator(message.message);
 	} else if (message.type === 'DELETE') {
@@ -316,13 +316,13 @@ function joinChat() {
 	`
 	$("#sendButtonType").append(temp)
 }
-
+let socket
 function connect() {
 	status = "question"
 	let nickname = localStorage.getItem('wschat.sender');
 	let token = localStorage.getItem('token');
 	if (nickname) {
-		let socket = new SockJS('/ws');
+		socket = new SockJS('/ws');
 		stompClient = Stomp.over(socket);
 		stompClient.connect({Authorization: token}, onConnected, onError);
 	}

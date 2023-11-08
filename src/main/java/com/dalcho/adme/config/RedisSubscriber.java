@@ -59,9 +59,6 @@ public class RedisSubscriber implements MessageListener { // 구독자
             if(chatMessage.getType().equals(MessageType.TALK)){
                 messagingTemplate.convertAndSend(channel, chatMessage);
             }
-            //messagingTemplate.convertAndSend(channel, jsonNode);
-
-
 
         } catch (Exception e){
             log.error(e.getMessage());
