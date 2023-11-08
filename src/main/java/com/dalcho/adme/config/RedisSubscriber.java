@@ -1,6 +1,7 @@
 package com.dalcho.adme.config;
 
 import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.dto.ChatMessage.MessageType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,9 +56,9 @@ public class RedisSubscriber implements MessageListener { // 구독자
                 log.info("구독자 수: " + stringStringMap.get(channel));
             }
 
-            //messagingTemplate.convertAndSend(channel, jsonNode);
-            messagingTemplate.convertAndSend(channel, chatMessage);
-
+            if(chatMessage.getType().equals(MessageType.TALK)){
+                messagingTemplate.convertAndSend(channel, chatMessage);
+            }
 
         } catch (Exception e){
             log.error(e.getMessage());

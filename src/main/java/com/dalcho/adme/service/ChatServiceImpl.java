@@ -25,6 +25,8 @@ import javax.annotation.PostConstruct;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -157,6 +159,13 @@ public class ChatServiceImpl {
 				countChat(chatMessage.getSender(), chatMessage.getRoomId());
 			}
 		}
+
+		LocalDateTime now = LocalDateTime.now();
+		int month = now.getMonthValue();
+		int day = now.getDayOfMonth();
+		String pattern = "HH:mm";
+		String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern(pattern));
+
 		JsonObject jsonObject = new JsonObject();
 		jsonObject.addProperty("roomId", chatMessage.getRoomId());
 		if (chatMessage.getType() == ChatMessage.MessageType.JOIN){
@@ -168,6 +177,8 @@ public class ChatServiceImpl {
 		jsonObject.addProperty("message", chatMessage.getMessage());
 		jsonObject.addProperty("adminChat", adminChat.get(chatMessage.getRoomId()));
 		jsonObject.addProperty("userChat", userChat.get(chatMessage.getRoomId()));
+		jsonObject.addProperty("day", month + "/" + day);
+		jsonObject.addProperty("time", time);
 
 		Gson gson = new Gson();
 		String json = gson.toJson(jsonObject);
@@ -286,11 +297,15 @@ public class ChatServiceImpl {
 			int userChat = json.get("userChat").getAsInt();
 			String message = json.get("message").getAsString().trim();
 			String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+			String day = json.get("day").getAsString();
+			String time = json.get("time").getAsString();
 
 			List<String> chat = new ArrayList<>();
 			chat.add(Integer.toString(adminChat));
 			chat.add(Integer.toString(userChat));
 			chat.add(messages);
+			chat.add(day);
+			chat.add(time);
 			return chat;
 		} catch (IOException | JsonSyntaxException e) {
 			e.printStackTrace();

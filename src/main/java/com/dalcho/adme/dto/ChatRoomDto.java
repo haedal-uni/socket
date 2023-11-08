@@ -19,6 +19,8 @@ public class ChatRoomDto implements Serializable { // 일반 crud에서 쓰임
 	private Integer adminChat;
 	private Integer userChat;
 	private String message;
+	private String day;
+	private String time;
 
 	public ChatRoomDto() {
 	}
@@ -37,6 +39,8 @@ public class ChatRoomDto implements Serializable { // 일반 crud에서 쓰임
 				.adminChat(Integer.valueOf(list.get(0)))
 				.userChat(Integer.valueOf(list.get(1)))
 				.message(list.get(2))
+				.day(list.get(3))
+				.time(list.get(4))
 				.build();
 	}
 }

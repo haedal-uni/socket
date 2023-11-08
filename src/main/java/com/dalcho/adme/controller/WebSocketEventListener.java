@@ -25,7 +25,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @Component
 @Slf4j
 public class WebSocketEventListener {
-	private final SimpMessagingTemplate sendingOperations;
+	private final SimpMessagingTemplate template;
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
 	private final EveryChatServiceImpl everyChatService;
 	private final ChatServiceImpl chatService;
@@ -59,7 +59,7 @@ public class WebSocketEventListener {
 			if (role.equals("ADMIN")){
 				redisService.deleteRedis(nickname);
 			}
-			sendingOperations.convertAndSend("/topic/public/" + roomId, chatMessage);
+			template.convertAndSend("/topic/public/" + roomId, chatMessage);
 		}
 	}
 }
