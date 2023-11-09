@@ -3,10 +3,10 @@ package com.dalcho.adme.controller;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.ChatRoomDto;
+import com.dalcho.adme.dto.LastMessage;
 import com.dalcho.adme.service.ChatServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
@@ -72,7 +72,7 @@ public class ChatRoomController {
 
 	// 채팅방 마지막 줄 갖고오기
 	@GetMapping ("/room/enter/{roomId}")
-	List<String> lastLine(@PathVariable String roomId){
+	LastMessage lastLine(@PathVariable String roomId){
 		return chatService.lastLine(roomId);
 	}
 
