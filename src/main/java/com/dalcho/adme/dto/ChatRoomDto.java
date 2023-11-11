@@ -32,15 +32,15 @@ public class ChatRoomDto implements Serializable { // 일반 crud에서 쓰임
 		return room;
 	}
 
-	public static ChatRoomDto of(String roomId, String nickname, User user, List<String> list) {
+	public static ChatRoomDto of(String roomId, User user, LastMessage lastMessage) {
 		return ChatRoomDto.builder()
 				.roomId(roomId)
 				.nickname(user.getNickname())
-				.adminChat(Integer.valueOf(list.get(0)))
-				.userChat(Integer.valueOf(list.get(1)))
-				.message(list.get(2))
-				.day(list.get(3))
-				.time(list.get(4))
+				.adminChat(lastMessage.getAdminChat())
+				.userChat(lastMessage.getUserChat())
+				.message(lastMessage.getMessage())
+				.day(lastMessage.getDay())
+				.time(lastMessage.getTime())
 				.build();
 	}
 }
