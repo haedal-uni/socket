@@ -72,7 +72,7 @@ function openChat() {
 
 function openChatList() {
 	if (document.getElementById("needChat")) {
-		//needLine()
+		needLine() // 새로 고침
 	}else{
 		let nickname = localStorage.getItem('wschat.sender');
 		$.ajax({
@@ -136,10 +136,10 @@ function needLine(){
 		contentType: false,
 		processData: false,
 		success: function(response) {
-			let count = response[1];
-			let message = response[2];
-			let day = response[3];
-			let time = response[4];
+			let count = response["userChat"];
+			let message = response["message"];
+			let day = response["day"]
+			let time = response["time"]
 			today = new Date();
 			month = today.getMonth()+1;
 			days = today.getDate();

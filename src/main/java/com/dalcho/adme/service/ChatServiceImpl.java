@@ -268,60 +268,60 @@ public class ChatServiceImpl {
     }
 
     public LastMessage lastLine(String roomId) {
-		if(lastMessageMap.containsKey(roomId)){
-			log.info(" = = = MAP 활용 = = = ");
-			return lastMessageMap.get(roomId);
-		}else{
-			log.info(" = = = MAP 활용 X = = = ");
-			String filePath = chatUploadLocation + "/" + roomId + ".txt";
-			File file = new File(filePath);
-			// 파일의 존재 여부 확인
-			if (!file.exists()) {
-				try {
-					// 파일이 존재하지 않는 경우 새로 생성
-					file.createNewFile();
-					return null;
-				} catch (IOException e) {
-					e.printStackTrace();
-					return null;
-				}
-			}
-			try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
+        if (lastMessageMap.containsKey(roomId)) {
+            log.info(" = = = MAP 활용 = = = ");
+            return lastMessageMap.get(roomId);
+        } else {
+            log.info(" = = = MAP 활용 X = = = ");
+            String filePath = chatUploadLocation + "/" + roomId + ".txt";
+            File file = new File(filePath);
+            // 파일의 존재 여부 확인
+            if (!file.exists()) {
+                try {
+                    // 파일이 존재하지 않는 경우 새로 생성
+                    file.createNewFile();
+                    return null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+            try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
 
-				long fileLength = file.length();
-				if (fileLength <= 0) {
-					return null;
-					//return Collections.emptyList();
-				}
-				randomAccessFile.seek(fileLength);
-				long pointer = fileLength - 2;
-				while (pointer > 0) {
-					randomAccessFile.seek(pointer);
-					char c = (char) randomAccessFile.read();
-					if (c == '\n') {
-						break;
-					}
-					pointer--;
-				}
-				randomAccessFile.seek(pointer + 1);
-				String line = randomAccessFile.readLine();
-				if (line == null || line.trim().isEmpty()) {
-					//return Collections.emptyList();
-					return null;
-				}
-				if (line.startsWith(",")) {
-					line = line.substring(1);
-				}
+                long fileLength = file.length();
+                if (fileLength <= 0) {
+                    return null;
+                    //return Collections.emptyList();
+                }
+                randomAccessFile.seek(fileLength);
+                long pointer = fileLength - 2;
+                while (pointer > 0) {
+                    randomAccessFile.seek(pointer);
+                    char c = (char) randomAccessFile.read();
+                    if (c == '\n') {
+                        break;
+                    }
+                    pointer--;
+                }
+                randomAccessFile.seek(pointer + 1);
+                String line = randomAccessFile.readLine();
+                if (line == null || line.trim().isEmpty()) {
+                    //return Collections.emptyList();
+                    return null;
+                }
+                if (line.startsWith(",")) {
+                    line = line.substring(1);
+                }
 
-				// Parsing JSON using com.google.gson.JsonObject
-				JsonParser parser = new JsonParser();
-				JsonObject json = parser.parse(line).getAsJsonObject();
-				int adminChat = json.get("adminChat").getAsInt();
-				int userChat = json.get("userChat").getAsInt();
-				String message = json.get("message").getAsString().trim();
-				String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
-				String day = json.get("day").getAsString();
-				String time = json.get("time").getAsString();
+                // Parsing JSON using com.google.gson.JsonObject
+                JsonParser parser = new JsonParser();
+                JsonObject json = parser.parse(line).getAsJsonObject();
+                int adminChat = json.get("adminChat").getAsInt();
+                int userChat = json.get("userChat").getAsInt();
+                String message = json.get("message").getAsString().trim();
+                String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+                String day = json.get("day").getAsString();
+                String time = json.get("time").getAsString();
 
 //			List<String> chat = new ArrayList<>();
 //			chat.add(Integer.toString(adminChat));
@@ -330,16 +330,16 @@ public class ChatServiceImpl {
 //			chat.add(day);
 //			chat.add(time);
 
-				ChatMessage chatMessage = new ChatMessage();
-				chatMessage.setRoomId(roomId);
-				chatMessage.setMessage(messages);
-				return LastMessage.of(chatMessage, adminChat, userChat, day, time);
-				//return chat;
-			} catch (IOException | JsonSyntaxException e) {
-				e.printStackTrace();
-				return null;
-				//Collections.emptyList()
-			}
-		}
+                ChatMessage chatMessage = new ChatMessage();
+                chatMessage.setRoomId(roomId);
+                chatMessage.setMessage(messages);
+                return LastMessage.of(chatMessage, adminChat, userChat, day, time);
+                //return chat;
+            } catch (IOException | JsonSyntaxException e) {
+                e.printStackTrace();
+                return null;
+                //Collections.emptyList()
+            }
+        }
     }
 }
