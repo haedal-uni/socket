@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,7 @@ import java.io.IOException;
 @Component
 
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
-	private final JwtTokenProvider jwtProvider;
+	private final JwtTokenProvider jwtTokenProvider;
 	private final UserRepository userRepository;
 	@Value("${oauth.redirection.url}")
 	private String REDIRECTION_URL;
@@ -39,7 +40,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 		User userInfo = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
 		String nickname = userInfo.getNickname();
 		User user = UserMapper.of(oAuth2User, nickname); // kakao type으로 넣기
-		String token = jwtProvider.generateToken(user); // string 으로 받는다
+		String token = jwtTokenProvider.generateToken(user); // string 으로 받는다
+
+
+		// user 정보 저장
+		Authentication auth = jwtTokenProvider.getAuthentication(token);
+		SecurityContextHolder.getContext().setAuthentication(auth);
+
 
 		response.sendRedirect(getRedirectionURI(token, user));
 	}

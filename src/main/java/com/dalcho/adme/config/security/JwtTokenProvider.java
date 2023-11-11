@@ -9,9 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
@@ -68,10 +70,9 @@ public class JwtTokenProvider {
 				.nickname(claims.getSubject())
 				.role(UserRole.of(role))
 				.build();
-		//UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUsername(token));
+		UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
 		log.info("[getAuthentication] 토큰 인증 정보 조회 완료 : " + user);
-		//System.out.println("userDetails : " + userDetails);
-		return new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
+		return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
 		//return new UsernamePasswordAuthenticationToken(userDetails, " ", userDetails.getAuthorities());
 	}
 
@@ -132,6 +133,11 @@ public class JwtTokenProvider {
 				.nickname(nickname)
 				.role(userRole)
 				.build();
+	}
+
+	public String resolveToken(HttpServletRequest request) {
+		log.info("[resolveToken] Header 에서 Token 추출 완료");
+		return request.getHeader("Authorization");
 	}
 
 }
