@@ -1,7 +1,7 @@
 package com.dalcho.adme.config;
 
 import com.dalcho.adme.config.security.JwtTokenProvider;
-import com.dalcho.adme.model.User;
+import com.dalcho.adme.service.UserDetailServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -10,9 +10,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 //stomp
 
@@ -22,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class StompHandler implements ChannelInterceptor {
 	// client가 connect할 떄 header로 보낸 Authorization에 담긴 jwt Token을 검증
 	private final JwtTokenProvider jwtTokenProvider;
+	private final UserDetailServiceImpl userDetailsService;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -32,10 +31,10 @@ public class StompHandler implements ChannelInterceptor {
 			//jwtTokenProvider.getUserFromToken(headerAccessor.getFirstNativeHeader("Authorization"));
 
 			String accessToken = headerAccessor.getFirstNativeHeader("Authorization");
-			User user = jwtTokenProvider.getUserFromToken(accessToken);
-			if (user != null) {
-				Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-				SecurityContextHolder.getContext().setAuthentication(authentication);
+			//User user = jwtTokenProvider.getUserFromToken(accessToken);
+			UserDetails userDetails = userDetailsService.loadUserByUsername(jwtTokenProvider.getNickname(accessToken));
+			if (userDetails != null) {
+				log.info("[preSend] 인증 확인");
 			} else {
 				throw new BadCredentialsException("Invalid JWT token");
 			}
