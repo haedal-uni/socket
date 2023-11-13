@@ -1,6 +1,5 @@
 package com.dalcho.adme.service;
 
-import com.dalcho.adme.exception.notfound.UserNotFoundException;
 import com.dalcho.adme.model.User;
 import com.dalcho.adme.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

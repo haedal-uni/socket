@@ -80,22 +80,22 @@ public class User implements UserDetails {
 	}
 
 	@Override
-	public boolean isAccountNonExpired() {
+	public boolean isAccountNonExpired() { // 사용자 계정 만료 여부
 		return false;
 	}
 
 	@Override
-	public boolean isAccountNonLocked() {
+	public boolean isAccountNonLocked() { // 사용자 잠금 여부
 		return false;
 	}
 
 	@Override
-	public boolean isCredentialsNonExpired() {
+	public boolean isCredentialsNonExpired() { // 비밀번호 만료 여부
 		return false;
 	}
 
 	@Override
-	public boolean isEnabled() {
+	public boolean isEnabled() { // 사용자 활성화 여부
 		return this.enabled;
 	}
 }
