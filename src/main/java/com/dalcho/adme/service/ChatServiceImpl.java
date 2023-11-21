@@ -115,13 +115,20 @@ public class ChatServiceImpl {
             chatRoom.setRoomId(findChat.get().getRoomId());
 
             // 채팅 파일이 없을 경우 ChatRoomDto에 값을 담지 않음
-            if (!isChatFileExists(roomId)) {
-                return null;
-            }
+//            if (!isChatFileExists(roomId)) {
+//                return null;
+//            }
 
             LastMessage lastLine = lastLine(roomId);
             if (lastLine == null) {
-                return null;
+                lastLine = LastMessage.builder()
+                        .roomId(roomId)
+                        .adminChat(0)
+                        .userChat(0)
+                        .message("환영합니다.")
+                        .day("")
+                        .time("")
+                        .build();
             }
             stopTime = System.currentTimeMillis();
             log.info("readFile : " + (stopTime - startTime) + " 초");
