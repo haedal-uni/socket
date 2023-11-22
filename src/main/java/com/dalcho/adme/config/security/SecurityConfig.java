@@ -17,74 +17,42 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
 @Configuration
-@EnableWebSecurity
 @RequiredArgsConstructor
+@EnableWebSecurity //웹보안 활성화를위한 annotation
 public class SecurityConfig {
-
-	private final JwtTokenProvider jwtTokenProvider;
-	private final CustomOAuthService customOAuth2UserService;
-	private final OAuth2SuccessHandler successHandler;
-	private final Oauth2FailureHandler failureHandler;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final CustomOAuthService customOAuth2UserService;
+    private final OAuth2SuccessHandler successHandler;
+    private final Oauth2FailureHandler failureHandler;
 	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-	public static final String[] VIEW_LIST = {
-			"/static/**",
-			"/css/**",
-			"/js/**",
-			"/favicon.ico/**",
-			"/user/**",
-			"/taste",
-			"/tenSeconds",
-			"/",
-			"/oauth2/**",
-			"/sign-up"
-	};
-
-	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.cors().configurationSource(corsConfigurationSource());
-		http.csrf().disable() // rest api 에서는 csrf 공격으로부터 안전하고 매번 api 요청으로부터 csrf 토큰을 받지 않아도 되어 disable로 설정
-				.sessionManagement() // Rest Api 기반 애플리케이션 동작 방식 설정
-				.and()
-				.headers()
-				.frameOptions()
-				.disable();
+        http.csrf().disable() // rest api 에서는 csrf 공격으로부터 안전하고 매번 api 요청으로부터 csrf 토큰을 받지 않아도 되어 disable로 설정
+                .sessionManagement(); // Rest Api 기반 애플리케이션 동작 방식 설정
+//				.sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않음
+//				.and().headers().frameOptions().disable().and().formLogin().disable() // 로그인 폼 미사용
+//					.httpBasic().disable() // Http basic Auth 기반으로 로그인 인증창이 열림(disable 시 인증창 열리지 않음)
+//					.exceptionHandling().authenticationEntryPoint(new RestAuthenticationEntryPoint())// 인증,인가가 되지 않은 요청 시 발생
+//					.and()
+        http.authorizeRequests()
+                .antMatchers("/css/**", "/oauth2/**", "/user/**", "/taste/**", "/js/**").permitAll()
+                .antMatchers("/admin/**").hasAuthority("ADMIN")
+                .anyRequest().authenticated();
 
-		http.authorizeRequests()
-				.antMatchers(VIEW_LIST).permitAll()
-				.antMatchers("/sign-up").permitAll()
-				.antMatchers("/sign-in").permitAll()
-				.antMatchers("/admin/**").hasAuthority("ADMIN")
-				.anyRequest().authenticated();
-
-		http.oauth2Login().loginPage("/oauth/login")
-				.and()
-				.logout().logoutSuccessUrl("/taste")
-				.deleteCookies("TokenCookie");
-
-		http.oauth2Login()
-				.userInfoEndpoint()
-				.userService(customOAuth2UserService)
-				.and()
-				.successHandler(successHandler)
-				.failureHandler(failureHandler);
-
-		http.formLogin()
-				.loginPage("/user/login")
-				.defaultSuccessUrl("/chat")
-				.and()
-				.logout()
-				.logoutUrl("/user/logout") // 로그아웃 처리 URL
-				.logoutSuccessUrl("/user/login") // 로그아웃 처리 후 이동할 URL
-				.deleteCookies("TokenCookie"); // 쿠키삭제
-		//.permitAll();
-
+        http.oauth2Login().loginPage("/user/login")
+                .and().logout().logoutSuccessUrl("/taste");
+        http.oauth2Login().userInfoEndpoint().userService(customOAuth2UserService)
+                .and()
+                .successHandler(successHandler)
+                .failureHandler(failureHandler);
 		http.exceptionHandling()
 				.authenticationEntryPoint(customAuthenticationEntryPoint)
 				.and()
 				.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
-		return http.build();
-	}
+        return http.build();
+    }
 
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
@@ -93,7 +61,6 @@ public class SecurityConfig {
 		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
 		configuration.addAllowedHeader("*");
-		//configuration.setAllowedHeaders(Arrays.asList("X-Custom-Header", "Content-Type"));
 		configuration.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE"));
 
 		configuration.setAllowCredentials(true);
@@ -103,4 +70,3 @@ public class SecurityConfig {
 		return source;
 	}
 }
-
