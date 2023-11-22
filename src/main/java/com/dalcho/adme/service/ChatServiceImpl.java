@@ -57,14 +57,15 @@ public class ChatServiceImpl {
     }
 
     public void connectUser(String status, String roomId, ChatMessage chatMessage) {
-        log.info("[ connectUser ] roomId : " + roomId);
         int num = 0;
         synchronized (lock) {
+            log.info("[ ConnectUser ] roomId : " + roomId);
             if (Objects.equals(status, "Connect")) {
                 num = connectUsers.getOrDefault(roomId, 0);
                 connectUsers.put(roomId, (num + 1));
                 saveFile(chatMessage);
             } else if (Objects.equals(status, "Disconnect")) {
+                log.info("[ DisconnectUser ] roomId : " + roomId);
                 num = connectUsers.get(roomId);
                 connectUsers.put(roomId, (num - 1));
             }

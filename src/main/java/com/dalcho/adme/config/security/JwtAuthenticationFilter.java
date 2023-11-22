@@ -28,7 +28,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		log.info("[dofilterInternal] token 값 유효성 체크 시작");
 		try {
-			System.out.println(" auth.getCredentials() : " + auth.getCredentials());
 			// token 이 유효하다면 Authentication 객체를 생성해서 SecurityContextHolder 에 추가
 			if (token != null && jwtTokenProvider.validateToken(token)) {
 				log.info("[ jwt ] Login");
