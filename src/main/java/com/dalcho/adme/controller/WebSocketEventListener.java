@@ -19,6 +19,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import static com.dalcho.adme.dto.ChatMessage.*;
+
 //@EventListener는 동기적으로 처리를 진행
 @RequiredArgsConstructor
 @Component
@@ -50,7 +52,7 @@ public class WebSocketEventListener {
 		} else {
 			log.info("[고객센터] disconnected chat - {} 의 roomId : {}", nickname, redisService.getRedis(nickname));
 			ChatMessage chatMessage = new ChatMessage();
-			chatMessage.setType(ChatMessage.MessageType.LEAVE);
+			chatMessage.setType(MessageType.LEAVE);
 			chatMessage.setSender(nickname);
 			chatMessage.setRoomId(roomId);
 			chatService.connectUser("Disconnect", roomId, chatMessage);
