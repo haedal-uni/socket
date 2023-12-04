@@ -4,6 +4,7 @@ import com.dalcho.adme.config.RedisPublisher;
 import com.dalcho.adme.config.RedisSubscriber;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.dto.ChatMessage.MessageType;
 import com.dalcho.adme.dto.DisconnectPayload;
 import com.dalcho.adme.model.User;
 import com.dalcho.adme.service.ChatServiceImpl;
@@ -65,7 +66,7 @@ public class ChatController {
 
 		log.info("[chat] addUser token 검사: " + user.getNickname());
 		chatMessage.setSender(user.getNickname());
-		chatMessage.setType(ChatMessage.MessageType.JOIN);
+		chatMessage.setType(MessageType.JOIN);
 
 		redisService.addRedis(chatMessage);
 		chatService.connectUser("Connect", roomId, chatMessage);
@@ -88,7 +89,7 @@ public class ChatController {
 			channels.remove(roomId);
 
 			ChatMessage chatMessage = new ChatMessage();
-			chatMessage.setType(ChatMessage.MessageType.LEAVE);
+			chatMessage.setType(MessageType.LEAVE);
 			chatMessage.setSender(nickname);
 			chatMessage.setRoomId(roomId);
 			chatService.connectUser("Disconnect", roomId, chatMessage);
