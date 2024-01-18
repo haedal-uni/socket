@@ -8,8 +8,6 @@ import com.dalcho.adme.service.EveryChatServiceImpl;
 import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -19,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import static com.dalcho.adme.dto.ChatMessage.*;
+import static com.dalcho.adme.dto.ChatMessage.MessageType;
 
 //@EventListener는 동기적으로 처리를 진행
 @RequiredArgsConstructor
@@ -27,7 +25,6 @@ import static com.dalcho.adme.dto.ChatMessage.*;
 @Slf4j
 public class WebSocketEventListener {
 	private final SimpMessagingTemplate template;
-	private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
 	private final EveryChatServiceImpl everyChatService;
 	private final ChatServiceImpl chatService;
 	private final RedisService redisService;
@@ -35,7 +32,7 @@ public class WebSocketEventListener {
 	private final UserRepository userRepository;
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-		logger.info("Received a new web socket connection  ");
+		log.info("\"Received a new web socket connection  ");
 	}
 
 	@EventListener
