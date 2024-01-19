@@ -49,6 +49,7 @@ public class ChatController {
    */
 	@MessageMapping("/chat/sendMessage")
 	public void sendMessage(@Payload ChatMessage chatMessage) {
+		log.info(" == sendMessage == ");
 		ChannelTopic channel = channels.get(chatMessage.getRoomId());
 		redisPublisher.publish(channel, chatMessage);
 		//template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);

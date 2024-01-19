@@ -13,7 +13,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	private final StompHandler stompHandler;
 	private final RedisConnectionFactory redisConnectionFactory;
 	@Override
@@ -35,8 +35,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		//소켓에 연결하기 위한 엔드 포인트를 지정
-		registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
-		registry.addEndpoint("/ws/chat").setAllowedOriginPatterns("*").withSockJS();
+		registry.addEndpoint("/coco").setAllowedOriginPatterns("*").withSockJS();
+		registry.addEndpoint("/coco/chat").setAllowedOriginPatterns("*").withSockJS();
 	}
 
 	// StompHandler가 Websocket 앞단에서 token을 체크할 수 있도록 interceptor로 설정
