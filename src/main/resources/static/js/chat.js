@@ -330,7 +330,11 @@ function connect() {
     let nickname = localStorage.getItem('wschat.sender');
     let token = localStorage.getItem('token');
     if (nickname) {
-        let socket = new SockJS('/ws');
+        let socket
+        if (document.location.protocol === 'https:') {
+            socket = new SockJS("/coco");
+        }
+        //let socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
         stompClient.connect({Authorization: token}, onConnected, onError);
     }
