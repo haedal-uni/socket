@@ -28,12 +28,12 @@ public class UserController {
 		return "index";
 	}
 
-	@GetMapping(value="/user/logout/{nickname}")
-	public void logout(@PathVariable String nickname) {
-		User byNickname = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
-		log.info("redis getToken : {}",redisService.getToken(byNickname.getEmail()));
-		String accessToken = redisService.getToken(byNickname.getEmail());
-		userService.kakaoLogout(accessToken);
-		redisService.deleteRedis(nickname);
-	}
+//	@GetMapping(value="/user/logout/{nickname}")
+//	public void logout(@PathVariable String nickname) {
+//		User byNickname = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
+//		log.info("redis getToken : {}",redisService.getToken(byNickname.getEmail()));
+//		String accessToken = redisService.getToken(byNickname.getEmail());
+//		userService.kakaoLogout(accessToken);
+//		redisService.deleteRedis(nickname);
+//	}
 }

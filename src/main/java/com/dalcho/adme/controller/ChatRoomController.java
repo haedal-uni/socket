@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -34,45 +36,36 @@ public class ChatRoomController {
 		return chatService.findAllRoom();
 	}
 
-	// 본인 채팅방(일반 유저)
-//	@GetMapping("/room/one/{nickname}")
-//	public ChatRoomDto roomOne(@PathVariable String nickname) {
-//		return chatService.roomOne(nickname);
-//	}
+	// 관리자 확인용
+	@GetMapping("/check-user")
+	public String check(){
+		return "success";
+	}
 
 	// 채팅방 생성
 	@PostMapping("/room")
-	public ChatRoomDto createRoom(@RequestBody String nickname) {
-		return chatService.createRoom(nickname);
+	public ChatRoomDto createRoom(@RequestBody String nickname, @AuthenticationPrincipal UserDetails userDetails) {
+		if(nickname.equals(userDetails.getUsername())){
+			return chatService.createRoom(nickname);
+		}else{
+			return chatService.createRoom(userDetails.getUsername());
+		}
 	}
 
-	// 완료된 채팅방 삭제하기
-//	@DeleteMapping("/room/one/{roomId}")
-//	public void deleteRoom(@PathVariable String roomId) {
-//		chatService.deleteRoom(roomId);
-//	}
-
-	// 삭제 후 채팅방 재 접속 막기
-//	@GetMapping("/room/{roomId}")
-//	public boolean getRoomInfo(@PathVariable String roomId) {
-//		return chatService.getRoomInfo(roomId);
-//	}
-
 	// 채팅방 기록 갖고오기
-	@GetMapping("/room/enter/{roomId}/{roomName}")
-	public Object readFile(@PathVariable String roomId, @PathVariable String roomName) {
+	@GetMapping("/room/enter/file/{roomId}")
+	public Object readFile(@PathVariable String roomId) {
 		return chatService.readFile(roomId);
 	}
 
 	// 채팅방 기록 저장하기
-	@PostMapping("/room/enter/{roomId}/{roomName}")
-	public void saveFile(@PathVariable String roomId, @PathVariable String roomName, @RequestBody ChatMessage chatMessage) {
+	@PostMapping("/room/enter/file")
+	public void saveFile(@RequestBody ChatMessage chatMessage, @AuthenticationPrincipal UserDetails userDetails){
+		chatMessage.setAuth(userDetails.getAuthorities().toString());
 		chatService.saveFile(chatMessage);
 	}
-
-	// 채팅방 마지막 줄 갖고오기
 	@GetMapping ("/room/enter/{roomId}")
-	LastMessage lastLine(@PathVariable String roomId){
+	LastMessage lastLine(@PathVariable String roomId) {
 		return chatService.lastLine(roomId);
 	}
 
@@ -81,27 +74,30 @@ public class ChatRoomController {
 		return jwtTokenProvider.getNickname(token);
 	}
 
-	@GetMapping("/room/subscribe")
-	public SseEmitter subscribe(String id) throws IOException {
+	@GetMapping("/alarm/subscribe/{id}")
+	public SseEmitter subscribe(@PathVariable String id) throws IOException {
+		log.info("[SSE] SUBSCRIBE");
 		SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
 		CLIENTS.put(id, emitter);
 		emitter.send(SseEmitter.event().name("connect") // 해당 이벤트의 이름 지정
 				.data("connected!")); // 503 에러 방지를 위한 더미 데이터
 		emitter.onTimeout(() -> CLIENTS.remove(id));
 		emitter.onCompletion(() -> CLIENTS.remove(id));
+
 		return emitter;
 	}
 
-	@GetMapping("/room/publish")
-	@Async("executor") // 비동기
-	public void publish(String sender, String roomId) {
+	@GetMapping( "/alarm/publish")
+	@Async // 비동기
+	public void publish(@RequestParam String sender, @RequestParam String roomId, @AuthenticationPrincipal UserDetails userDetails) {
 		Set<String> deadIds = new HashSet<>();
 		CLIENTS.forEach((id, emitter) -> {
 			try {
-				ChatMessage chatMessage = chatService.chatAlarm(sender, roomId);
+				ChatMessage chatMessage = chatService.chatAlarm(sender, roomId, userDetails.getAuthorities().toString());
 				emitter.send(chatMessage, MediaType.APPLICATION_JSON);
+				log.info("[SSE] send 완료");
 			} catch (Exception e) {
-				log.error("publish() : [error]  " + e);
+				log.error("[error]  " + e);
 				deadIds.add(id);
 				log.warn("disconnected id : {}", id);
 			}
