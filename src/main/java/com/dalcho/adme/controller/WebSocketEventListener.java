@@ -1,7 +1,9 @@
 package com.dalcho.adme.controller;
 
+import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.exception.notfound.UserNotFoundException;
+import com.dalcho.adme.model.User;
 import com.dalcho.adme.repository.UserRepository;
 import com.dalcho.adme.service.ChatServiceImpl;
 import com.dalcho.adme.service.EveryChatServiceImpl;
@@ -25,11 +27,11 @@ import static com.dalcho.adme.dto.ChatMessage.MessageType;
 @Slf4j
 public class WebSocketEventListener {
 	private final SimpMessagingTemplate template;
-	private final EveryChatServiceImpl everyChatService;
 	private final ChatServiceImpl chatService;
 	private final RedisService redisService;
-	private final RedisTemplate<String, ChatMessage> redisTemplate;
 	private final UserRepository userRepository;
+	private final JwtTokenProvider jwtProvider;
+
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
 		log.info("\"Received a new web socket connection  ");
@@ -38,22 +40,24 @@ public class WebSocketEventListener {
 	@EventListener
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-		UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) headerAccessor.getHeader("simpUser");
-		String nickname = token.getName();
+		String sessionId = (String) headerAccessor.getHeader("simpSessionId");
+		String token = redisService.getSession(sessionId);
+		User user = jwtProvider.getUserFromToken(token);
+		String nickname = user.getNickname();
 		userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
-		String role = token.getAuthorities().toString().replace("[","").replace("]","");
+		String role = user.getRole().name();
 		String roomId = redisService.getRedis(nickname);
 		if (roomId.startsWith("aaaa")) {
 			log.info("[랜덤 채팅] disconnected chat");
-			everyChatService.disconnectUser(nickname, roomId);
 		} else {
 			log.info("[고객센터] disconnected chat - {} 의 roomId : {}", nickname, redisService.getRedis(nickname));
 			ChatMessage chatMessage = new ChatMessage();
 			chatMessage.setType(MessageType.LEAVE);
 			chatMessage.setSender(nickname);
 			chatMessage.setRoomId(roomId);
+			chatMessage.setAuth(role);
 			chatService.connectUser("Disconnect", roomId, chatMessage);
-			if (role.equals("ADMIN")){
+			if (role.equals("ADMIN")) {
 				redisService.deleteRedis(nickname);
 			}
 			template.convertAndSend("/topic/public/" + roomId, chatMessage);
