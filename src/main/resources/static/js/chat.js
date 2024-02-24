@@ -128,8 +128,6 @@ function openChatList() {
               </div>
             </div>`
                 $(".conversations").append(temp);
-
-
             }
         });
     }

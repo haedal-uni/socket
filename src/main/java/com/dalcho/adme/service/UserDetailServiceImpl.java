@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class UserDetailServiceImpl implements UserDetailService {// @AuthenticationPrincipal에서 값을 받아오기 위해서는 아래 코드를 작성해야 한다.
-//PrincipalDetailsService
+
 	private final UserRepository userRepository;
 
 	// Kakao 엔티티의 id 값 가져오기 (인증)
