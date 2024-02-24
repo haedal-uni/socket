@@ -28,7 +28,7 @@ public class JwtTokenProvider {
 	@Value("${springboot.jwt.secret}")
 	private String secretKey; // 토큰 생성에 필요한 key
 	private final long TOKEN_VALID_MILISECOND = 1000L * 60 * 60 * 10; // token 유효시간 : 10시간
-	long refreshPeriod = 1000L * 60L * 60L * 24L * 30L * 3L;
+
 
 	// SecretKey 초기화
 	@PostConstruct // Bean 객체로 주입된 후 수행
@@ -64,14 +64,9 @@ public class JwtTokenProvider {
 	// 필터에서 인증에 성공시 SecurityContextHolder 에 저장할 Authentication 생성
 	public Authentication getAuthentication(String token) {
 		log.info("[getAuthentication] 토큰 인증 정보 조회 시작");
-		Claims claims = getClaims(token).getBody();
-		String role = claims.get("roles").toString();
-		User user = User.builder()
-				.nickname(claims.getSubject())
-				.role(UserRole.of(role))
-				.build();
-		UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
-		log.info("[getAuthentication] 토큰 인증 정보 조회 완료 : " + user);
+
+		UserDetails userDetails = userDetailsService.loadUserByUsername(this.getNickname(token));
+		log.info("[getAuthentication] 토큰 인증 정보 조회 완료");
 		return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
 		//return new UsernamePasswordAuthenticationToken(userDetails, " ", userDetails.getAuthorities());
 	}
