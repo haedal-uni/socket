@@ -7,7 +7,6 @@ import com.dalcho.adme.model.UserRole;
 import com.dalcho.adme.oauth2.util.UserMapper;
 import com.dalcho.adme.repository.UserRepository;
 import com.dalcho.adme.service.UserDetailServiceImpl;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -49,10 +48,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         UserDetails userDetails = userDetailService.loadUserByUsername(jwtProvider.getNickname(token));
         UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userDetails.getUsername(), null, userDetails.getAuthorities());
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(auth);
-        System.out.println(" = = = = = = = = ");
-        System.out.println(userDetails.getUsername());
         response.sendRedirect(getRedirectionURI(token, user));
     }
 
