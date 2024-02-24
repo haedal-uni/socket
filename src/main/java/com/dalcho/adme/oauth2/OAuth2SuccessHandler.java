@@ -51,6 +51,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken(userDetails.getUsername(), null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(auth);
+        System.out.println(" = = = = = = = = ");
+        System.out.println(userDetails.getUsername());
         response.sendRedirect(getRedirectionURI(token, user));
     }
 
