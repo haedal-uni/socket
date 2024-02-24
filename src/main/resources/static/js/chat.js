@@ -77,7 +77,7 @@ function openChatList() {
         nickname = localStorage.getItem('nickname');
         $.ajax({
             type: "POST",
-            url: host + `/room`,
+            url: `/room`,
             headers: {"Authorization": token},
             data: nickname,
             contentType: false,
@@ -142,7 +142,7 @@ function needLine() {
     nickname = localStorage.getItem('nickname');
     $.ajax({
         type: "GET",
-        url: host + `/room/enter/` + roomId,
+        url: `/room/enter/` + roomId,
         headers: {"Authorization": token},
         contentType: false,
         processData: false,
@@ -270,7 +270,7 @@ function closeChat() {
         connectingElement.text("")
         $.ajax({
             type: "GET",
-            url: host + "/random/cancel/" + nickname,
+            url: "/random/cancel/" + nickname,
             headers: {"Authorization": token},
             success: function () {
                 // 취소에 성공한 경우
