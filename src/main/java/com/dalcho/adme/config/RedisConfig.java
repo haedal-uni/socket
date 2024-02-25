@@ -1,5 +1,6 @@
 package com.dalcho.adme.config;
 
+import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.ChatRoomDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -41,8 +42,8 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, ChatRoomDto> chatMessageRedisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, ChatRoomDto> redisTemplate = new RedisTemplate<>();
+    public RedisTemplate<String, ChatMessage> messageRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, ChatMessage> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(connectionFactory);
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
