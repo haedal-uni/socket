@@ -18,7 +18,7 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	private final RedisConnectionFactory redisConnectionFactory;
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
-		config.enableSimpleBroker("/topic", "/every-chat"); // sub
+		config.enableSimpleBroker("/every-chat"); // sub
 		config.setApplicationDestinationPrefixes("/app"); // pub
 
 		// Redis를 메시지 브로커로 사용하도록 설정
