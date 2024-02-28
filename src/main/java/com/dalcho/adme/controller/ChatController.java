@@ -33,7 +33,6 @@ public class ChatController {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisService redisService;
 	private final EveryChatServiceImpl everyChatService;
-	private final RedisTemplate<String, Object> redisTemplate;
 
 	private final RedisMessageListenerContainer redisMessageListener;
 	private final RedisPublisher redisPublisher;
@@ -44,60 +43,29 @@ public class ChatController {
 	public void init(){
 		channels = new HashMap<>();
 	}
-	/*
-    websocket을 통해 서버에 메세지가 send 되었을 떄도 jwt token 유효성 검증이 필요하다.
-   */
 	@MessageMapping("/chat/sendMessage")
 	public void sendMessage(@Payload ChatMessage chatMessage) {
-		log.info(" == sendMessage == ");
-		ChannelTopic channel = channels.get(chatMessage.getRoomId());
+		ChannelTopic channel = channels.get("/topic/public/" + chatMessage.getRoomId());
 		redisPublisher.publish(channel, chatMessage);
-		//template.convertAndSend("/topic/public/" + chatMessage.getRoomId(), chatMessage);
 	}
 
 	@MessageMapping("/chat/addUser")
 	public void addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+		String sessionId = (String) headerAccessor.getHeader("simpSessionId");
 		String token = headerAccessor.getFirstNativeHeader("Authorization");
+		redisService.addSession(sessionId, token);
 		User user= jwtTokenProvider.getUserFromToken(token);
-
 		String roomId = chatMessage.getRoomId();
 		ChannelTopic channel = new ChannelTopic("/topic/public/" + roomId);
 		redisMessageListener.addMessageListener(redisSubscriber, channel);
-		channels.put(roomId, channel);
-
+		channels.put("/topic/public/"+roomId, channel);
 		log.info("[chat] addUser token 검사: " + user.getNickname());
 		chatMessage.setSender(user.getNickname());
 		chatMessage.setType(MessageType.JOIN);
-
+		chatMessage.setAuth(user.getRole().name());
 		redisService.addRedis(chatMessage);
 		chatService.connectUser("Connect", roomId, chatMessage);
 		template.convertAndSend("/topic/public/" + roomId, chatMessage);
 	}
-
-	// 일반 chat과 random chat 분리
-	@MessageMapping("/disconnect")
-	public void disConnect(@Payload DisconnectPayload disconnectPayload){
-		String roomId = disconnectPayload.getRoomId();
-		String nickname = disconnectPayload.getNickname();
-		if (roomId.startsWith("aaaa")) {
-			log.info("User Disconnected - random");
-			everyChatService.disconnectUser(nickname, roomId);
-		} else {
-			log.info("User Disconnected : " + nickname);
-
-			ChannelTopic channel = channels.get(roomId);
-			redisMessageListener.removeMessageListener(redisSubscriber, channel);
-			channels.remove(roomId);
-
-			ChatMessage chatMessage = new ChatMessage();
-			chatMessage.setType(MessageType.LEAVE);
-			chatMessage.setSender(nickname);
-			chatMessage.setRoomId(roomId);
-			chatService.connectUser("Disconnect", roomId, chatMessage);
-			if (nickname.equals("admin")){
-				redisService.deleteRedis(nickname);
-			}
-			template.convertAndSend("/topic/public/" + roomId, chatMessage);
-		}
-	}
 }
+

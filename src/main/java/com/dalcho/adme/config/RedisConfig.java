@@ -1,5 +1,6 @@
 package com.dalcho.adme.config;
 
+import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.ChatRoomDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -41,8 +42,8 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, ChatRoomDto> chatMessageRedisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, ChatRoomDto> redisTemplate = new RedisTemplate<>();
+    public RedisTemplate<String, ChatMessage> messageRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, ChatMessage> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(connectionFactory);
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
@@ -68,22 +69,13 @@ public class RedisConfig {
     }
 
     @Bean
-    public CacheManager cacheManager1() { // TTL
-        long expireTimeInSeconds = 24 * 60 * 60;
-        long creationTimeInMillis = System.currentTimeMillis();
-        long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);
+    public CacheManager cacheManager() {
         RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofSeconds(remainingTimeInSeconds))
-                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
-        RedisCacheConfiguration cacheConfigWithoutNullValues = RedisCacheConfiguration.defaultCacheConfig()
-                .disableCachingNullValues()
+                .entryTtl(Duration.ofHours(3))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
         return RedisCacheManager.builder(redisConnectionFactory())
-                .cacheDefaults(cacheConfigWithoutNullValues)
-                .withCacheConfiguration("roomId", cacheConfig)
-                .withCacheConfiguration("createRoom", cacheConfig)
+                .cacheDefaults(cacheConfig) // 기본 캐시에 TTL 적용
                 .build();
     }
 }

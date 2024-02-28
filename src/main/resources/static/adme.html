@@ -21,7 +21,7 @@
 	Chat
 	<div class="badge">0</div>
 </button>
-<div id="container">
+<div id="chat-container" class="fixed">
 
 	<div class="header">
 		<div>
@@ -37,7 +37,7 @@
 
 	<div class="wrapper">
 		<div class="list">
-			<input type="text" class="search" placeholder="&#xF002; Search">
+			<input type="text" class="search" placeholder="&#xF002; Search" style="height: 20%">
 			<div class="conversations">
 			</div>
 		</div>
@@ -55,20 +55,11 @@
 					</div>
 				</div>
 
-				<div class="options">
-					<button class="btn btn-icon btn-round" onclick="openDrawer()">openDrawer
-						<i class="fa fa-ellipsis-v"></i>
-					</button>
-					<label class="btn btn-round btn-icon" for="file"> 파일 업로드
-						<i class="fa fa-paperclip"></i>
-					</label>
-					<input id="file" type="file" accept="*" multiple>
-				</div>
 			</div>
 		</div>
 
 
-		<div class="drawer close">
+		<div class="drawer close" style="display: none">
 			<button class="btn btn-round btn-icon" onclick="closeDrawer()">closeDrawer
 				<i class="fa fa-times"></i>
 			</button>
@@ -88,56 +79,12 @@
 				</div>
 			</div>
 
-			<div class="files">
-				<h2>Files</h2>
-				<div class="mentions">
-					<div class="pill">
-						<span>Filename.cs</span>
-						<i class="fa fa-arrow-down"></i>
-					</div>
-				</div>
-			</div>
-
-			<div class="projects">
-				<h2>Projects</h2>
-				<div class="mentions">
-					<div class="pill">
-						<i class="fa fa-link"></i>
-						<span>Project1.cs</span>
-					</div>
-					<div class="pill">
-						<i class="fa fa-link"></i>
-						<span>Project2.cs</span>
-					</div>
-
-				</div>
-			</div>
-
-			<div class="ideas">
-				<h2>Ideas</h2>
-				<div class="mentions">
-					<div class="pill">
-						<i class="fa fa-link"></i>
-						<span>Idea1.cs</span>
-					</div>
-				</div>
-			</div>
-
-			<div class="samples">
-				<h2>Samples</h2>
-				<div class="mentions">
-					<div class="pill">
-						<i class="fa fa-link"></i>
-						<span>Sample1.cs</span>
-					</div>
-				</div>
-			</div>
 		</div>
 	</div>
 </div>
 <div id="msgStack"></div>
 </body>
+<script src="/js/global.js"></script>
 <script src="/js/chat.js"></script>
-<script src="/js/adme.js"></script>
 <script src="/js/alarm.js"></script>
 </html>
