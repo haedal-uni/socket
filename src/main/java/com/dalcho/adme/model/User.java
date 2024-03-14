@@ -45,7 +45,6 @@ public class User implements UserDetails {
 	@Column(nullable = false)
 	private boolean enabled = true; // 1
 
-	@Column(nullable = false)
 	private String socialId;
 	private String social;
 
