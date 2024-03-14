@@ -1,0 +1,52 @@
+/* 로고 설정 */
+@font-face {
+    font-family: 'adme';
+    font-style: normal;
+    font-weight: auto;
+    src: local(Modak-Regular), url("../../../../../../git-Socket/src/main/resources/fonts/Modak-Regular.ttf") format("truetype");
+}
+@font-face {
+    font-family: 'HakgyoansimGaeulsopungB';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-2@1.0/HakgyoansimGaeulsopungB.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+
+.logo {
+    position: absolute; /*절대위치 설정*/
+    top: 2.5vw;
+    left: 6.5vw;
+
+    font-family: adme, serif; /*폰트 설정*/
+    font-size: 4vw;
+    color: whitesmoke;
+}
+.logo>a {
+    text-decoration-line: none;
+}
+.logo-link {
+    margin-left: -0.8vw; /*글자마다 색상을 적용해돼서 분리한 객체들간의 간격 줄이기*/
+}
+.logo-link-a {
+    color: #FF5C4B;
+}
+.logo-link-d {
+    color: #F3A11A;
+}
+.logo-link-m {
+    color: #62D83E;
+}
+.logo-link-e {
+    color: #249EFF;
+}
+
+.adme-scale-animation:hover {
+    transition: all 0.1s linear;
+    transform: scale(1.05);
+}
+.adme-font {
+    font-family: "HakgyoansimGaeulsopungB", sans-serif;
+}
+.adme-font2 {
+    font-family: "adme", serif;
+}

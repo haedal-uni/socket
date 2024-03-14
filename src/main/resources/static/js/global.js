@@ -15,3 +15,5 @@ function saveToken(queryString) {
     window.localStorage.setItem("nickname", urlParams.get("name"))
     window.history.replaceState({}, document.title, "/adme");
 }
+
+loginPage = "/user/login"
