@@ -73,35 +73,4 @@ public class ChatRoomController {
 	public String findNickname(@PathVariable String token){
 		return jwtTokenProvider.getNickname(token);
 	}
-
-	@GetMapping("/alarm/subscribe/{id}")
-	public SseEmitter subscribe(@PathVariable String id) throws IOException {
-		log.info("[SSE] SUBSCRIBE");
-		SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
-		CLIENTS.put(id, emitter);
-		emitter.send(SseEmitter.event().name("connect") // 해당 이벤트의 이름 지정
-				.data("connected!")); // 503 에러 방지를 위한 더미 데이터
-		emitter.onTimeout(() -> CLIENTS.remove(id));
-		emitter.onCompletion(() -> CLIENTS.remove(id));
-
-		return emitter;
-	}
-
-	@GetMapping( "/alarm/publish")
-	@Async // 비동기
-	public void publish(@RequestParam String sender, @RequestParam String roomId, @AuthenticationPrincipal UserDetails userDetails) {
-		Set<String> deadIds = new HashSet<>();
-		CLIENTS.forEach((id, emitter) -> {
-			try {
-				ChatMessage chatMessage = chatService.chatAlarm(sender, roomId, userDetails.getAuthorities().toString());
-				emitter.send(chatMessage, MediaType.APPLICATION_JSON);
-				log.info("[SSE] send 완료");
-			} catch (Exception e) {
-				log.error("[error]  " + e);
-				deadIds.add(id);
-				log.warn("disconnected id : {}", id);
-			}
-			deadIds.forEach(CLIENTS::remove);
-		});
-	}
 }
