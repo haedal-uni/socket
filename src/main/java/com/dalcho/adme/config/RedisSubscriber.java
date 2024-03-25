@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
@@ -20,7 +20,7 @@ import java.util.Map;
 public class RedisSubscriber implements MessageListener { // 구독자
     private final ObjectMapper objectMapper;
     private final RedisTemplate<String, ChatMessage> redisTemplate;
-    private final SimpMessageSendingOperations messagingTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override // Redis 메시지를 수신하면 호출되는 메소드
     public void onMessage(Message message, byte[] pattern) {

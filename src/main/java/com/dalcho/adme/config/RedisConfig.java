@@ -1,7 +1,6 @@
 package com.dalcho.adme.config;
 
 import com.dalcho.adme.dto.ChatMessage;
-import com.dalcho.adme.dto.ChatRoomDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;

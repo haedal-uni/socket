@@ -37,10 +37,17 @@ public class SecurityConfig {
 //					.httpBasic().disable() // Http basic Auth 기반으로 로그인 인증창이 열림(disable 시 인증창 열리지 않음)
 //					.exceptionHandling().authenticationEntryPoint(new RestAuthenticationEntryPoint())// 인증,인가가 되지 않은 요청 시 발생
 //					.and()
-        http.authorizeRequests().requestMatchers("/css/**", "/oauth2/**", "/user/**", "/taste/**", "/js/**")
+        http.authorizeRequests()
+				.requestMatchers("/sign-up").permitAll()
+				.requestMatchers("/sign-in").permitAll()
+				.requestMatchers("/css/**", "/oauth2/**", "/user/**", "/taste/**", "/js/**")
                 .permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated();
+
+		http.formLogin()
+						.loginPage("/user/login")
+								.defaultSuccessUrl("/adme");
 
         http.oauth2Login().loginPage("/user/login")
                 .and().logout().logoutSuccessUrl("/taste");
