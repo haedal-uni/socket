@@ -5,14 +5,12 @@ import com.dalcho.adme.config.RedisSubscriber;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.ChatMessage.MessageType;
-import com.dalcho.adme.dto.DisconnectPayload;
 import com.dalcho.adme.model.User;
 import com.dalcho.adme.service.ChatServiceImpl;
 import com.dalcho.adme.service.EveryChatServiceImpl;
 import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -64,8 +62,7 @@ public class ChatController {
 		chatMessage.setType(MessageType.JOIN);
 		chatMessage.setAuth(user.getRole().name());
 		redisService.addRedis(chatMessage);
-		chatService.connectUser("Connect", roomId, chatMessage);
+		chatService.countUser("Connect", roomId, chatMessage);
 		template.convertAndSend("/topic/public/" + roomId, chatMessage);
 	}
 }
-

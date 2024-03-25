@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -26,6 +27,30 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler successHandler;
     private final Oauth2FailureHandler failureHandler;
 	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+	public static final String[] VIEW_LIST = {
+			"/static/**",
+			"/favicon.ico/**",
+			"/taste",
+			"/tenSeconds",
+			"/",
+			"/ws/**",
+			"/oauth2/**",
+			"/alarm/**",
+			"/adme",
+			"/coco/**"
+	};
+
+	@Bean
+	public WebSecurityCustomizer webSecurityCustomizer() {
+		return web -> {
+			web.ignoring()
+					.requestMatchers(
+					"/sign-up", "/sign-in",
+							"/user/login", "/css/**","/fonts/**", "/js/**","/webjars/**","/templates/**"
+
+					);
+		};
+	}
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -38,10 +63,7 @@ public class SecurityConfig {
 //					.exceptionHandling().authenticationEntryPoint(new RestAuthenticationEntryPoint())// 인증,인가가 되지 않은 요청 시 발생
 //					.and()
         http.authorizeRequests()
-				.requestMatchers("/sign-up").permitAll()
-				.requestMatchers("/sign-in").permitAll()
-				.requestMatchers("/css/**", "/oauth2/**", "/user/**", "/taste/**", "/js/**")
-                .permitAll()
+				.requestMatchers(VIEW_LIST).permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated();
 

@@ -32,13 +32,6 @@ public class RedisService {
 		redisTemplate.delete(nickname);
 	}
 
-	public void addToken(String email, String accessToken) {
-		long expireTimeInSeconds = 24 * 60 * 60;
-		long creationTimeInMillis = System.currentTimeMillis();
-		long remainingTimeInSeconds = expireTimeInSeconds - ((System.currentTimeMillis() - creationTimeInMillis) / 1000);
-		redisTemplate.opsForValue().set(email, accessToken, remainingTimeInSeconds, TimeUnit.SECONDS);
-	}
-
 	public void addSession(String sessionId, String token) {
 		long expireTimeInSeconds = 24 * 60 * 60;
 		long creationTimeInMillis = System.currentTimeMillis();
@@ -48,6 +41,10 @@ public class RedisService {
 
 	public String getSession(String sessionId) {
 		return redisTemplate.opsForValue().get(sessionId);
+	}
+
+	public void deleteSession(String sessionId){
+		redisTemplate.delete(sessionId);
 	}
 }
 

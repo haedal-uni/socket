@@ -83,7 +83,6 @@ public class CustomOAuthService implements OAuth2UserService<OAuth2UserRequest, 
 				throw new OAuth2AuthenticationException("save error");
 			}
 		});
-		redisService.addToken(user.getEmail(), accessToken);
 		if (!user.isEnabled()) throw new OAuth2AuthenticationException(new OAuth2Error("Not Found"), new UserNotFoundException());
 		Map<String, Object> memberAttribute = oAuth2Attribute.convertToMap(); // {name=kakao에서 설정한 이름, id=email, key=email, email=test@kakao.com, picture=null}
 		memberAttribute.put("id", user.getId());
