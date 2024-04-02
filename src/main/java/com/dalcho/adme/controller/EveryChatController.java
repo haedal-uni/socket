@@ -66,7 +66,7 @@ public class EveryChatController {
 	@MessageMapping("every-chat/addUser")
 	public void everyChatAddUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor){
 		System.out.println(" = = = = = = = = =  RANDOM CHAT = = = = = = = = = = ");
-		redisService.addRedis(chatMessage);
+		redisService.addRoomId(chatMessage);
 		//String sessionId = (String) headerAccessor.getHeader("simpSessionId");
 		everyChatService.connectUser(chatMessage.getRoomId(), chatMessage.getSender());
 		template.convertAndSend("/every-chat/" + chatMessage.getRoomId(), chatMessage);
