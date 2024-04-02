@@ -2,6 +2,7 @@ package com.dalcho.adme.controller;
 
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.service.ChatServiceImpl;
+import com.dalcho.adme.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -26,6 +27,9 @@ public class SseController {
     private final ChatServiceImpl chatService;
     private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
     private static final Map<String, SseEmitter> CLIENTS = new ConcurrentHashMap<>();
+
+    public final RedisService redisService;
+
     @GetMapping("/alarm/subscribe/{id}")
     public SseEmitter subscribe(@PathVariable String id) throws IOException {
         log.info("[SSE] SUBSCRIBE");
@@ -41,17 +45,25 @@ public class SseController {
     @GetMapping( "/alarm/publish")
     @Async // 비동기
     public void publish(@RequestParam String sender, @RequestParam String roomId, @AuthenticationPrincipal UserDetails userDetails) {
+        String auth;
+        if(userDetails==null){
+            auth = redisService.getAuth(sender);
+        }else{
+            auth = userDetails.getAuthorities().toString();
+        }
+        Set<String> deadIds = new HashSet<>();
         CLIENTS.forEach((id, emitter) -> {
             try {
-                ChatMessage chatMessage = chatService.chatAlarm(sender, roomId, userDetails.getAuthorities().toString());
+                ChatMessage chatMessage = chatService.chatAlarm(sender, roomId, auth);
                 emitter.send(chatMessage, MediaType.APPLICATION_JSON);
                 log.info("[SSE] send 완료");
             } catch (Exception e) {
                 log.error("[error]  " + e);
                 // Error handling
-                removeClient(id);
+                deadIds.add(id);
                 log.warn("disconnected id : {}", id);
             }
+            deadIds.forEach(CLIENTS::remove);
         });
     }
 
