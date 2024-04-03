@@ -1,5 +1,7 @@
 package com.dalcho.adme;
 
+import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.dto.LastMessage;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -12,39 +14,60 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class LastLineBenchmark {
+    private Map<String, LastMessage> lastMessageMap;
+    private Map<String, LastMessage> lastLineMap;
 	private String chatUploadLocation;
-
+    private String roomId = "0ad72ee0-ffb2-488c-897b-1db901d06a87";
 	@Setup
 	public void setup() {
 		chatUploadLocation = "./src/main/resources/static/files/";
+        lastMessageMap = new HashMap<>();
+        lastLineMap = new HashMap<>();
+        ChatMessage chatMessage = new ChatMessage();
+        int adminChat = 0;
+        int userChat=0;
+        String day = "20";
+        String time="3 : 07";
+        LastMessage lastMessage = LastMessage.of(chatMessage, adminChat, userChat, day, time);
+        lastLineMap.put(roomId, lastMessage);
 	}
 	@Benchmark
-	public List<String> testOriginal() throws IOException {
-		String roomId = "3afa20e1-39a0-4237-be14-f2bdcfb75949";
+	public List<String> AtestOriginal() throws IOException {
 		return lastLineOriginal(chatUploadLocation + "/" + roomId + ".txt");
 	}
 
 	@Benchmark
-	public List<String> testImproved() throws IOException {
-		String roomId = "3afa20e1-39a0-4237-be14-f2bdcfb75949";
+	public List<String> BtestImproved() throws IOException {
 		return lastLineImproved(chatUploadLocation + "/" + roomId + ".txt");
 	}
 
+    @Benchmark
+    public void DgetFileAftergetMap(){
+		lastLine(roomId);
+    }
+
+    @Benchmark
+    public LastMessage ConlyGetFile(){
+        return getFile();
+    }
+
 	@Benchmark
-	public List<String> testUpdateJson() throws IOException{
-		String roomId = "3afa20e1-39a0-4237-be14-f2bdcfb75949";
-		return updateJson(chatUploadLocation + "/" + roomId + ".txt");
+	public LastMessage FonlyGetMap(){
+		return getMap();
 	}
+
+
+    public LastMessage getMap() {
+        return lastLineMap.get(roomId);
+    }
+
 
 	public List lastLineOriginal(String filepath) {
 		try{
@@ -84,7 +107,6 @@ public class LastLineBenchmark {
 			chat.add(messages.trim());
 
 			return chat;
-			// 4. 결과 출력
 		}catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -132,60 +154,124 @@ public class LastLineBenchmark {
 		}
 	}
 
-	public List<String> updateJson(String roomId) {
-		File file = new File(roomId);
-		// 파일의 존재 여부 확인
-		if (!file.exists()) {
-			try {
-				// 파일이 존재하지 않는 경우 새로 생성
-				file.createNewFile();
-				return Collections.emptyList();
-			} catch (IOException e) {
-				e.printStackTrace();
-				return Collections.emptyList();
-			}
-		}
-		try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
+    public LastMessage getFile() {
+        String filePath = chatUploadLocation + "/" + roomId + ".txt";
+        File file = new File(filePath);
+        // 파일의 존재 여부 확인
+        if (!file.exists()) {
+            try {
+                // 파일이 존재하지 않는 경우 새로 생성
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
+            long fileLength = file.length();
+            if (fileLength > 0) {
+                randomAccessFile.seek(fileLength);
+                long pointer = fileLength - 2;
+                while (pointer > 0) {
+                    randomAccessFile.seek(pointer);
+                    char c = (char) randomAccessFile.read();
+                    if (c == '\n') {
+                        break;
+                    }
+                    pointer--;
+                }
+                randomAccessFile.seek(pointer + 1);
+                String line = randomAccessFile.readLine();
+                if (line == null || line.trim().isEmpty()) {
+                    return null;
+                }
+                if (line.startsWith(",")) {
+                    line = line.substring(1);
+                }
+                JsonParser parser = new JsonParser();
+                JsonObject json = parser.parse(line).getAsJsonObject();
+                int adminChat = json.get("adminChat").getAsInt();
+                int userChat = json.get("userChat").getAsInt();
+                String message = json.get("message").getAsString().trim();
+                String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+                String day = json.get("day").getAsString();
+                String time = json.get("time").getAsString();
+                ChatMessage chatMessage = new ChatMessage();
+                chatMessage.setRoomId(roomId);
+                chatMessage.setMessage(messages);
+                return LastMessage.of(chatMessage, adminChat, userChat, day, time);
+            } else {
+                ChatMessage chatMessage = new ChatMessage();
+                chatMessage.setRoomId(roomId);
+                chatMessage.setMessage("");
+                return LastMessage.of(chatMessage, 0, 0, "", "");
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            e.printStackTrace();
+            return null;
+        }
 
-			long fileLength = file.length();
-			if (fileLength <= 0) {
-				return Collections.emptyList();
-			}
-			randomAccessFile.seek(fileLength);
-			long pointer = fileLength - 2;
-			while (pointer > 0) {
-				randomAccessFile.seek(pointer);
-				char c = (char) randomAccessFile.read();
-				if (c == '\n') {
-					break;
+    }
+
+	public LastMessage lastLine(String roomId) {
+		if (lastMessageMap.containsKey(roomId)) {
+			return lastMessageMap.get(roomId);
+		} else {
+			String filePath = chatUploadLocation + "/" + roomId + ".txt";
+			File file = new File(filePath);
+			// 파일의 존재 여부 확인
+			if (!file.exists()) {
+				try {
+					// 파일이 존재하지 않는 경우 새로 생성
+					file.createNewFile();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-				pointer--;
 			}
-			randomAccessFile.seek(pointer + 1);
-			String line = randomAccessFile.readLine();
-			if (line == null || line.trim().isEmpty()) {
-				return Collections.emptyList();
+			try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
+				long fileLength = file.length();
+				if (fileLength > 0) {
+					randomAccessFile.seek(fileLength);
+					long pointer = fileLength - 2;
+					while (pointer > 0) {
+						randomAccessFile.seek(pointer);
+						char c = (char) randomAccessFile.read();
+						if (c == '\n') {
+							break;
+						}
+						pointer--;
+					}
+					randomAccessFile.seek(pointer + 1);
+					String line = randomAccessFile.readLine();
+					if (line == null || line.trim().isEmpty()) {
+						return null;
+					}
+					if (line.startsWith(",")) {
+						line = line.substring(1);
+					}
+					JsonParser parser = new JsonParser();
+					JsonObject json = parser.parse(line).getAsJsonObject();
+					int adminChat = json.get("adminChat").getAsInt();
+					int userChat = json.get("userChat").getAsInt();
+					String message = json.get("message").getAsString().trim();
+					String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+					String day = json.get("day").getAsString();
+					String time = json.get("time").getAsString();
+					ChatMessage chatMessage = new ChatMessage();
+					chatMessage.setRoomId(roomId);
+					chatMessage.setMessage(messages);
+					lastMessageMap.put(roomId, LastMessage.of(chatMessage, adminChat, userChat, day, time));
+					return LastMessage.of(chatMessage, adminChat, userChat, day, time);
+				} else {
+					ChatMessage chatMessage = new ChatMessage();
+					chatMessage.setRoomId(roomId);
+					chatMessage.setMessage("");
+					lastMessageMap.put(roomId, LastMessage.of(chatMessage, 0, 0, "day", "time"));
+					return LastMessage.of(chatMessage, 0, 0, "", "");
+				}
+			} catch (IOException | JsonSyntaxException e) {
+				e.printStackTrace();
+				return null;
 			}
-			if (line.startsWith(",")) {
-				line = line.substring(1);
-			}
-
-			// Parsing JSON using com.google.gson.JsonObject
-			JsonParser parser = new JsonParser();
-			JsonObject json = parser.parse(line).getAsJsonObject();
-			int adminChat = json.get("adminChat").getAsInt();
-			int userChat = json.get("userChat").getAsInt();
-			String message = json.get("message").getAsString().trim();
-			String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
-
-			List<String> chat = new ArrayList<>();
-			chat.add(Integer.toString(adminChat));
-			chat.add(Integer.toString(userChat));
-			chat.add(messages);
-			return chat;
-		} catch (IOException | JsonSyntaxException e) {
-			e.printStackTrace();
-			return Collections.emptyList();
 		}
 	}
 }

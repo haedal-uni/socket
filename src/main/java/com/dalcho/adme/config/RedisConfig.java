@@ -49,24 +49,6 @@ public class RedisConfig {
         return redisTemplate;
     }
 
-//	@Bean
-//	public CacheManager cacheManager() {
-//		RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(redisConnectionFactory());
-//		RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
-//				.serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-//				.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))// Value Serializer 변경
-//				.entryTtl(Duration.ofMinutes(30));
-//		builder.cacheDefaults(configuration);
-//		return builder.build();
-//	}
-
-    @Bean // RedisMessageListenerContainer : Redis에서 발행되는 메시지를 수신하고 처리하기 위한 컨테이너
-    public RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory connectionFactory) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory); // 컨테이너와 Redis 서버 간의 연결을 설정
-        return container;
-    }
-
     @Bean
     public CacheManager cacheManager() {
         RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()

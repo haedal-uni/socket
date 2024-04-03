@@ -11,6 +11,9 @@ let currentXHR;
 let timerInterval;
 const unsentMessages = [];
 let messageToSend = null;
+let connectEx = "connect.exchange"
+let sendEx = "send.exchange"
+let disconEx = "disconnect.exchange"
 
 // 읽음, 안읽음 개수 처리
 function alarmCount(num) {
@@ -96,7 +99,7 @@ function openChatList() {
                 if (message == null || message === "") {
                     message = " 고객센터 입장하기"
                 }
-                if (now !== day && month != null) {
+                if (now !== day && month != null && time!=null) {
                     dayTime = day + " " + time;
                 } else if (time != null) {
                     dayTime = time;
@@ -154,10 +157,10 @@ function needLine() {
             let days = today.getDate();
             let now = month + "/" + days;
             let dayTime
-            if (message == null || message.equals("")) {
+            if (message == null || message === "") {
                 message = " 고객센터 입장하기"
             }
-            if (now !== day && month != null) {
+            if (now !== day && month != null && time!=null) {
                 dayTime = day + " " + time;
             } else if (time != null) {
                 dayTime = time;
@@ -195,6 +198,7 @@ function needLine() {
 
 function onMessageReceived(payload) { // 메세지 받기
     let message;
+
     try {
         message = JSON.parse(payload.body);
     } catch (SyntaxError) {
@@ -353,7 +357,11 @@ function connect() {
 function onConnected() {
     let token = localStorage.getItem('token');
     roomId = localStorage.getItem('wschat.roomId')
-    stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
+    //stompClient.subscribe('/topic/public/' + roomId, onMessageReceived);
+    stompClient.subscribe('/exchange/' + connectEx +'/room.' + roomId, onMessageReceived);
+    stompClient.subscribe('/exchange/' + sendEx +'/room.' + roomId, onMessageReceived);
+    stompClient.subscribe('/exchange/' + disconEx +'/room.' + roomId, onMessageReceived);
+    //stompClient.subscribe('/exchange/' + "adme.exchange" +'/room.' + roomId, onMessageReceived);
 
     let message = "";
     if (document.querySelector('.message-container')) {
@@ -364,7 +372,7 @@ function onConnected() {
     let days = today.getDate();
     let hour = ('0' + today.getHours()).slice(-2);
     let minute = ('0' + today.getMinutes()).slice(-2);
-    stompClient.send("/app/chat/addUser", {Authorization: token}, JSON.stringify({
+    stompClient.send("/app/chat.addUser", {Authorization: token}, JSON.stringify({
         roomId: roomId,
         type: 'JOIN',
         day: month + "/" + days,
@@ -406,7 +414,7 @@ function sendMessage() {
     };
     if (messageContent && stompClient) {
         saveFile(chatMessage)
-        stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
     } else {
         messageToSend = chatMessage;
@@ -547,8 +555,8 @@ function randomOnConnected() {
     }, 1900)
 
     setTimeout(function () {
-        stompClient.subscribe('/every-chat/' + roomId, randomMessageReceived);
-        stompClient.send("/app/every-chat/addUser", {}, JSON.stringify({
+        stompClient.subscribe('/every-chat.' + roomId, randomMessageReceived);
+        stompClient.send("/app/every-chat.addUser", {}, JSON.stringify({
             roomId: roomId,
             sender: nickname,
             type: 'JOIN'
@@ -605,7 +613,7 @@ function randomSendMessage(event) {
         let chatMessage = {
             roomId: roomId, sender: nickname, message: messageContent, type: 'TALK'
         };
-        stompClient.send("/app/every-chat/message/" + roomId, {}, JSON.stringify(chatMessage));
+        stompClient.send("/app/every-chat.message." + roomId, {}, JSON.stringify(chatMessage));
         messageInput.value = '';
     }
 }

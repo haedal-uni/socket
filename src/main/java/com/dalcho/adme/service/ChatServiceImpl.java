@@ -55,9 +55,9 @@ public class ChatServiceImpl {
         this.lastMessageMap = new HashMap<>();
     }
 
-    public void connectUser(String status, String roomId, ChatMessage chatMessage) {
+    public void countUser(String status, String roomId, ChatMessage chatMessage) {
         int num = 0;
-        log.info("[ ConnectUser ] roomId : " + roomId);
+        log.info("[ countUser ] roomId : " + roomId);
         if (Objects.equals(status, "Connect")) {
             num = connectUsers.getOrDefault(roomId, 0);
             connectUsers.put(roomId, (num + 1));
@@ -65,7 +65,11 @@ public class ChatServiceImpl {
         } else if (Objects.equals(status, "Disconnect")) {
             log.info("[ DisconnectUser ] roomId : " + roomId);
             num = connectUsers.get(roomId);
-            connectUsers.put(roomId, (num - 1));
+            if(num>0){
+                connectUsers.put(roomId, (num - 1));
+            }else{
+                connectUsers.put(roomId, 0);
+            }
         }
         log.info("현재 인원 : " + connectUsers.get(roomId));
     }
@@ -161,6 +165,11 @@ public class ChatServiceImpl {
         jsonObject.addProperty("roomId", chatMessage.getRoomId());
         if (chatMessage.getType() == MessageType.JOIN) {
             jsonObject.addProperty("type", "JOINED");
+            if (lastMessageMap.containsKey(chatMessage.getRoomId())) {
+                chatMessage.setMessage(lastMessageMap.get(chatMessage.getRoomId()).getMessage());
+            }else{
+                chatMessage.setMessage("환영합니다.");
+            }
         } else {
             jsonObject.addProperty("type", chatMessage.getType().toString());
         }
