@@ -20,7 +20,8 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.setApplicationDestinationPrefixes("/app");// pub
         config.setPathMatcher(new AntPathMatcher(".")); // URL을 / → .으로
-        config.enableStompBrokerRelay( "/queue", "/exchange", "/amq/queue");
+        //config.enableStompBrokerRelay( "/queue", "/exchange", "/amq/queue");
+        config.enableStompBrokerRelay(  "/exchange");
         //config.enableSimpleBroker("/topic/ping", "/every-chat"); // sub
     }
 	/*
