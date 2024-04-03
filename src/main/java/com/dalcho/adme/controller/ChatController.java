@@ -1,6 +1,5 @@
 package com.dalcho.adme.controller;
 
-import com.dalcho.adme.config.rabbitmq.ChatMessageProducer;
 import com.dalcho.adme.config.security.JwtTokenProvider;
 import com.dalcho.adme.dto.ChatMessage;
 import com.dalcho.adme.dto.ChatMessage.MessageType;
@@ -23,7 +22,6 @@ public class ChatController {
     private final ChatServiceImpl chatService;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisService redisService;
-    private final ChatMessageProducer producer;
     private final RabbitTemplate rabbitTemplate;
 
     @Value("${rabbitmq.connect.exchange}")
