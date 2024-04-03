@@ -26,35 +26,34 @@ public class SecurityConfig {
     private final CustomOAuthService customOAuth2UserService;
     private final OAuth2SuccessHandler successHandler;
     private final Oauth2FailureHandler failureHandler;
-	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-	public static final String[] VIEW_LIST = {
-			"/static/**",
-			"/favicon.ico/**",
-			"/taste",
-			"/tenSeconds",
-			"/",
-			"/ws/**",
-			"/oauth2/**",
-			"/alarm/**",
-			"/adme",
-			"/coco/**"
-	};
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    public static final String[] VIEW_LIST = {
+            "/static/**",
+            "/favicon.ico/**",
+            "/taste",
+            "/ws/**",
+            "/oauth2/**",
+            "/alarm/**",
+            "/coco/**",
+            "/user/login",
+            "/css/**", "/fonts/**", "/js/**", "/webjars/**", "/templates/**"
+    };
 
-	@Bean
-	public WebSecurityCustomizer webSecurityCustomizer() {
-		return web -> {
-			web.ignoring()
-					.requestMatchers(
-					"/sign-up", "/sign-in",
-							"/user/login", "/css/**","/fonts/**", "/js/**","/webjars/**","/templates/**"
-
-					);
-		};
-	}
+//	@Bean
+//	public WebSecurityCustomizer webSecurityCustomizer() {
+//		return web -> {
+//			web.ignoring()
+//					.requestMatchers(
+//					"/sign-up", "/sign-in",
+//							 "/css/**","/fonts/**", "/js/**","/webjars/**","/templates/**"
+//
+//					);
+//		};
+//	}
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.cors().configurationSource(corsConfigurationSource());
+        http.cors().configurationSource(corsConfigurationSource());
         http.csrf().disable() // rest api 에서는 csrf 공격으로부터 안전하고 매번 api 요청으로부터 csrf 토큰을 받지 않아도 되어 disable로 설정
                 .sessionManagement(); // Rest Api 기반 애플리케이션 동작 방식 설정
 //				.sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않음
@@ -63,13 +62,16 @@ public class SecurityConfig {
 //					.exceptionHandling().authenticationEntryPoint(new RestAuthenticationEntryPoint())// 인증,인가가 되지 않은 요청 시 발생
 //					.and()
         http.authorizeRequests()
-				.requestMatchers(VIEW_LIST).permitAll()
+                .requestMatchers(VIEW_LIST).permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated();
 
-		http.formLogin()
-						.loginPage("/user/login")
-								.defaultSuccessUrl("/adme");
+        http.formLogin()
+                .loginPage("/user/login")
+                .defaultSuccessUrl("/adme").and()
+                .logout()
+                .logoutUrl("/user/logout") // 로그아웃 처리 URL
+                .logoutSuccessUrl("/user/login");
 
         http.oauth2Login().loginPage("/user/login")
                 .and().logout().logoutSuccessUrl("/taste");
@@ -77,24 +79,24 @@ public class SecurityConfig {
                 .and()
                 .successHandler(successHandler)
                 .failureHandler(failureHandler);
-		http.exceptionHandling()
-				.authenticationEntryPoint(customAuthenticationEntryPoint)
-				.and()
-				.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+        http.exceptionHandling()
+                .authenticationEntryPoint(customAuthenticationEntryPoint)
+                .and()
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOriginPatterns(List.of("*"));
-		configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-		configuration.setMaxAge(3600L);
-		configuration.setAllowCredentials(true);
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setMaxAge(3600L);
+        configuration.setAllowCredentials(true);
 
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", configuration);
-		return source;
-	}
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }
