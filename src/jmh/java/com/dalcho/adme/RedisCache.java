@@ -64,7 +64,7 @@ public class RedisCache {
                     .day("")
                     .time("")
                     .build();
-            return ChatRoomDto.of(roomId, user, lastLine);
+            return ChatRoomDto.of(user, lastLine);
         }
     }
 
@@ -93,7 +93,7 @@ public class RedisCache {
                     .day("")
                     .time("")
                     .build();
-            return ChatRoomDto.of(roomId, user, lastLine);
+            return ChatRoomDto.of(user, lastLine);
         }
     }
 }

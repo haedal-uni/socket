@@ -50,25 +50,23 @@ public class ChatServiceImpl {
     @PostConstruct // @PostConstruct는 의존성 주입이 이루어진 후 초기화를 수행하는 메서드
     private void setUp() { // 안그러면 NullPointerException
         this.connectUsers = new ConcurrentHashMap<>();
-        this.adminChat = new HashMap<>();
-        this.userChat = new HashMap<>();
-        this.lastMessageMap = new HashMap<>();
+        this.adminChat = new ConcurrentHashMap<>();
+        this.userChat = new ConcurrentHashMap<>();
+        this.lastMessageMap = new ConcurrentHashMap<>();
     }
 
     public void countUser(String status, String roomId, ChatMessage chatMessage) {
-        int num = 0;
+        int num = connectUsers.getOrDefault(roomId, 0);
         log.info("[ countUser ] roomId : " + roomId);
         if (Objects.equals(status, "Connect")) {
-            num = connectUsers.getOrDefault(roomId, 0);
-            connectUsers.put(roomId, (num + 1));
+            if (num < 2) { // 최대값이 2이므로 2보다 작을 때만 증가
+                connectUsers.put(roomId, num + 1);
+            }
             saveFile(chatMessage);
         } else if (Objects.equals(status, "Disconnect")) {
             log.info("[ DisconnectUser ] roomId : " + roomId);
-            num = connectUsers.get(roomId);
-            if(num>0){
+            if (num > 0) {
                 connectUsers.put(roomId, (num - 1));
-            }else{
-                connectUsers.put(roomId, 0);
             }
         }
         log.info("현재 인원 : " + connectUsers.get(roomId));
@@ -83,7 +81,7 @@ public class ChatServiceImpl {
                 User user = userRepository.findById(all.get(i).getUser().getId()).orElseThrow(UserNotFoundException::new);
                 LastMessage lastMessage = lastLine(all.get(i).getRoomId());
                 if (!lastMessage.getMessage().equals("")) {
-                    chatRoomDtos.add(ChatRoomDto.of(all.get(i).getRoomId(), user, lastLine(all.get(i).getRoomId())));
+                    chatRoomDtos.add(ChatRoomDto.of(user, lastLine(all.get(i).getRoomId())));
                 }
             }
         } catch (NullPointerException e) {
@@ -127,7 +125,7 @@ public class ChatServiceImpl {
             }
             stopTime = System.currentTimeMillis();
             log.info("채팅방 생성 소요 시간 : " + (stopTime - startTime) / 1000 + " 초");
-            return ChatRoomDto.of(roomId, user, lastLine);
+            return ChatRoomDto.of(user, lastLine);
         }
     }
 
@@ -167,7 +165,7 @@ public class ChatServiceImpl {
             jsonObject.addProperty("type", "JOINED");
             if (lastMessageMap.containsKey(chatMessage.getRoomId())) {
                 chatMessage.setMessage(lastMessageMap.get(chatMessage.getRoomId()).getMessage());
-            }else{
+            } else {
                 chatMessage.setMessage("환영합니다.");
             }
         } else {
@@ -208,10 +206,12 @@ public class ChatServiceImpl {
 
     public void reset(String roomId, String auth) {
         if (auth.equals("ADMIN")) {
+            log.info("= = = = = = admin이 읽음 = = = = = = ");
             adminChat.putIfAbsent(roomId, 0);
             userChat.putIfAbsent(roomId, 0);
             adminChat.put(roomId, 0);
         } else {
+            log.info("= = = = = = user가 읽음 = = = = = = ");
             userChat.putIfAbsent(roomId, 0);
             adminChat.putIfAbsent(roomId, 0);
             userChat.put(roomId, 0);
@@ -220,11 +220,13 @@ public class ChatServiceImpl {
 
     public void countChat(String roomId, String auth) {
         if (auth.equals("ADMIN")) {
+            log.info("= = = = = = admin이 보냄 = = = = = = ");
             userChat.putIfAbsent(roomId, 0);
             int num = userChat.get(roomId);
             userChat.put(roomId, num + 1);
             adminChat.put(roomId, 0);
         } else {
+            log.info("= = = = = = user가 보냄 = = = = = = ");
             adminChat.putIfAbsent(roomId, 0);
             int num = adminChat.get(roomId);
             adminChat.put(roomId, num + 1);
