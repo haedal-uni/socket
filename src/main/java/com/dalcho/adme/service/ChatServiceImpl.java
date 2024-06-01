@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.*;
@@ -172,7 +173,7 @@ public class ChatServiceImpl {
             jsonObject.addProperty("type", chatMessage.getType().toString());
         }
         Integer adminCnt = adminChat.get(chatMessage.getRoomId());
-        Integer userCnt = adminChat.get(chatMessage.getRoomId());
+        Integer userCnt = userChat.get(chatMessage.getRoomId());
         String days = chatMessage.getDay();
         String time = chatMessage.getTime();
 
@@ -306,12 +307,11 @@ public class ChatServiceImpl {
                     if (line.startsWith(",")) {
                         line = line.substring(1);
                     }
-                    JsonParser parser = new JsonParser();
-                    JsonObject json = parser.parse(line).getAsJsonObject();
+                    JsonObject json = JsonParser.parseString(line).getAsJsonObject();
                     int adminChat = json.get("adminChat").getAsInt();
                     int userChat = json.get("userChat").getAsInt();
                     String message = json.get("message").getAsString().trim();
-                    String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+                    String messages = new String(message.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
                     String day = json.get("day").getAsString();
                     String time = json.get("time").getAsString();
                     ChatMessage chatMessage = new ChatMessage();
