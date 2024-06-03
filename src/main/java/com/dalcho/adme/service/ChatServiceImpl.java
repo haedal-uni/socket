@@ -31,6 +31,7 @@ import java.nio.file.NoSuchFileException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -252,8 +253,8 @@ public class ChatServiceImpl {
                 return null;
             }
         }
-        try {
-            List<String> lines = Files.lines(file.toPath()).collect(Collectors.toList());
+        try (Stream<String> stream = Files.lines(file.toPath())) {
+            List<String> lines = stream.collect(Collectors.toList());
             String jsonString = "[" + String.join(",", lines) + "]";
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(jsonString);
