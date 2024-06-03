@@ -110,8 +110,11 @@ public class ChatServiceImpl {
         } else {
             log.info("[createRoom] roomId 값은 있지만 cache 적용 안됨");
             Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
-            String roomId = findChat.get().getRoomId();
-            chatRoom.setRoomId(findChat.get().getRoomId());
+            String roomId = "";
+            if (findChat.isPresent()){
+                roomId = findChat.get().getRoomId();
+            }
+            chatRoom.setRoomId(roomId);
 
             LastMessage lastLine = lastLine(roomId);
             if (lastLine == null) {
