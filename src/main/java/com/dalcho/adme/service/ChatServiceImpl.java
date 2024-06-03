@@ -78,11 +78,11 @@ public class ChatServiceImpl {
         List<ChatRoomDto> chatRoomDtos = new ArrayList<>();
         List<Chat> all = chatRepository.findAll();
         try {
-            for (int i = 0; i < all.size(); i++) {
-                User user = userRepository.findById(all.get(i).getUser().getId()).orElseThrow(UserNotFoundException::new);
-                LastMessage lastMessage = lastLine(all.get(i).getRoomId());
-                if (!lastMessage.getMessage().equals("")) {
-                    chatRoomDtos.add(ChatRoomDto.of(user, lastLine(all.get(i).getRoomId())));
+            for (Chat chat : all) {
+                User user = userRepository.findById(chat.getUser().getId()).orElseThrow(UserNotFoundException::new);
+                LastMessage lastMessage = lastLine(chat.getRoomId());
+                if (!lastMessage.getMessage().isEmpty()) {
+                    chatRoomDtos.add(ChatRoomDto.of(user, lastLine(chat.getRoomId())));
                 }
             }
         } catch (NullPointerException e) {
