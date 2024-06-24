@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import org.openjdk.jmh.annotations.*;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.*;
@@ -107,8 +106,6 @@ public class LastLineBenchmark {
 			chat.add(messages.trim());
 
 			return chat;
-		}catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
