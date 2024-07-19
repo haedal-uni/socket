@@ -25,11 +25,13 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -77,11 +79,11 @@ public class ChatServiceImpl {
         List<ChatRoomDto> chatRoomDtos = new ArrayList<>();
         List<Chat> all = chatRepository.findAll();
         try {
-            for (int i = 0; i < all.size(); i++) {
-                User user = userRepository.findById(all.get(i).getUser().getId()).orElseThrow(UserNotFoundException::new);
-                LastMessage lastMessage = lastLine(all.get(i).getRoomId());
-                if (!lastMessage.getMessage().equals("")) {
-                    chatRoomDtos.add(ChatRoomDto.of(user, lastLine(all.get(i).getRoomId())));
+            for (Chat chat : all) {
+                User user = userRepository.findById(chat.getUser().getId()).orElseThrow(UserNotFoundException::new);
+                LastMessage lastMessage = lastLine(chat.getRoomId());
+                if (!lastMessage.getMessage().isEmpty()) {
+                    chatRoomDtos.add(ChatRoomDto.of(user, lastLine(chat.getRoomId())));
                 }
             }
         } catch (NullPointerException e) {
@@ -109,8 +111,11 @@ public class ChatServiceImpl {
         } else {
             log.info("[createRoom] roomId 값은 있지만 cache 적용 안됨");
             Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
-            String roomId = findChat.get().getRoomId();
-            chatRoom.setRoomId(findChat.get().getRoomId());
+            String roomId = "";
+            if (findChat.isPresent()){
+                roomId = findChat.get().getRoomId();
+            }
+            chatRoom.setRoomId(roomId);
 
             LastMessage lastLine = lastLine(roomId);
             if (lastLine == null) {
@@ -172,7 +177,7 @@ public class ChatServiceImpl {
             jsonObject.addProperty("type", chatMessage.getType().toString());
         }
         Integer adminCnt = adminChat.get(chatMessage.getRoomId());
-        Integer userCnt = adminChat.get(chatMessage.getRoomId());
+        Integer userCnt = userChat.get(chatMessage.getRoomId());
         String days = chatMessage.getDay();
         String time = chatMessage.getTime();
 
@@ -248,8 +253,8 @@ public class ChatServiceImpl {
                 return null;
             }
         }
-        try {
-            List<String> lines = Files.lines(file.toPath()).collect(Collectors.toList());
+        try (Stream<String> stream = Files.lines(file.toPath())) {
+            List<String> lines = stream.collect(Collectors.toList());
             String jsonString = "[" + String.join(",", lines) + "]";
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(jsonString);
@@ -306,12 +311,11 @@ public class ChatServiceImpl {
                     if (line.startsWith(",")) {
                         line = line.substring(1);
                     }
-                    JsonParser parser = new JsonParser();
-                    JsonObject json = parser.parse(line).getAsJsonObject();
+                    JsonObject json = JsonParser.parseString(line).getAsJsonObject();
                     int adminChat = json.get("adminChat").getAsInt();
                     int userChat = json.get("userChat").getAsInt();
                     String message = json.get("message").getAsString().trim();
-                    String messages = new String(message.getBytes("iso-8859-1"), "utf-8");
+                    String messages = new String(message.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
                     String day = json.get("day").getAsString();
                     String time = json.get("time").getAsString();
                     ChatMessage chatMessage = new ChatMessage();

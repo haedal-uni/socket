@@ -86,8 +86,9 @@ function openChatList() {
             contentType: false,
             processData: false,
             success: function (response) {
+                response = response["lastMessage"]
                 localStorage.setItem('wschat.roomId', response["roomId"]);
-                let count = response["userChat"];
+                count = response["userChat"];
                 let message = response["message"];
                 let day = response["day"]
                 let time = response["time"]
@@ -105,7 +106,7 @@ function openChatList() {
                     dayTime = time;
                 } else {
                     dayTime = now;
-                    count = 0;
+                    //count = 0;
                 }
                 let temp = `
           <div id="needChat" class="conversation" onclick="joinChat()">
@@ -148,7 +149,7 @@ function needLine() {
         contentType: false,
         processData: false,
         success: function (response) {
-            let count = response["userChat"];
+            count = response["userChat"];
             let message = response["message"];
             let day = response["day"]
             let time = response["time"]
@@ -166,7 +167,7 @@ function needLine() {
                 dayTime = time;
             } else {
                 dayTime = now;
-                count = 0;
+                //count = 0;
             }
             let temp = `
           <div id="needChat" class="conversation" onclick="joinChat()">
