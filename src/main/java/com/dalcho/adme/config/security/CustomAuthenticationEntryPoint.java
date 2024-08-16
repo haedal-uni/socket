@@ -32,7 +32,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         log.info("[ commence ] : " + "인증 실패");
-        sendErrorResponse(response, "인증 실패");
+        //sendErrorResponse(response, "인증 실패");
         response.sendRedirect("/user/login");
     }
 }
