@@ -107,9 +107,7 @@ public class SignServiceImpl implements SignService {
     @Override
     public SignInResultDto signIn(SignInRequestDto signInRequestDto) throws RuntimeException {
         log.info("[getSignInResult] signDataHandler 로 회원 정보 요청");
-        User user = userRepository.findByNickname(signInRequestDto.getNickname()).orElseThrow(() -> {
-            throw new UserNotFoundException();
-        });
+        User user = userRepository.findByNickname(signInRequestDto.getNickname()).orElseThrow(UserNotFoundException::new);
 
         log.info("[getSignInResult] Id : {}", signInRequestDto.getNickname());
 
