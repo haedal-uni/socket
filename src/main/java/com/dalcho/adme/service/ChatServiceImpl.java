@@ -9,6 +9,7 @@ import com.dalcho.adme.exception.notfound.FileNotFoundException;
 import com.dalcho.adme.exception.notfound.UserNotFoundException;
 import com.dalcho.adme.model.Chat;
 import com.dalcho.adme.model.User;
+import com.dalcho.adme.model.UserRole;
 import com.dalcho.adme.repository.ChatRepository;
 import com.dalcho.adme.repository.UserRepository;
 import com.google.gson.Gson;
@@ -28,6 +29,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -38,6 +40,7 @@ import java.util.stream.Stream;
 @Service
 public class ChatServiceImpl {
     private final ChatRepository chatRepository;
+    private final RedisService redisService;
     private Map<String, Integer> connectUsers;
     private Map<String, Integer> adminChat;
     private Map<String, Integer> userChat;
@@ -163,7 +166,12 @@ public class ChatServiceImpl {
         }
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("roomId", chatMessage.getRoomId());
+        String sender = chatMessage.getSender();
         if (chatMessage.getType() == MessageType.JOIN) {
+            if(UserRole.USER.name().equals(chatMessage.getAuth())){
+                log.info("[chatServiceImpl] chatUser 사용자 추가");
+                statsChat(chatMessage.getSender());
+            }
             jsonObject.addProperty("type", "JOINED");
             if (lastMessageMap.containsKey(chatMessage.getRoomId())) {
                 chatMessage.setMessage(lastMessageMap.get(chatMessage.getRoomId()).getMessage());
@@ -178,7 +186,7 @@ public class ChatServiceImpl {
         String days = chatMessage.getDay();
         String time = chatMessage.getTime();
 
-        jsonObject.addProperty("sender", chatMessage.getSender());
+        jsonObject.addProperty("sender", sender);
         jsonObject.addProperty("message", chatMessage.getMessage());
         jsonObject.addProperty("adminChat", adminCnt);
         jsonObject.addProperty("userChat", userCnt);
@@ -194,7 +202,7 @@ public class ChatServiceImpl {
         try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt", true)))) {
             if (new File(chatUploadLocation + "/" + chatMessage.getRoomId() + ".txt").length() == 0) {
                 out.println(json);
-                chatAlarm(chatMessage.getSender(), chatMessage.getRoomId(), chatMessage.getAuth());
+                chatAlarm(sender, chatMessage.getRoomId(), chatMessage.getAuth());
             } else {
                 out.println("," + json);
             }
@@ -330,5 +338,9 @@ public class ChatServiceImpl {
                 return null;
             }
         }
+    }
+
+    private void statsChat(String nickname){
+        redisService.addChatUserCount((LocalDate.now().getDayOfMonth() + "-ChatUser"), nickname);
     }
 }

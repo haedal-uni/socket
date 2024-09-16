@@ -14,6 +14,25 @@ import java.util.concurrent.TimeUnit;
 public class RedisService {
 	private final RedisTemplate<String, String> redisTemplate;
 	private static final long expirationTimeInSeconds = 24*60*60;
+	private static final long STATSTIME = 26;
+
+	public void addLoginUserCount(String key, String nickname){
+		redisTemplate.opsForSet().add(key, nickname);
+		redisTemplate.expire(key, STATSTIME, TimeUnit.HOURS);
+	}
+
+	public void deleteLoginUserCount(String key){
+		redisTemplate.delete(key);
+	}
+
+	public void addChatUserCount(String key, String nickname){
+		redisTemplate.opsForSet().add(key, nickname);
+		redisTemplate.expire(key, STATSTIME, TimeUnit.HOURS);
+	}
+
+	public void deleteChatUserCount(String key){
+		redisTemplate.delete(key);
+	}
 
 	public void addRoomId(ChatMessage chatMessage) {
 		long creationTimeInMillis = System.currentTimeMillis();

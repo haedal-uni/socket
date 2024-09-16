@@ -29,27 +29,35 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     public static final String[] VIEW_LIST = {
             "/static/**",
+            "/css/**",
+            "/js/**",
             "/favicon.ico/**",
+            "/user/**",
             "/taste",
+            "/sign-up",
             "/ws/**",
             "/oauth2/**",
             "/alarm/**",
             "/coco/**",
-            "/user/login",
-            "/css/**", "/fonts/**", "/js/**", "/webjars/**", "/templates/**"
+             "/fonts/**",  "/webjars/**", "/templates/**","/**"
     };
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return (web) -> web.ignoring().requestMatchers("/js/**", "/css/**", "/static/**", "/fonts/**", "/favicon.ico");
+//    }
 
-//	@Bean
-//	public WebSecurityCustomizer webSecurityCustomizer() {
-//		return web -> {
-//			web.ignoring()
-//					.requestMatchers(
-//					"/sign-up", "/sign-in",
-//							 "/css/**","/fonts/**", "/js/**","/webjars/**","/templates/**"
-//
-//					);
-//		};
-//	}
+	@Bean
+	public WebSecurityCustomizer webSecurityCustomizer() {
+		return web -> {
+			web.ignoring()
+					.requestMatchers(
+					"/sign-up", "/sign-in",
+							 "/css/**","/fonts/**", "/js/**","/webjars/**","/templates/**",
+                            "/adme"
+					);
+		};
+	}
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -63,6 +71,8 @@ public class SecurityConfig {
 //					.and()
         http.authorizeHttpRequests()
                 .requestMatchers(VIEW_LIST).permitAll()
+                .requestMatchers("/sign-up").permitAll()
+                .requestMatchers("/sign-in").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated();
 

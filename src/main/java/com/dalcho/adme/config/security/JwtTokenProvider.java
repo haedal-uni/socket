@@ -2,6 +2,7 @@ package com.dalcho.adme.config.security;
 
 import com.dalcho.adme.model.User;
 import com.dalcho.adme.model.UserRole;
+import com.dalcho.adme.service.RedisService;
 import com.dalcho.adme.service.UserDetailService;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Date;
 
@@ -24,6 +26,7 @@ import java.util.Date;
 public class JwtTokenProvider {
 
 	private final UserDetailService userDetailsService;
+	private final RedisService redisService;
 
 	@Value("${springboot.jwt.secret}")
 	private String secretKey; // 토큰 생성에 필요한 key
@@ -58,6 +61,8 @@ public class JwtTokenProvider {
 				.compact();
 
 		log.info("[createToken] 토큰 생성 완료");
+		statsLogin(user.getNickname());
+		log.info("[login user count]");
 		return token;
 	}
 
@@ -83,14 +88,11 @@ public class JwtTokenProvider {
 	// Token 유효기간 체크
 	public boolean validateToken(String token) {
 		log.info("[validateToken] 토큰 유효 체크 시작");
-
 		try {
 			Jws<Claims> claims = Jwts.parser().
 					setSigningKey(secretKey)
 					.parseClaimsJws(token);
-
 			return !claims.getBody().getExpiration().before(new Date());
-
 		} catch (Exception e) {
 			log.warn("[validateToken] 토큰 유효 체크 예외 발생");
 			return false;
@@ -131,9 +133,12 @@ public class JwtTokenProvider {
 	}
 
 	public String resolveToken(HttpServletRequest request) {
-		log.info("[resolveToken] Header 에서 Token 추출 완료");
+		log.info("[resolveToken] Header 에서 Token 추출 완료.{}",request.getHeader("Authorization"));
 		return request.getHeader("Authorization");
 	}
 
+	private void statsLogin(String nickname){
+        redisService.addLoginUserCount((LocalDate.now().getDayOfMonth() + "-LoginUser"), nickname);
+	}
 }
 
