@@ -297,9 +297,9 @@ public class ChatServiceImpl {
             }
             try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
                 long fileLength = file.length();
-                if (fileLength > 0) {
+                if (fileLength > 145) {
                     randomAccessFile.seek(fileLength);
-                    long pointer = fileLength - 2;
+                    long pointer = fileLength - 145;
                     while (pointer > 0) {
                         randomAccessFile.seek(pointer);
                         char c = (char) randomAccessFile.read();
@@ -308,7 +308,7 @@ public class ChatServiceImpl {
                         }
                         pointer--;
                     }
-                    randomAccessFile.seek(pointer + 1);
+                    randomAccessFile.seek(pointer);
                     String line = randomAccessFile.readLine();
                     if (line == null || line.trim().isEmpty()) {
                         return null;

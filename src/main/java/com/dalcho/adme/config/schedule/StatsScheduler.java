@@ -22,7 +22,6 @@ public class StatsScheduler {
     private final RedisTemplate<String, String> redisTemplate;
     private final StatsRepository repository;
 
-
     @Scheduled(cron = "0 5 0 * * *")  // 매일 새벽 12시 5분에 실행
     public void calculateDailyStats() {
         log.info("[stats scheduler] 스케줄러 실행");
@@ -45,7 +44,7 @@ public class StatsScheduler {
             redisService.deleteChatUserCount(now.minusDays(1) + "-ChatUser");
             log.info("성공적으로 통계 저장 완료. 날짜: {}", stats.getStatDate());
         }catch (Exception e){
-            log.info("일일 통계 계산 중 오류 발생 ", e);
+            log.error("일일 통계 계산 중 오류 발생 ", e);
         }
     }
 }
