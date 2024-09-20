@@ -115,7 +115,7 @@ public class ChatServiceImpl {
             log.info("[createRoom] roomId 값은 있지만 cache 적용 안됨");
             Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
             String roomId = "";
-            if (findChat.isPresent()){
+            if (findChat.isPresent()) {
                 roomId = findChat.get().getRoomId();
             }
             chatRoom.setRoomId(roomId);
@@ -168,7 +168,7 @@ public class ChatServiceImpl {
         jsonObject.addProperty("roomId", chatMessage.getRoomId());
         String sender = chatMessage.getSender();
         if (chatMessage.getType() == MessageType.JOIN) {
-            if(UserRole.USER.name().equals(chatMessage.getAuth())){
+            if (UserRole.USER.name().equals(chatMessage.getAuth())) {
                 log.info("[chatServiceImpl] chatUser 사용자 추가");
                 statsChat(chatMessage.getSender());
             }
@@ -303,7 +303,7 @@ public class ChatServiceImpl {
                     while (pointer > 0) {
                         randomAccessFile.seek(pointer);
                         char c = (char) randomAccessFile.read();
-                        if (c == '\n') {
+                        if (c == '{') {
                             break;
                         }
                         pointer--;
@@ -312,9 +312,6 @@ public class ChatServiceImpl {
                     String line = randomAccessFile.readLine();
                     if (line == null || line.trim().isEmpty()) {
                         return null;
-                    }
-                    if (line.startsWith(",")) {
-                        line = line.substring(1);
                     }
                     JsonObject json = JsonParser.parseString(line).getAsJsonObject();
                     int adminChat = json.get("adminChat").getAsInt();
@@ -340,7 +337,7 @@ public class ChatServiceImpl {
         }
     }
 
-    private void statsChat(String nickname){
+    private void statsChat(String nickname) {
         redisService.addChatUserCount((LocalDate.now().getDayOfMonth() + "-ChatUser"), nickname);
     }
 }
