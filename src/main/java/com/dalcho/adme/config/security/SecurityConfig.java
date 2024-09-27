@@ -28,32 +28,21 @@ public class SecurityConfig {
     private final Oauth2FailureHandler failureHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     public static final String[] VIEW_LIST = {
-            "/static/**",
-            "/css/**",
-            "/js/**",
             "/favicon.ico/**",
-            "/user/**",
+            "/adme",
             "/taste",
-            "/sign-up",
             "/ws/**",
             "/oauth2/**",
             "/alarm/**",
-            "/coco/**",
-             "/fonts/**",  "/webjars/**", "/templates/**","/**"
+            "/webjars/**", "/templates/**"
     };
-//    @Bean
-//    public WebSecurityCustomizer webSecurityCustomizer() {
-//        return (web) -> web.ignoring().requestMatchers("/js/**", "/css/**", "/static/**", "/fonts/**", "/favicon.ico");
-//    }
 
 	@Bean
 	public WebSecurityCustomizer webSecurityCustomizer() {
 		return web -> {
 			web.ignoring()
 					.requestMatchers(
-					"/sign-up", "/sign-in",
-							 "/css/**","/fonts/**", "/js/**","/webjars/**","/templates/**",
-                            "/adme"
+							 "/css/**","/fonts/**", "/js/**","/webjars/**","/user/**","/error"
 					);
 		};
 	}
@@ -73,26 +62,29 @@ public class SecurityConfig {
                 .requestMatchers(VIEW_LIST).permitAll()
                 .requestMatchers("/sign-up").permitAll()
                 .requestMatchers("/sign-in").permitAll()
-                .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/admin").hasAuthority("ADMIN")
                 .anyRequest().authenticated();
 
         http.formLogin()
                 .loginPage("/user/login")
-                .defaultSuccessUrl("/adme").and()
-                .logout()
-                .logoutUrl("/user/logout") // 로그아웃 처리 URL
-                .logoutSuccessUrl("/user/login");
-
-        http.oauth2Login().loginPage("/user/login")
-                .and().logout().logoutSuccessUrl("/taste");
-        http.oauth2Login().userInfoEndpoint().userService(customOAuth2UserService)
+                .defaultSuccessUrl("/adme")
                 .and()
-                .successHandler(successHandler)
-                .failureHandler(failureHandler);
-        http.exceptionHandling()
-                .authenticationEntryPoint(customAuthenticationEntryPoint)
+                    .logout()
+                    .logoutUrl("/user/logout") // 로그아웃 처리 URL
+                    .logoutSuccessUrl("/user/login")
                 .and()
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                    .oauth2Login()
+                    .loginPage("/user/login")
+                    .userInfoEndpoint().userService(customOAuth2UserService)
+                .and()
+                    .successHandler(successHandler)
+                    .failureHandler(failureHandler)
+                .and()
+                    .exceptionHandling()
+                    //.accessDeniedHandler(new CustomAccessDeniedHandler())
+                    .authenticationEntryPoint(customAuthenticationEntryPoint)
+                .and()
+                    .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
