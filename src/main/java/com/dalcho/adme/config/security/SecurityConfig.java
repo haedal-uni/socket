@@ -1,5 +1,6 @@
 package com.dalcho.adme.config.security;
 
+import com.dalcho.adme.model.UserRole;
 import com.dalcho.adme.oauth2.CustomOAuthService;
 import com.dalcho.adme.oauth2.OAuth2SuccessHandler;
 import com.dalcho.adme.oauth2.Oauth2FailureHandler;
@@ -28,32 +29,21 @@ public class SecurityConfig {
     private final Oauth2FailureHandler failureHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     public static final String[] VIEW_LIST = {
-            "/static/**",
-            "/css/**",
-            "/js/**",
             "/favicon.ico/**",
-            "/user/**",
+            "/adme",
             "/taste",
-            "/sign-up",
             "/ws/**",
             "/oauth2/**",
             "/alarm/**",
-            "/coco/**",
-             "/fonts/**",  "/webjars/**", "/templates/**","/**"
+            "/webjars/**", "/templates/**"
     };
-//    @Bean
-//    public WebSecurityCustomizer webSecurityCustomizer() {
-//        return (web) -> web.ignoring().requestMatchers("/js/**", "/css/**", "/static/**", "/fonts/**", "/favicon.ico");
-//    }
 
 	@Bean
 	public WebSecurityCustomizer webSecurityCustomizer() {
 		return web -> {
 			web.ignoring()
 					.requestMatchers(
-					"/sign-up", "/sign-in",
-							 "/css/**","/fonts/**", "/js/**","/webjars/**","/templates/**",
-                            "/adme"
+							 "/css/**","/fonts/**", "/js/**","/webjars/**","/user/**","/error"
 					);
 		};
 	}
@@ -70,29 +60,32 @@ public class SecurityConfig {
 //					.exceptionHandling().authenticationEntryPoint(new RestAuthenticationEntryPoint())// 인증,인가가 되지 않은 요청 시 발생
 //					.and()
         http.authorizeHttpRequests()
+                .requestMatchers("/admin").hasAuthority(UserRole.ADMIN.name())
                 .requestMatchers(VIEW_LIST).permitAll()
                 .requestMatchers("/sign-up").permitAll()
                 .requestMatchers("/sign-in").permitAll()
-                .requestMatchers("/admin/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated();
 
         http.formLogin()
                 .loginPage("/user/login")
-                .defaultSuccessUrl("/adme").and()
-                .logout()
-                .logoutUrl("/user/logout") // 로그아웃 처리 URL
-                .logoutSuccessUrl("/user/login");
-
-        http.oauth2Login().loginPage("/user/login")
-                .and().logout().logoutSuccessUrl("/taste");
-        http.oauth2Login().userInfoEndpoint().userService(customOAuth2UserService)
+                .defaultSuccessUrl("/adme")
                 .and()
-                .successHandler(successHandler)
-                .failureHandler(failureHandler);
-        http.exceptionHandling()
-                .authenticationEntryPoint(customAuthenticationEntryPoint)
+                    .logout()
+                    .logoutUrl("/user/logout") // 로그아웃 처리 URL
+                    .logoutSuccessUrl("/user/login")
                 .and()
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                    .oauth2Login()
+                    .loginPage("/user/login")
+                    .userInfoEndpoint().userService(customOAuth2UserService)
+                .and()
+                    .successHandler(successHandler)
+                    .failureHandler(failureHandler)
+                .and()
+                    .exceptionHandling()
+                    .accessDeniedHandler(new CustomAccessDeniedHandler())
+                    .authenticationEntryPoint(customAuthenticationEntryPoint)
+                .and()
+                    .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
