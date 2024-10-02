@@ -1,7 +1,6 @@
 package com.dalcho.adme.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,12 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
         log.info("[ commence ] : " + "인증 실패");
-        response.sendRedirect("/user/login");
+        String acceptHeader = request.getHeader("Accept");
+        if(acceptHeader.contains("text/html")){
+            log.info("[ html ]");
+            //response.sendRedirect("/error");
+        }else{
+            response.sendRedirect("/user/login");
+        }
     }
 }

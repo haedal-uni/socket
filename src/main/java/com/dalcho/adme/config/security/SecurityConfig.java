@@ -1,5 +1,6 @@
 package com.dalcho.adme.config.security;
 
+import com.dalcho.adme.model.UserRole;
 import com.dalcho.adme.oauth2.CustomOAuthService;
 import com.dalcho.adme.oauth2.OAuth2SuccessHandler;
 import com.dalcho.adme.oauth2.Oauth2FailureHandler;
@@ -59,10 +60,10 @@ public class SecurityConfig {
 //					.exceptionHandling().authenticationEntryPoint(new RestAuthenticationEntryPoint())// 인증,인가가 되지 않은 요청 시 발생
 //					.and()
         http.authorizeHttpRequests()
+                .requestMatchers("/admin").hasAuthority(UserRole.ADMIN.name())
                 .requestMatchers(VIEW_LIST).permitAll()
                 .requestMatchers("/sign-up").permitAll()
                 .requestMatchers("/sign-in").permitAll()
-                .requestMatchers("/admin").hasAuthority("ADMIN")
                 .anyRequest().authenticated();
 
         http.formLogin()
@@ -81,7 +82,7 @@ public class SecurityConfig {
                     .failureHandler(failureHandler)
                 .and()
                     .exceptionHandling()
-                    //.accessDeniedHandler(new CustomAccessDeniedHandler())
+                    .accessDeniedHandler(new CustomAccessDeniedHandler())
                     .authenticationEntryPoint(customAuthenticationEntryPoint)
                 .and()
                     .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
