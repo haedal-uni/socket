@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -96,9 +95,7 @@ public class ChatServiceImpl {
     }
 
     //채팅방 생성
-    @CachePut(key = "#nickname", value = "createRoom", unless = "#result == null", cacheManager = "cacheManager")
     public ChatRoomDto createRoom(String nickname) {
-        long startTime = System.currentTimeMillis();
         User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
         ChatRoomDto chatRoom = new ChatRoomDto();
         long stopTime;
@@ -108,33 +105,42 @@ public class ChatServiceImpl {
             ChatRoomMap.getInstance().getChatRooms().put(chatRoom.getRoomId(), chatRoom);
             Chat chat = new Chat(chatRoom.getRoomId(), user);
             chatRepository.save(chat);
-            stopTime = System.currentTimeMillis();
-            log.info("roomId 생성 : " + (stopTime - startTime) / 1000 + " 초");
+            chatRoom.setNickname(nickname);
+            redisService.addCreateRoom("createRoom::"+nickname, chatRoom);
             return chatRoom;
         } else {
-            log.info("[createRoom] roomId 값은 있지만 cache 적용 안됨");
-            Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
-            String roomId = "";
-            if (findChat.isPresent()) {
-                roomId = findChat.get().getRoomId();
+            // 캐시에서 ChatRoomDto 조회
+            ChatRoomDto cachedChatRoomDto = redisService.getCreateRoom("createRoom::" + nickname);
+            if (cachedChatRoomDto != null) {
+                log.info("[createRoom] cache 적용 o");
+                cachedChatRoomDto.setLastMessage(getLastMessage(cachedChatRoomDto.getRoomId()));
+                return cachedChatRoomDto;
+            }else{
+                log.info("[createRoom] cache 적용 x");
+                Optional<Chat> findChat = chatRepository.findByUserId(user.getId());
+                if (findChat.isPresent()) {
+                    chatRoom.setRoomId(findChat.get().getRoomId());
+                }
+                LastMessage lastLine = getLastMessage(chatRoom.getRoomId());
+                chatRoom.setNickname(nickname);
+                redisService.addCreateRoom("createRoom::"+nickname, chatRoom);
+                return ChatRoomDto.of(user, lastLine);
             }
-            chatRoom.setRoomId(roomId);
-
-            LastMessage lastLine = lastLine(roomId);
-            if (lastLine == null) {
-                lastLine = LastMessage.builder()
-                        .roomId(roomId)
-                        .adminChat(0)
-                        .userChat(0)
-                        .message("환영합니다.")
-                        .day("")
-                        .time("")
-                        .build();
-            }
-            stopTime = System.currentTimeMillis();
-            log.info("채팅방 생성 소요 시간 : " + (stopTime - startTime) / 1000 + " 초");
-            return ChatRoomDto.of(user, lastLine);
         }
+    }
+    private LastMessage getLastMessage(String roomId) {
+        LastMessage lastLine = lastLine(roomId);
+        if (lastLine == null) {
+            lastLine = LastMessage.builder()
+                    .roomId(roomId)
+                    .adminChat(0)
+                    .userChat(0)
+                    .message("환영합니다.")
+                    .day("")
+                    .time("")
+                    .build();
+        }
+        return lastLine;
     }
 
     public ChatMessage chatAlarm(String sender, String roomId, String auth) {
