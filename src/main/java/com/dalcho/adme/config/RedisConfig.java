@@ -1,6 +1,6 @@
 package com.dalcho.adme.config;
 
-import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.dto.ChatRoomDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -11,7 +11,6 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -40,9 +39,19 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+    @Bean //Redis 데이터에 쉽게 접근하기 위한 코드
+    public RedisTemplate<String, ChatRoomDto> chatRoomDtoRedisTemplate() {
+        RedisTemplate<String, ChatRoomDto> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer()); // JSON 직렬화 설정
+        return redisTemplate;
+    }
+
     @Bean
     public CacheManager cacheManager() {
         RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .disableCachingNullValues() // null value cacheX
                 .entryTtl(Duration.ofHours(3))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));

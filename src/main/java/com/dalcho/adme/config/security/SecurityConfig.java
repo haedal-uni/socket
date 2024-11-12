@@ -43,7 +43,7 @@ public class SecurityConfig {
 		return web -> {
 			web.ignoring()
 					.requestMatchers(
-							 "/css/**","/fonts/**", "/js/**","/webjars/**","/user/**","/error"
+							 "/css/**","/fonts/**", "/js/**","/webjars/**","/user/**","/error","/coco/**"
 					);
 		};
 	}

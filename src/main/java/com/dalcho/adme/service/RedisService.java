@@ -1,6 +1,7 @@
 package com.dalcho.adme.service;
 
 import com.dalcho.adme.dto.ChatMessage;
+import com.dalcho.adme.dto.ChatRoomDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -13,8 +14,18 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RedisService {
 	private final RedisTemplate<String, String> redisTemplate;
+	private final RedisTemplate<String, ChatRoomDto> chatRoomRedisTemplate;
 	private static final long expirationTimeInSeconds = 24*60*60;
 	private static final long STATSTIME = 26;
+
+	public void addCreateRoom(String key, ChatRoomDto chatRoomDto){
+		chatRoomRedisTemplate.opsForValue().set(key, chatRoomDto);
+		redisTemplate.expire(key, STATSTIME, TimeUnit.HOURS);
+	}
+
+	public ChatRoomDto getCreateRoom(String key){
+		return chatRoomRedisTemplate.opsForValue().get(key);
+	}
 
 	public void addLoginUserCount(String key, String nickname){
 		redisTemplate.opsForSet().add(key, nickname);
