@@ -20,7 +20,7 @@ public class RedisService {
 
 	public void addCreateRoom(String key, ChatRoomDto chatRoomDto){
 		chatRoomRedisTemplate.opsForValue().set(key, chatRoomDto);
-		redisTemplate.expire(key, STATSTIME, TimeUnit.HOURS);
+		redisTemplate.expire(key, 3, TimeUnit.HOURS);
 	}
 
 	public ChatRoomDto getCreateRoom(String key){

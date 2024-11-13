@@ -98,7 +98,6 @@ public class ChatServiceImpl {
     public ChatRoomDto createRoom(String nickname) {
         User user = userRepository.findByNickname(nickname).orElseThrow(UserNotFoundException::new);
         ChatRoomDto chatRoom = new ChatRoomDto();
-        long stopTime;
         if (!chatRepository.existsByUserId(user.getId())) {
             log.info("[createRoom] roomId 값이 없음");
             chatRoom = ChatRoomDto.create();
@@ -106,10 +105,9 @@ public class ChatServiceImpl {
             Chat chat = new Chat(chatRoom.getRoomId(), user);
             chatRepository.save(chat);
             chatRoom.setNickname(nickname);
-            redisService.addCreateRoom("createRoom::"+nickname, chatRoom);
+            redisService.addCreateRoom("createRoom::" + nickname, chatRoom);
             return chatRoom;
         } else {
-            // 캐시에서 ChatRoomDto 조회
             ChatRoomDto cachedChatRoomDto = redisService.getCreateRoom("createRoom::" + nickname);
             if (cachedChatRoomDto != null) {
                 log.info("[createRoom] cache 적용 o");
@@ -128,6 +126,7 @@ public class ChatServiceImpl {
             }
         }
     }
+
     private LastMessage getLastMessage(String roomId) {
         LastMessage lastLine = lastLine(roomId);
         if (lastLine == null) {
