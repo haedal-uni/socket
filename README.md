@@ -1,4 +1,4 @@
-# Chat Project (Spring Boot)
+# Chat Project
 
 ![AC_ 20230405-010147](https://user-images.githubusercontent.com/74857364/229852178-a4c36349-6df4-4af3-b128-e4e5d0cd8a78.gif)
 
