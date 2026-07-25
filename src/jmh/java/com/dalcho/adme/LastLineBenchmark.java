@@ -69,8 +69,7 @@ public class LastLineBenchmark {
 
 
 	public List lastLineOriginal(String filepath) {
-		try{
-			RandomAccessFile file = new RandomAccessFile(filepath, "r");
+		try (RandomAccessFile file = new RandomAccessFile(filepath, "r")) {
 			StringBuilder lastLine = new StringBuilder();
 			int lineCount = 7;
 			long fileLength = file.length();
@@ -256,13 +255,13 @@ public class LastLineBenchmark {
 					ChatMessage chatMessage = new ChatMessage();
 					chatMessage.setRoomId(roomId);
 					chatMessage.setMessage(messages);
-					lastMessageMap.put(roomId, LastMessage.of(chatMessage, adminChat, userChat, day, time));
+					// 벤치마크는 매 invocation 동일 조건이어야 하므로 map을 채우지 않는다.
+					// (put을 하면 2번째 호출부터 map-hit로 빠져 '파일 읽기'가 아닌 'map 조회'를 측정하게 됨)
 					return LastMessage.of(chatMessage, adminChat, userChat, day, time);
 				} else {
 					ChatMessage chatMessage = new ChatMessage();
 					chatMessage.setRoomId(roomId);
 					chatMessage.setMessage("");
-					lastMessageMap.put(roomId, LastMessage.of(chatMessage, 0, 0, "day", "time"));
 					return LastMessage.of(chatMessage, 0, 0, "", "");
 				}
 			} catch (IOException | JsonSyntaxException e) {

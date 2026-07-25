@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @BenchmarkMode(Mode.AverageTime)
 //@BenchmarkMode : 벤치마크 결과를 나타내는 모드 (Mode.AverageTime으로 설정했으므로 평균 실행 시간이 결과로 나타남)
@@ -34,7 +35,10 @@ public class ReadFileBenchmark {
 	@Benchmark // 벤치마크 대상 메소드
 	public Object readFileAfter() throws IOException, ParseException {
 		String roomId = "3afa20e1-39a0-4237-be14-f2bdcfb75949";
-		List<String> lines = Files.lines(Paths.get(chatUploadLocation, roomId + ".txt")).collect(Collectors.toList());
+		List<String> lines;
+		try (Stream<String> stream = Files.lines(Paths.get(chatUploadLocation, roomId + ".txt"))) {
+			lines = stream.collect(Collectors.toList());  // 스트림을 닫아 파일 핸들 누수 방지
+		}
 		String jsonString = "[" + String.join(",", lines) + "]";
 		JSONParser parser = new JSONParser();
 		return parser.parse(jsonString);

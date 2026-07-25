@@ -1,5 +1,17 @@
 version: '3.9'
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"   # AMQP
+      - "61613:61613" # STOMP
+      - "15672:15672" # management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    command: >
+      bash -c "rabbitmq-plugins enable --offline rabbitmq_stomp rabbitmq_management && rabbitmq-server"
   controller:
     image: ngrinder/controller
     restart: always

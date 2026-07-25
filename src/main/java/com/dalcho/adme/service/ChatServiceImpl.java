@@ -181,7 +181,14 @@ public class ChatServiceImpl {
             if (lastMessageMap.containsKey(chatMessage.getRoomId())) {
                 chatMessage.setMessage(lastMessageMap.get(chatMessage.getRoomId()).getMessage());
             } else {
-                chatMessage.setMessage("환영합니다.");
+                // 서버 재시작 등으로 map이 비어 있으면 파일(lastLine)에서 마지막 메시지를 읽어온다.
+                // (map만 보고 "환영합니다."로 덮으면 기존 마지막 메시지가 사라짐)
+                LastMessage fileLast = lastLine(chatMessage.getRoomId());
+                if (fileLast != null && fileLast.getMessage() != null && !fileLast.getMessage().isEmpty()) {
+                    chatMessage.setMessage(fileLast.getMessage());
+                } else {
+                    chatMessage.setMessage("환영합니다.");
+                }
             }
         } else {
             jsonObject.addProperty("type", chatMessage.getType().toString());
@@ -302,9 +309,9 @@ public class ChatServiceImpl {
             }
             try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
                 long fileLength = file.length();
-                if (fileLength > 145) {
-                    randomAccessFile.seek(fileLength);
-                    long pointer = fileLength - 145;
+                if (fileLength > 0) {
+                    // 파일 끝에서부터 역방향으로 마지막 JSON 객체의 시작('{')을 찾는다.
+                    long pointer = fileLength - 1;
                     while (pointer > 0) {
                         randomAccessFile.seek(pointer);
                         char c = (char) randomAccessFile.read();
