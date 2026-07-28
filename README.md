@@ -6,51 +6,85 @@
 - 고객센터 1:1 채팅 / 랜덤 채팅 / 채팅 알림
 
 ## 성능 최적화 요약
+아래 수치는 모두 JMH 벤치마크(`fork=2`, warmup 10회, 측정 10회)로 다시 측정한 값이다.
+
+<br>
 
 ### [채팅 기록 파일 조회 속도 개선](https://github.com/haedal-uni/socket/wiki/Refactoring#%ED%8C%8C%EC%9D%BC-%EC%A0%80%EC%9E%A5-%EB%B0%A9%EC%8B%9D-%EB%B3%80%EA%B2%BD) 
 
 줄바꿈 포함 저장 방식 → **한 줄 저장 방식**으로 변경하여 조회 속도 개선
 
+| 방식 | 조회 시간 |
+|:---:|:---:|
+| 7줄 스캔 (기존) | 7.23 ± 4.74 ms |
+| 1줄 읽기 (개선)** | 1.64 ± 0.08 ms |
+
+평균 기준 약 4.4배 빨라졌다.
+
+기존 방식은 편차(± 4.74ms)가 커서 실행할 때마다 값이 널뛰었고 개선한 방식은 1.6ms로 일정하게 나온다.
+
 <br>
 
 ### [채팅 기록 파일 조회 횟수 감소](https://haedal-uni.github.io/posts/%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%EC%9A%94%EC%95%BD/#2-%EC%B1%84%ED%8C%85-%EA%B8%B0%EB%A1%9D-%ED%8C%8C%EC%9D%BC-%EC%A1%B0%ED%9A%8C-%ED%9A%9F%EC%88%98-%EA%B0%90%EC%86%8C)  
 
-채팅창 열고 닫을 때마다 파일 조회 → **HashMap 캐싱**으로 변경
+채팅창 열고 닫을 때마다 파일 조회 → **ConcurrentHashMap 캐싱**으로 변경
 
-<img src="https://github.com/user-attachments/assets/67a5222b-0097-4c76-b940-bbfccec093d9" width="60%" />  
-
-| 방식 | 응답 시간 |
+| 방식 | 조회 시간 |
 |:---:|:---:|
-| Map 미사용 | 0.283초 |
-| Map 사용 | 0.017초 |
+| 파일 조회 | 약 1.76 ms |
+| 맵 조회 | 약 4.5 ns |
 
-<img src="https://github.com/user-attachments/assets/0b9e3e40-418f-4b8b-b82f-d4eaced8d254" />
+맵 조회는 `get` 한 번이라 나노초 단위이고 파일 조회는 파일 열기 + 역방향 탐색 + JSON 파싱이 들어가서 밀리초 단위다.
 
-<img src="https://github.com/user-attachments/assets/c855b689-115f-4613-b875-f3e167dac6b0" />
+단위 자체가 다르기 때문에 몇 배라고 말하기보다 '디스크 I/O를 제거했다' 고 보는 것이 맞다.
 
 <br>
 
 ### RabbitMQ Broker 도입
+
 In-Memory Broker의 용량 제한·메시지 유실·모니터링 문제를 해결하기 위해 **외부 메시지 브로커 RabbitMQ** 적용
+
+STOMP 프로토콜을 그대로 지원해서 클라이언트 코드는 두고 브로커만 분리할 수 있었다.
 
 <br>
 
 ### [Redis Cache로 DB 조회 횟수 감소](https://haedal-uni.github.io/posts/%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%EC%9A%94%EC%95%BD/#4-db-%EC%A1%B0%ED%9A%8C-%ED%9A%9F%EC%88%98-%EA%B0%90%EC%86%8C)  
 
 - 전체 값 캐싱: `@Cacheable` 어노테이션 사용
+
 - 일부 값 캐싱: `RedisTemplate` 직접 사용
 
-LastMessage처럼 항상 최신값이 필요한 데이터는 `@CachePut` vs `RedisTemplate` 성능 비교 후 채택
+방 정보를 매번 DB에서 조회하던 것을 Redis 캐시로 대체했다.
 
-| 방식 | 응답 시간 |
+<br>
+
+| 방식 | 처리량 |
 |:---:|:---:|
-| Map x + @CachePut | 0.089초 |
-| Map o + @CachePut | 0.018초 |
-| Map x + RedisTemplate | 0.051초 |
-| **Map o + RedisTemplate** | **0.009초** |
+| DB 조회 | 약 516 ops/s |
+| Redis 조회 | 약 1,313 ops/s |
 
-→ **Map + RedisTemplate** 조합 채택: 고정 데이터는 캐시에 유지하고 변동 데이터(LastMessage)만 별도 조회
+처리량이 약 2.5배 올라갔고 그만큼 DB 부하도 줄었다.
 
+<br>
+
+### 종합 : 단계별 조회 시간
+
+세 최적화가 각각 다른 대상을 재기 때문에
+
+**"채팅창 열기 1회 = 마지막 메시지 조회 + 방 정보 조회"** 라는 같은 작업에 캐시를 한 단계씩 누적 적용해서 측정했다.
+
+| 설정 | 조회 시간 | 캐시 없음 대비 |
+|:---:|:---:|:---:|
+| 캐시 없음 (파일 + DB) | 4.409 ± 0.442 ms | — |
+| Map 적용 (맵 + DB) | 3.326 ± 0.669 ms | 1.3배 |
+| Map + Redis | 1.165 ± 0.185 ms | 3.8배 |
+
+<br>
+
+Map만 적용하면 마지막 메시지의 파일 I/O만 제거되고 방 정보는 여전히 DB에서 읽기 때문에 병목이 남는다 (4.41 → 3.33ms)
+
+Redis까지 적용하면 방 정보 조회도 캐시로 대체되면서 4.41 → 1.17ms, 약 3.8배 빨라진다
+  
 <br><br>
 
 ## [API 설계](https://github.com/haedal-uni/socket/wiki/API-%EC%84%A4%EA%B3%84)    
