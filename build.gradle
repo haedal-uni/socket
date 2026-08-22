@@ -95,9 +95,15 @@ jmh{
     fork = 2                // 벤치마크마다 별도 JVM으로 격리
     warmupIterations = 10
     iterations = 10
-    warmup = '1s'           // iteration당 시간 (기본 10s → 전체 수트 실행시간 단축)
-    timeOnIteration = '1s'
-    // 특정 벤치마크만 실행하려면: includes = ['ChatOpenBenchmark']
+    // ms급 작업을 1s iteration으로 재면 iteration당 호출이 150회 수준이라
+    // OS 스케줄러·디스크 노이즈가 그대로 점수에 찍힌다. iteration을 늘려 편차를 줄인다.
+    warmup = '2s'           // iteration당 시간
+    timeOnIteration = '3s'
+    // 문서(JMH.md / 이력서-포트폴리오.md)에 들어가는 수치는 모두 한 run에서 뽑는다.
+    // → 기본은 전체 실행. 일부만 돌리면 문서 안에서 run이 섞인다.
+    // 특정 벤치마크만 돌릴 때만 아래를 켠다.
+    // (클래스명을 여러 개 나열하면 매칭이 안 되므로 정규식 하나로 묶어야 한다)
+    // includes = ['.*(ChatOpenBenchmark|LastLineBenchmark|RedisCache).*']
 }
 test {
     useJUnitPlatform()
